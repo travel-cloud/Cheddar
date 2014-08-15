@@ -1,0 +1,115 @@
+/*
+ * Copyright 2014 Click Travel Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
+// Root Gradle project for Cheddar
+
+def checkstyleConfigDir = new File(rootDir, 'config/checkstyle')
+
+// Select all non-empty subprojects
+def subproj = subprojects.findAll{ new File(it.projectDir, "src").exists() }
+
+// Add clean task to all projects
+allprojects { apply plugin: 'base' }
+
+// Apply site specific configuration
+if (file('site.gradle').exists()) {
+    apply from: 'site.gradle'
+} else {
+    ant.fail('File site.gradle is missing. Please follow the instructions in site.gradle.template to correct this.')
+}
+
+// Configuration for all subprojects, but not this root project
+configure(subproj) {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+    apply plugin: 'checkstyle'
+
+    group = 'com.clicktravel'
+    sourceCompatibility = 1.7
+
+    idea { module { excludeDirs += file('bin') } }
+
+    // Apply common Checkstyle configuration
+    checkstyle {
+        configFile = new File(checkstyleConfigDir, "checkstyle.xml")
+        configProperties.checkstyleConfigDir = checkstyleConfigDir
+    }
+    
+    configurations.all {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            // Use org.mockito:mockito-core:xxx rather than org.mockito:mockito-all:xxx
+            // This fixes Powermock's transitive dependencies conflicting with org.hamcrest:hamcrest-core
+            if (details.requested.group == 'org.mockito' && details.requested.name == 'mockito-all') {
+                details.useTarget "org.mockito:mockito-core:${details.requested.version}"
+            }
+        }
+
+        // Remove Jakarta Commons Logging
+        exclude(group: 'commons-logging', module: 'commons-logging')
+
+        // Add logging dependencies
+        dependencies {
+            compile 'org.slf4j:slf4j-api:1.7.5'
+            compile 'org.slf4j:jcl-over-slf4j:1.7.5'
+            runtime 'org.slf4j:jul-to-slf4j:1.7.5'
+            runtime 'org.slf4j:slf4j-log4j12:1.7.5'
+            runtime 'log4j:log4j:1.2.17'
+            runtime 'log4j:apache-log4j-extras:1.2.17'
+            runtime 'com.logentries:logentries-appender:1.1.18'
+        }
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts { archives sourcesJar }
+}
+
+// Aggregate Checkstyle reports and produce combined HTML report
+task checkstyleAggregate << {
+    def reportFiles = fileTree(rootDir).include('**/checkstyle/main.xml', '**/checkstyle/test.xml')
+    def reportDir = new File("${project.buildDir}/reports/checkstyle")
+    if( !reportDir.exists() ) { reportDir.mkdirs() }
+    def file = new File("${reportDir}/aggregate.xml")
+    def fileElemWriter = new PrintWriter(file)
+    fileElemWriter.print('<checkstyle version="5.6">')
+    def fileElemXml = new XmlNodePrinter(fileElemWriter)
+    reportFiles.each { reportFile ->
+        new XmlParser().parse(reportFile).file.each { fileElemXml.print(it) }
+    }
+    fileElemWriter.print('</checkstyle>')
+    fileElemWriter.flush()
+    ant.xslt(in: file, style: "${checkstyleConfigDir}/checkstyle.xsl", out: "${reportDir}/checkstyle.html")
+}
+checkstyleAggregate.dependsOn { subproj.check }
+
+// Execute check on all subprojects
+task checkAll { dependsOn { subproj.check } }
+
+// Upload source and binaries for all subprojects
+task uploadAll { dependsOn { subproj.uploadArchives } }
+
+// Upload source and binaries, but only if checks pass for all subprojects
+task checkAndUploadAll { dependsOn { [checkAll, uploadAll] } }
+uploadAll.mustRunAfter checkAll
+
+// Produce Gradle Wrapper scripts for running Gradle on machines that don't have Gradle installed
+task wrapper(type: Wrapper) { gradleVersion = '1.7' }

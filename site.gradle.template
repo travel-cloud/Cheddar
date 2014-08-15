@@ -1,0 +1,20 @@
+// Template Gradle script for site specific configuration
+// TODO: Copy this file to 'site.gradle' and edit the copied file to suit your site's environment
+
+allprojects {
+    apply plugin: 'maven'
+
+    // Repository configuration
+    // TODO: Change this to use your site's repository manager, if applicable
+    repositories {
+        mavenCentral()
+    }
+
+    // AWS credentials and endpoint URLs used in Cheddar integration tests
+    // TODO: Fill in values appropriate for your site's AWS account
+    ext.aws_integration_account_id=YOUR_AWS_ACCOUNT
+    ext.aws_integration_access_key_id=YOUR_AWS_ACCESS_KEY
+    ext.aws_integration_secret_key=YOUR_AWS_SECRET_KEY
+    ext.aws_dynamodb_endpoint=YOUR_AWS_DYNAMODB_ENDPOINT_HOST_NAME
+    ext.aws_cloudsearch_endpoint=YOUR_AWS_CLOUDSEARCH_ENDPOINT_HOST_NAME
+}

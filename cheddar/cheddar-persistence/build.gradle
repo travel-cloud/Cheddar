@@ -1,0 +1,8 @@
+dependencies {
+	compile 'com.thoughtworks.xstream:xstream:1.4.5'
+    compile project(':commons:commons-lang')
+    
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.mockito:mockito-core:1.9.5'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
+}
