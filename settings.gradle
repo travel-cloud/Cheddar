@@ -1,0 +1,24 @@
+include (
+
+    "commons:commons-lang",
+    "commons:commons-httpclient",
+    "commons:commons-test",
+    
+    "cheddar:cheddar-rest",
+    "cheddar:cheddar-domain",
+    "cheddar:cheddar-application",
+    "cheddar:cheddar-query-model",
+    "cheddar:cheddar-messaging",
+    "cheddar:cheddar-persistence",
+    "cheddar:cheddar-tx",
+    "cheddar:cheddar-persisted-trackers",
+    "cheddar:cheddar-server",
+    "cheddar:cheddar-cdm",
+    "cheddar:cheddar-integration-aws",
+    "cheddar:cheddar-events",
+    "cheddar:cheddar-system-events",
+    "cheddar:cheddar-remote-api",
+    "cheddar:cheddar-remote",
+    "cheddar:cheddar-context"
+    
+)

@@ -1,0 +1,11 @@
+def springVersion = '3.2.3.RELEASE'
+
+dependencies {
+    compile project(':cheddar:cheddar-messaging')
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+    compile "org.springframework:spring-context-support:${springVersion}"   //Required for BeanUtils
+
+    testCompile project(':commons:commons-lang')
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.mockito:mockito-core:1.9.5'
+}

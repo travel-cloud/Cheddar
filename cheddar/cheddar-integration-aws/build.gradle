@@ -1,0 +1,45 @@
+apply from: '../../test.gradle'
+
+def springVersion = '3.2.3.RELEASE'
+
+dependencies {
+    compile project(':commons:commons-lang')
+    compile project(':commons:commons-httpclient')
+    compile project(':cheddar:cheddar-messaging')
+    compile project(':cheddar:cheddar-persistence')
+    compile project(':cheddar:cheddar-tx')
+
+    compile 'com.amazonaws:aws-java-sdk:1.7.5'
+    compile "org.springframework:spring-context-support:${springVersion}"
+    compile "org.springframework:spring-aop:${springVersion}"
+
+    compile "org.aspectj:aspectjrt:1.7.4"
+    compile "org.aspectj:aspectjweaver:1.7.4"
+    compile 'javax.mail:mail:1.4.7'
+    compile 'joda-time:joda-time:2.4'
+    compile 'org.slf4j:slf4j-api:1.7.5'
+    compile 'org.slf4j:jcl-over-slf4j:1.7.5'    //Required for AWS SDK
+}
+
+test {
+    useJUnit {
+        excludeCategories 'com.clicktravel.infrastructure.integration.aws.AwsIntegration'
+    }
+}
+
+processTestResources {
+    filter(org.apache.tools.ant.filters.ReplaceTokens,
+        tokens: [
+            AWS_ACCOUNT_ID: aws_integration_account_id,
+            AWS_ACCESS_KEY_ID: aws_integration_access_key_id,
+            AWS_SECRET_KEY_ID: aws_integration_secret_key,
+            AWS_DYNAMODB_ENDPOINT: aws_dynamodb_endpoint,
+            AWS_CLOUDSEARCH_ENDPOINT: aws_cloudsearch_endpoint
+        ])
+}
+
+task integrationTest(type: Test) {
+    useJUnit {
+        includeCategories 'com.clicktravel.infrastructure.integration.aws.AwsIntegration'
+    }
+}

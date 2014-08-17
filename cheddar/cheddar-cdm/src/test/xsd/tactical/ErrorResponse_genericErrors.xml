@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ErrorResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.clicktravel.com/schema/v1/common"
+	xsi:schemaLocation="http://www.clicktravel.com/schema/v1/common ../../../main/xsd/tactical/common.xsd">
+
+	<errors>
+		<description>Circular reference has been created</description>
+	</errors>
+		
+		
+</ErrorResponse>

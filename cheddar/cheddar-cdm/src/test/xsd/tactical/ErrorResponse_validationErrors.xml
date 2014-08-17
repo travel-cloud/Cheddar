@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ErrorResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.clicktravel.com/schema/v1/common"
+	xsi:schemaLocation="http://www.clicktravel.com/schema/v1/common ../../../main/xsd/tactical/common.xsd">
+
+	<validationErrors>
+		<field>ownerEmail</field>
+		<error>The field is empty</error>
+	</validationErrors>
+	<validationErrors>
+		<field>ownerEmail</field>
+		<error>The field is not a valid email address</error>
+	</validationErrors>
+	<validationErrors>
+		<field>ownerTitle</field>
+		<field>ownerLastName</field>
+		<error>Title or Last name must not be blank</error>
+	</validationErrors>
+
+</ErrorResponse>
