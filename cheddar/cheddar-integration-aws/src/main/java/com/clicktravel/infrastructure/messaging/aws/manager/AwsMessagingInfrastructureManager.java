@@ -41,15 +41,15 @@ import com.clicktravel.infrastructure.messaging.aws.SqsMessageQueueAccessor;
  * Amazon Web Services Messaging Infrastructure Manager
  * 
  * The responsibility of implementing classes is to create queues and topics, fetch queue and topic-related information
- * @author bjanjua
- * 
  */
 public class AwsMessagingInfrastructureManager {
 
     private static final String AWS_POLICY_ATTRIBUTE = "Policy";
     private static final String SQS_QUEUE_ARN_ATTRIBUTE = "QueueArn";
+    private static final String SQS_VISIBILITY_TIMEOUT_ATTRIBUTE = "VisibilityTimeout";
+    private static final String SQS_VISIBILITY_TIMEOUT_VALUE = "300";
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final AmazonSQS amazonSqsClient;
     private final AmazonSNS amazonSnsClient;
     private final Collection<SqsMessageQueueAccessor> messageQueueAccessors;
@@ -202,7 +202,9 @@ public class AwsMessagingInfrastructureManager {
 
     public void createQueue(final String queueName) {
         logger.debug("Creating queue: " + queueName);
-        final CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName);
+        final Map<String, String> attributes = new HashMap<>();
+        attributes.put(SQS_VISIBILITY_TIMEOUT_ATTRIBUTE, SQS_VISIBILITY_TIMEOUT_VALUE);
+        final CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName).withAttributes(attributes);
         amazonSqsClient.createQueue(createQueueRequest);
     }
 

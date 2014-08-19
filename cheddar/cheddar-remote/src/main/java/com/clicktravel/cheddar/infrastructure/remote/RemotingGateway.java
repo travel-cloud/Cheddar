@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RemotingGateway {
     private static final long MAX_QUEUE_OFFER_TIMEOUT_SECONDS = 1; // Max wait for threads to synchronise
-    private static final long MAX_QUEUE_POLL_TIMEOUT_SECONDS = 40; // Must cover all remote method call retries
+    private static final long MAX_QUEUE_POLL_TIMEOUT_SECONDS = 310; // Must cover all remote method call retries
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final RemoteCallSender remoteCallSender;
 
