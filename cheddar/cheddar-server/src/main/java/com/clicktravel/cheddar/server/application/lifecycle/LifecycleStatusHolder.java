@@ -14,14 +14,21 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.server.application.status;
+package com.clicktravel.cheddar.server.application.lifecycle;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LifecycleStatusHolder {
 
-    private LifecycleStatus lifecycleStatus = LifecycleStatus.RUNNING;
+    private LifecycleStatus lifecycleStatus;
+
+    @Autowired
+    public LifecycleStatusHolder(@Value("${blue.green.mode}") final boolean blueGreenMode) {
+        lifecycleStatus = blueGreenMode ? LifecycleStatus.INACTIVE : LifecycleStatus.RUNNING;
+    }
 
     public LifecycleStatus getLifecycleStatus() {
         return lifecycleStatus;

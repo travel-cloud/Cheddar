@@ -31,8 +31,8 @@ import org.junit.Test;
 
 import com.clicktravel.cheddar.remote.TaggedRemoteCallStatusHolder;
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.status.LifecycleStatus;
-import com.clicktravel.cheddar.server.application.status.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
 import com.clicktravel.cheddar.server.application.status.RestAdapterStatusHolder;
 import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;

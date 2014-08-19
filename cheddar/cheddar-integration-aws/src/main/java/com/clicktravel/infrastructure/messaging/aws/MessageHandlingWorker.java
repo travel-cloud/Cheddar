@@ -30,32 +30,25 @@ public class MessageHandlingWorker implements Runnable {
     private final Message message;
     private final MessageHandler messageHandler;
     private final AmazonSQS amazonSqsClient;
-    private final String queueUrl;
-    private final String messageReceiptHandle;
+    private final DeleteMessageRequest deleteMessageRequest;
 
     public MessageHandlingWorker(final Message message, final MessageHandler messageHandler,
-            final AmazonSQS amazonSqsClient, final String queueUrl, final String messageReceiptHandle) {
+            final AmazonSQS amazonSqsClient, final DeleteMessageRequest deleteMessageRequest) {
         this.message = message;
         this.messageHandler = messageHandler;
         this.amazonSqsClient = amazonSqsClient;
-        this.queueUrl = queueUrl;
-        this.messageReceiptHandle = messageReceiptHandle;
+        this.deleteMessageRequest = deleteMessageRequest;
     }
 
     @Override
     public void run() {
-        if (messageHandler != null) {
-            try {
-                messageHandler.handle(message);
-            } catch (final Exception e) {
-                logger.warn(e.getMessage(), e);
-            }
-        } else {
-            logger.debug("Unsupported message type: " + message.getType());
+        try {
+            messageHandler.handle(message);
+        } catch (final Exception e) {
+            logger.warn(e.getMessage(), e);
         }
-        // TODO Batch the delete message requests
-        amazonSqsClient.deleteMessage(new DeleteMessageRequest().withQueueUrl(queueUrl).withReceiptHandle(
-                messageReceiptHandle));
+
+        amazonSqsClient.deleteMessage(deleteMessageRequest);
     }
 
     public Message message() {

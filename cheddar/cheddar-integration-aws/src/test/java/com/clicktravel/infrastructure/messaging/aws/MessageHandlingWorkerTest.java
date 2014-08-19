@@ -16,16 +16,13 @@
  */
 package com.clicktravel.infrastructure.messaging.aws;
 
-import static com.clicktravel.common.random.Randoms.randomString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
@@ -34,92 +31,46 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 
 public class MessageHandlingWorkerTest {
 
-    @Test
-    public void shouldCreateMessageHandlingWorker_with() throws Exception {
-        // Given
-        final Message message = mock(Message.class);
-        final MessageHandler messageHandler = mock(MessageHandler.class);
-        final AmazonSQS amazonSqsClient = mock(AmazonSQS.class);
-        final String queueUrl = randomString();
-        final String messageReceiptHandle = randomString();
+    private Message message;
+    private MessageHandler messageHandler;
+    private AmazonSQS amazonSqsClient;
+    private DeleteMessageRequest deleteMessageRequest;
 
-        // When
-        final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
-                amazonSqsClient, queueUrl, messageReceiptHandle);
-
-        // Then
-        assertNotNull(messageHandlingWorker);
-        assertEquals(message, messageHandlingWorker.message());
-        assertEquals(messageHandler, messageHandlingWorker.messageHandler());
+    @Before
+    public void setUp() {
+        message = mock(Message.class);
+        messageHandler = mock(MessageHandler.class);
+        amazonSqsClient = mock(AmazonSQS.class);
+        deleteMessageRequest = mock(DeleteMessageRequest.class);
     }
 
     @Test
     public void shouldRun_withMessageAndMessageHandler() throws Exception {
         // Given
-        final Message message = mock(Message.class);
-        final MessageHandler messageHandler = mock(MessageHandler.class);
-        final AmazonSQS amazonSqsClient = mock(AmazonSQS.class);
-        final String queueUrl = randomString();
-        final String messageReceiptHandle = randomString();
         final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
-                amazonSqsClient, queueUrl, messageReceiptHandle);
+                amazonSqsClient, deleteMessageRequest);
 
         // When
         messageHandlingWorker.run();
 
         // Then
-        final ArgumentCaptor<DeleteMessageRequest> deleteMessageRequestArgumentCaptor = ArgumentCaptor
-                .forClass(DeleteMessageRequest.class);
         verify(messageHandler).handle(message);
-        verify(amazonSqsClient).deleteMessage(deleteMessageRequestArgumentCaptor.capture());
-        assertEquals(queueUrl, deleteMessageRequestArgumentCaptor.getValue().getQueueUrl());
-        assertEquals(messageReceiptHandle, deleteMessageRequestArgumentCaptor.getValue().getReceiptHandle());
+        verify(amazonSqsClient).deleteMessage(deleteMessageRequest);
     }
 
     @Test
     public void shouldRun_withMessageAndMessageHandlerAndException() throws Exception {
         // Given
-        final Message message = mock(Message.class);
-        final MessageHandler messageHandler = mock(MessageHandler.class);
         doThrow(Exception.class).when(messageHandler).handle(any(Message.class));
-        final AmazonSQS amazonSqsClient = mock(AmazonSQS.class);
-        final String queueUrl = randomString();
-        final String messageReceiptHandle = randomString();
         final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
-                amazonSqsClient, queueUrl, messageReceiptHandle);
+                amazonSqsClient, deleteMessageRequest);
 
         // When
         messageHandlingWorker.run();
 
         // Then
-        final ArgumentCaptor<DeleteMessageRequest> deleteMessageRequestArgumentCaptor = ArgumentCaptor
-                .forClass(DeleteMessageRequest.class);
         verify(messageHandler).handle(message);
-        verify(amazonSqsClient).deleteMessage(deleteMessageRequestArgumentCaptor.capture());
-        assertEquals(queueUrl, deleteMessageRequestArgumentCaptor.getValue().getQueueUrl());
-        assertEquals(messageReceiptHandle, deleteMessageRequestArgumentCaptor.getValue().getReceiptHandle());
-    }
-
-    @Test
-    public void shouldRun_withNullMessageHandler() throws Exception {
-        // Given
-        final Message message = mock(Message.class);
-        final MessageHandler messageHandler = null;
-        final AmazonSQS amazonSqsClient = mock(AmazonSQS.class);
-        final String queueUrl = randomString();
-        final String messageReceiptHandle = randomString();
-        final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
-                amazonSqsClient, queueUrl, messageReceiptHandle);
-
-        // When
-        messageHandlingWorker.run();
-
-        // Then
-        final ArgumentCaptor<DeleteMessageRequest> deleteMessageRequestArgumentCaptor = ArgumentCaptor
-                .forClass(DeleteMessageRequest.class);
-        verify(amazonSqsClient).deleteMessage(deleteMessageRequestArgumentCaptor.capture());
-        assertEquals(queueUrl, deleteMessageRequestArgumentCaptor.getValue().getQueueUrl());
-        assertEquals(messageReceiptHandle, deleteMessageRequestArgumentCaptor.getValue().getReceiptHandle());
+        verify(amazonSqsClient).deleteMessage(deleteMessageRequest);
     }
 
 }

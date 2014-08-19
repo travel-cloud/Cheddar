@@ -21,9 +21,6 @@ import com.clicktravel.cheddar.event.Event;
 /**
  * Interface representing a low-level system event within the Click Platform eco-system which may be targetting a
  * particular application of version of that application.
- * 
- * @author bjanjua
- * 
  */
 public interface SystemEvent extends Event {
 

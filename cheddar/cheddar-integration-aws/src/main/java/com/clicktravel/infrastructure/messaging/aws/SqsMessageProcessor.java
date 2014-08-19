@@ -24,7 +24,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.clicktravel.cheddar.infrastructure.messaging.Message;
@@ -43,6 +47,7 @@ public class SqsMessageProcessor implements Runnable {
     private static final int LONG_POLL_DURATION_SECONDS = 20;
     private static final int MAX_THREADS = 10;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ReceiveMessageRequest receiveMessageRequest;
     private final String queueUrl;
     private final AmazonSQS amazonSqsClient;
@@ -74,20 +79,23 @@ public class SqsMessageProcessor implements Runnable {
             final List<com.amazonaws.services.sqs.model.Message> sqsMessages = amazonSqsClient.receiveMessage(
                     receiveMessageRequest).getMessages();
             for (final com.amazonaws.services.sqs.model.Message sqsMessage : sqsMessages) {
-                if (rateLimiter != null) {
-                    try {
-                        rateLimiter.takeToken();
-                    } catch (final InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-                final String messageReceiptHandle = sqsMessage.getReceiptHandle();
-                final Message message = getMessage(sqsMessage);
-                final MessageHandler messageHandler = messageHandlers.get(message.getType());
-                final MessageHandlingWorker worker = new MessageHandlingWorker(message, messageHandler,
-                        amazonSqsClient, queueUrl, messageReceiptHandle);
-                executorService.execute(worker);
+                processSqsMessage(sqsMessage);
             }
+        }
+    }
+
+    private void processSqsMessage(final com.amazonaws.services.sqs.model.Message sqsMessage) {
+        final DeleteMessageRequest deleteMessageRequest = new DeleteMessageRequest().withQueueUrl(queueUrl)
+                .withReceiptHandle(sqsMessage.getReceiptHandle());
+        final Message message = getMessage(sqsMessage);
+        final MessageHandler messageHandler = messageHandlers.get(message.getType());
+        if (messageHandler != null) {
+            applyRateLimiter();
+            executorService.execute(new MessageHandlingWorker(message, messageHandler,
+                    amazonSqsClient, deleteMessageRequest));
+        } else {
+            logger.debug("Unsupported message type: " + message.getType());
+            amazonSqsClient.deleteMessage(deleteMessageRequest);
         }
     }
 
@@ -96,10 +104,19 @@ public class SqsMessageProcessor implements Runnable {
             final JsonNode jsonNode = mapper.readTree(sqsMessage.getBody());
             final String messageType = jsonNode.get("Subject").textValue();
             final String messagePayload = jsonNode.get("Message").textValue();
-            final Message message = new SimpleMessage(messageType, messagePayload);
-            return message;
+            return new SimpleMessage(messageType, messagePayload);
         } catch (final Exception e) {
             throw new IllegalStateException("Could not parse message from SQS message: " + sqsMessage.getBody(), e);
+        }
+    }
+
+    private void applyRateLimiter() {
+        if (rateLimiter != null) {
+            try {
+                rateLimiter.takeToken();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
