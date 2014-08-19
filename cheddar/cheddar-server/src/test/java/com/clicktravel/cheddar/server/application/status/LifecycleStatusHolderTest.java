@@ -20,16 +20,40 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
 import com.clicktravel.common.random.Randoms;
-import com.clicktravel.cheddar.server.application.status.LifecycleStatus;
-import com.clicktravel.cheddar.server.application.status.LifecycleStatusHolder;
 
 public class LifecycleStatusHolderTest {
 
     @Test
+    public void shouldReturnRunningStatus_inNonBlueGreenMode() {
+        // Given
+        final LifecycleStatusHolder holder = new LifecycleStatusHolder(false);
+
+        // When
+        final LifecycleStatus lifecycleStatus = holder.getLifecycleStatus();
+
+        // Then
+        assertEquals(LifecycleStatus.RUNNING, lifecycleStatus);
+    }
+
+    @Test
+    public void shouldReturnInactiveStatus_inBlueGreenMode() {
+        // Given
+        final LifecycleStatusHolder holder = new LifecycleStatusHolder(true);
+
+        // When
+        final LifecycleStatus lifecycleStatus = holder.getLifecycleStatus();
+
+        // Then
+        assertEquals(LifecycleStatus.INACTIVE, lifecycleStatus);
+    }
+
+    @Test
     public void shouldReturnStatus_afterSetStatus() {
         // Given
-        final LifecycleStatusHolder holder = new LifecycleStatusHolder();
+        final LifecycleStatusHolder holder = new LifecycleStatusHolder(Randoms.randomBoolean());
         final LifecycleStatus lifecycleStatus = Randoms.randomEnum(LifecycleStatus.class);
         holder.setLifecycleStatus(lifecycleStatus);
 
