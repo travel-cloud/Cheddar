@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -122,7 +123,12 @@ public class AwsMessagingInfrastructureManagerTest {
         final ArgumentCaptor<CreateQueueRequest> createQueueRequestArgumentCaptor = ArgumentCaptor
                 .forClass(CreateQueueRequest.class);
         verify(mockAmazonSqsClient).createQueue(createQueueRequestArgumentCaptor.capture());
-        assertEquals(queueName, createQueueRequestArgumentCaptor.getValue().getQueueName());
+        final CreateQueueRequest createQueueRequest = createQueueRequestArgumentCaptor.getValue();
+        assertEquals(queueName, createQueueRequest.getQueueName());
+        final Map<String, String> queueAttributes = createQueueRequest.getAttributes();
+        assertNotNull(queueAttributes);
+        final String visibility = queueAttributes.get("VisibilityTimeout");
+        assertEquals("300", visibility);
     }
 
     @Test
