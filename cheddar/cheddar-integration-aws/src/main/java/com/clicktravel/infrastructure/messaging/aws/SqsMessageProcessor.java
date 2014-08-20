@@ -16,13 +16,11 @@
  */
 package com.clicktravel.infrastructure.messaging.aws;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,10 +43,11 @@ public class SqsMessageProcessor implements Runnable {
      * the actual duration will be shorter.
      */
     private static final int LONG_POLL_DURATION_SECONDS = 20;
-    private static final int MAX_THREADS = 10;
+    private static final int MAX_RECEIVED_MESSAGES = 10;
+    private static final int NUM_THREADS = 10;
+    private static final int MAX_RUNNABLES = NUM_THREADS * 2;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ReceiveMessageRequest receiveMessageRequest;
     private final String queueUrl;
     private final AmazonSQS amazonSqsClient;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -56,28 +55,38 @@ public class SqsMessageProcessor implements Runnable {
     private volatile boolean processing = false;
     private final ExecutorService executorService;
     private final RateLimiter rateLimiter;
+    private final LinkedBlockingQueue<Runnable> workQueue;
+    private final Semaphore semaphore;
 
     public SqsMessageProcessor(final AmazonSQS amazonSqsClient, final String queueName,
             final Map<String, MessageHandler> messageHandlers, final RateLimiter rateLimiter) {
         this.amazonSqsClient = amazonSqsClient;
         this.rateLimiter = rateLimiter;
         queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(queueName)).getQueueUrl();
-        receiveMessageRequest = new ReceiveMessageRequest(queueUrl);
-        receiveMessageRequest.setWaitTimeSeconds(LONG_POLL_DURATION_SECONDS);
         this.messageHandlers = new HashMap<>(messageHandlers);
-        final MessageHandlingWorkerRejectedExecutionHandler rejectedExecutionHandler = new MessageHandlingWorkerRejectedExecutionHandler(
-                this);
-        final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(MAX_THREADS * 2);
-        executorService = new ThreadPoolExecutor(MAX_THREADS, MAX_THREADS, 1L, TimeUnit.SECONDS, workQueue,
-                rejectedExecutionHandler);
+        workQueue = new LinkedBlockingQueue<Runnable>();
+        semaphore = new Semaphore(MAX_RUNNABLES);
+        executorService = new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 0L, TimeUnit.SECONDS, workQueue);
     }
 
     @Override
     public void run() {
         processing = true;
         while (processing) {
-            final List<com.amazonaws.services.sqs.model.Message> sqsMessages = amazonSqsClient.receiveMessage(
-                    receiveMessageRequest).getMessages();
+            try {
+                // Block until there is capacity to handle up to MAX_RECEIVED_MESSAGES
+                semaphore.acquire(MAX_RECEIVED_MESSAGES);
+            } catch (final InterruptedException e) {
+                continue;
+            }
+            List<com.amazonaws.services.sqs.model.Message> sqsMessages = Collections.emptyList();
+            try {
+                final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl)
+                        .withWaitTimeSeconds(LONG_POLL_DURATION_SECONDS).withMaxNumberOfMessages(MAX_RECEIVED_MESSAGES);
+                sqsMessages = amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
+            } finally {
+                semaphore.release(MAX_RECEIVED_MESSAGES - sqsMessages.size());
+            }
             for (final com.amazonaws.services.sqs.model.Message sqsMessage : sqsMessages) {
                 processSqsMessage(sqsMessage);
             }
@@ -91,11 +100,12 @@ public class SqsMessageProcessor implements Runnable {
         final MessageHandler messageHandler = messageHandlers.get(message.getType());
         if (messageHandler != null) {
             applyRateLimiter();
-            executorService.execute(new MessageHandlingWorker(message, messageHandler,
-                    amazonSqsClient, deleteMessageRequest));
+            executorService.execute(new MessageHandlingWorker(message, messageHandler, amazonSqsClient,
+                    deleteMessageRequest, semaphore));
         } else {
             logger.debug("Unsupported message type: " + message.getType());
             amazonSqsClient.deleteMessage(deleteMessageRequest);
+            semaphore.release();
         }
     }
 
@@ -128,5 +138,4 @@ public class SqsMessageProcessor implements Runnable {
     public boolean isProcessing() {
         return processing;
     }
-
 }
