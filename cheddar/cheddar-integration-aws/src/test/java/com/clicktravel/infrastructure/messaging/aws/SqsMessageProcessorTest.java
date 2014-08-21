@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -53,26 +53,21 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 import com.clicktravel.common.concurrent.RateLimiter;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SqsMessageProcessor.class, ArrayBlockingQueue.class,
-        MessageHandlingWorkerRejectedExecutionHandler.class, ThreadPoolExecutor.class })
+@PrepareForTest({ SqsMessageProcessor.class, LinkedBlockingQueue.class, ThreadPoolExecutor.class })
 @SuppressWarnings("unchecked")
 public class SqsMessageProcessorTest {
 
     private static final long THREAD_WAKE_UP_TIME = 1000;
-    private ArrayBlockingQueue<?> mockArrayBlockingQueue;
-    private MessageHandlingWorkerRejectedExecutionHandler mockMessageHandlingWorkerRejectedExecutionHandler;
+    private LinkedBlockingQueue<?> mockLinkedBlockingQueue;
     private ThreadPoolExecutor mockThreadPoolExecutor;
     private RateLimiter mockRateLimiter;
 
     @Before
     public void setup() throws Exception {
-        mockArrayBlockingQueue = mock(ArrayBlockingQueue.class);
-        mockMessageHandlingWorkerRejectedExecutionHandler = mock(MessageHandlingWorkerRejectedExecutionHandler.class);
+        mockLinkedBlockingQueue = mock(LinkedBlockingQueue.class);
         mockThreadPoolExecutor = mock(ThreadPoolExecutor.class);
         mockRateLimiter = mock(RateLimiter.class);
-        whenNew(ArrayBlockingQueue.class).withAnyArguments().thenReturn(mockArrayBlockingQueue);
-        whenNew(MessageHandlingWorkerRejectedExecutionHandler.class).withAnyArguments().thenReturn(
-                mockMessageHandlingWorkerRejectedExecutionHandler);
+        whenNew(LinkedBlockingQueue.class).withAnyArguments().thenReturn(mockLinkedBlockingQueue);
         whenNew(ThreadPoolExecutor.class).withAnyArguments().thenReturn(mockThreadPoolExecutor);
     }
 
@@ -98,10 +93,8 @@ public class SqsMessageProcessorTest {
                 .forClass(GetQueueUrlRequest.class);
         verify(amazonSqsClient).getQueueUrl(getQueueUrlRequestArgumentCaptor.capture());
         assertEquals(queueName, getQueueUrlRequestArgumentCaptor.getValue().getQueueName());
-        verifyNew(ArrayBlockingQueue.class).withArguments(20);
-        verifyNew(MessageHandlingWorkerRejectedExecutionHandler.class).withArguments(sqsMessageProcessor);
-        verifyNew(ThreadPoolExecutor.class).withArguments(10, 10, 1L, TimeUnit.SECONDS, mockArrayBlockingQueue,
-                mockMessageHandlingWorkerRejectedExecutionHandler);
+        verifyNew(LinkedBlockingQueue.class).withNoArguments();
+        verifyNew(ThreadPoolExecutor.class).withArguments(10, 10, 0L, TimeUnit.SECONDS, mockLinkedBlockingQueue);
     }
 
     @Test

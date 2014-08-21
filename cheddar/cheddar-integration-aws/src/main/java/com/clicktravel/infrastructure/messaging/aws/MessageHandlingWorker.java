@@ -16,6 +16,8 @@
  */
 package com.clicktravel.infrastructure.messaging.aws;
 
+import java.util.concurrent.Semaphore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +33,15 @@ public class MessageHandlingWorker implements Runnable {
     private final MessageHandler messageHandler;
     private final AmazonSQS amazonSqsClient;
     private final DeleteMessageRequest deleteMessageRequest;
+    private final Semaphore semaphore;
 
     public MessageHandlingWorker(final Message message, final MessageHandler messageHandler,
-            final AmazonSQS amazonSqsClient, final DeleteMessageRequest deleteMessageRequest) {
+            final AmazonSQS amazonSqsClient, final DeleteMessageRequest deleteMessageRequest, final Semaphore semaphore) {
         this.message = message;
         this.messageHandler = messageHandler;
         this.amazonSqsClient = amazonSqsClient;
         this.deleteMessageRequest = deleteMessageRequest;
+        this.semaphore = semaphore;
     }
 
     @Override
@@ -46,9 +50,10 @@ public class MessageHandlingWorker implements Runnable {
             messageHandler.handle(message);
         } catch (final Exception e) {
             logger.warn(e.getMessage(), e);
+        } finally {
+            amazonSqsClient.deleteMessage(deleteMessageRequest);
+            semaphore.release();
         }
-
-        amazonSqsClient.deleteMessage(deleteMessageRequest);
     }
 
     public Message message() {

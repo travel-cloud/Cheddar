@@ -21,6 +21,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import java.util.concurrent.Semaphore;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,6 +37,7 @@ public class MessageHandlingWorkerTest {
     private MessageHandler messageHandler;
     private AmazonSQS amazonSqsClient;
     private DeleteMessageRequest deleteMessageRequest;
+    private Semaphore semaphore;
 
     @Before
     public void setUp() {
@@ -42,13 +45,14 @@ public class MessageHandlingWorkerTest {
         messageHandler = mock(MessageHandler.class);
         amazonSqsClient = mock(AmazonSQS.class);
         deleteMessageRequest = mock(DeleteMessageRequest.class);
+        semaphore = mock(Semaphore.class);
     }
 
     @Test
     public void shouldRun_withMessageAndMessageHandler() throws Exception {
         // Given
         final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
-                amazonSqsClient, deleteMessageRequest);
+                amazonSqsClient, deleteMessageRequest, semaphore);
 
         // When
         messageHandlingWorker.run();
@@ -56,6 +60,7 @@ public class MessageHandlingWorkerTest {
         // Then
         verify(messageHandler).handle(message);
         verify(amazonSqsClient).deleteMessage(deleteMessageRequest);
+        verify(semaphore).release();
     }
 
     @Test
@@ -63,7 +68,7 @@ public class MessageHandlingWorkerTest {
         // Given
         doThrow(Exception.class).when(messageHandler).handle(any(Message.class));
         final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
-                amazonSqsClient, deleteMessageRequest);
+                amazonSqsClient, deleteMessageRequest, semaphore);
 
         // When
         messageHandlingWorker.run();
@@ -71,6 +76,7 @@ public class MessageHandlingWorkerTest {
         // Then
         verify(messageHandler).handle(message);
         verify(amazonSqsClient).deleteMessage(deleteMessageRequest);
+        verify(semaphore).release();
     }
 
 }
