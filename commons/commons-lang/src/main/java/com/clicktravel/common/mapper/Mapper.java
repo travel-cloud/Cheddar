@@ -21,8 +21,6 @@ package com.clicktravel.common.mapper;
  * 
  * Should return null if the input object is null to start with
  * 
- * @author bjanjua
- * 
  * @param <T1> The class for the input object
  * @param <T2> The class for the output object
  */

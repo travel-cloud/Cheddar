@@ -21,9 +21,6 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.configuratio
  * 
  * Underlying database mechanisms may use this configuration to create sequences and seed them with a starting value.
  * The sequence name is typically unique within the context of the database schema.
- * 
- * @author bjanjua
- * 
  */
 public class SequenceConfiguration {
 

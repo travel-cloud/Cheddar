@@ -19,9 +19,6 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 /**
  * Exception to be used in the persistence layer when an item-level constraint has been violated for example unique
  * constraints.
- * 
- * @author Basharat Janjua
- * 
  */
 public class ItemConstraintViolationException extends PersistenceException {
 

@@ -24,9 +24,6 @@ import java.lang.annotation.Target;
 /**
  * This annotation should be placed on any API call that is needed to be secured by an authenticated user. It will
  * automatically trigger an authentication check before the method is run.
- * 
- * @author jamesbutherway
- * 
  */
 
 @Retention(value = RetentionPolicy.RUNTIME)

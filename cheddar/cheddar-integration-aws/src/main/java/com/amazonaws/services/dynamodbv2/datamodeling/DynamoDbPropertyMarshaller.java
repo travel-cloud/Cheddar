@@ -35,9 +35,6 @@ import com.fasterxml.jackson.databind.MappingJsonFactory;
 
 /**
  * Uses DynamoDB's underlying marshalling functionality provided by DynamoDbMapper
- * 
- * @author bjanjua
- * 
  */
 public class DynamoDbPropertyMarshaller {
 

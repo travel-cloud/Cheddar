@@ -20,10 +20,6 @@ import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-/**
- * @author bjanjua
- * 
- */
 public class ApplicationConfigurationTest {
 
     public void shouldCreateApplicationConfiguration_withNameAndVersionandFrameworkVersion() throws Exception {

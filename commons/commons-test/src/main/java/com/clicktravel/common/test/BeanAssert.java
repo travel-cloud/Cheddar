@@ -35,8 +35,6 @@ import com.clicktravel.common.random.Randoms;
  * 
  * Ensures that equals and hash code are implemented properly. Only works for sub-set of property types defined in
  * SUPPORTED_PROPERTY_TYPES
- * @author bjanjua
- * 
  */
 public class BeanAssert {
 

@@ -21,11 +21,7 @@ import com.clicktravel.common.http.client.authentication.AuthenticationException
 /**
  * Should hold a set of credentials and the knowledge of how to authenticate to a given service that wishes to
  * participate in a three legged OAuth 2.0 authorisation code flow.
- * 
- * @author jamesbutherway
- * 
  */
-
 public interface OAuthUserAgent {
 
     /**

@@ -18,11 +18,7 @@ package com.clicktravel.common.mapper;
 
 /**
  * Exception to be throw from a mapper when an object cannot be successfully mapped to another object.
- * 
- * @author jamesbutherway
- * 
  */
-
 public class MapperException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
