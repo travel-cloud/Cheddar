@@ -21,60 +21,61 @@ package com.clicktravel.cheddar.server.application.lifecycle;
  */
 public enum LifecycleStatus {
     /**
-     * Application does not process any command, response or event messages. REST requests are accepted but not
-     * processed. ELB health checks report instance as unhealthy i.e. not ready for traffic.<br>
+     * Application does not process any command, response, event or application work messages. REST requests are
+     * accepted but not processed. ELB health checks report instance as unhealthy i.e. not ready for traffic.<br>
      * An application starts in this state if the server is started in blue-green mode.
      */
     INACTIVE,
 
     /**
-     * Application does not process any command, response or event messages. REST requests are accepted but not
-     * processed. ELB health checks report instance as healthy i.e. ready for traffic.
+     * Application does not process any command, response, event or application work messages. REST requests are
+     * accepted but not processed. ELB health checks report instance as healthy i.e. ready for traffic.
      */
     PAUSED,
 
     /**
-     * Application processes command, response, event messages and REST requests as normal. ELB health checks report
-     * instance as healthy i.e. ready for traffic.<br>
+     * Application processes command, response, event and application work messages and REST requests as normal. ELB
+     * health checks report instance as healthy i.e. ready for traffic.<br>
      * An application starts in this state if the server is not started in blue-green mode.
      */
     RUNNING,
 
     /**
      * Application processes command, response, event messages for high priority domain event handlers and REST requests
-     * as normal. Event messages for low priority event messages are not taken from the queue; shutdown of thread pool
-     * for low priority domain event handlers is started when entering this state. ELB health checks report instance as
-     * healthy i.e. ready for traffic.
+     * as normal. Event and application work messages for low priority event messages are not taken from the queue;
+     * shutdown of thread pool for low priority domain event handlers and application work message handlers is started
+     * when entering this state. ELB health checks report instance as healthy i.e. ready for traffic.
      */
     HALTING_LOW_PRIORITY_EVENTS,
 
     /**
      * Application processes command, response, event messages for high priority domain event handlers and REST requests
-     * as normal. Event messages for low priority domain event handlers are not taken from the queue. ELB health checks
-     * report instance as unhealthy i.e. not ready for traffic. It is expected that few, if any, REST requests are
-     * received.
+     * as normal. Event messages for low priority domain event handlers or application work are not taken from the
+     * queues. ELB health checks report instance as unhealthy i.e. not ready for traffic. It is expected that few, if
+     * any, REST requests are received.
      */
     DRAINING_REQUESTS,
 
     /**
-     * Application processes command and response messages as normal. No event messages are taken from queues. Shutdown
-     * of thread pool for high priority domain event handlers is started when entering this state. ELB health checks
-     * report instance as unhealthy i.e. not ready for traffic. No REST requests should be received in this state. When
-     * processing of event messages held in MessageListener completes, the lifecycle status is advanced to TERMINATING
+     * Application processes command and response messages as normal. No messages are taken from event or application
+     * work queues. Shutdown of thread pool for high priority domain event handlers is started when entering this state.
+     * ELB health checks report instance as unhealthy i.e. not ready for traffic. No REST requests should be received in
+     * this state. When processing of event messages held in MessageListener completes, the lifecycle status is advanced
+     * to TERMINATING
      */
     HALTING_HIGH_PRIORITY_EVENTS,
 
     /**
-     * Application processes command and response messages as normal. No event messages are taken from queues. ELB
-     * health checks report instance as unhealthy i.e. not ready for traffic. No REST requests should be received in
-     * this state. When processing of commands managed by the RemotingGateway completes, the lifecycle status is
-     * advanced to TERMINATED
+     * Application processes command and response messages as normal. No messages are taken from event or application
+     * work queues. ELB health checks report instance as unhealthy i.e. not ready for traffic. No REST requests should
+     * be received in this state. When processing of commands managed by the RemotingGateway completes, the lifecycle
+     * status is advanced to TERMINATED
      */
     TERMINATING,
 
     /**
-     * Application does not process any queue (command, response or event). ELB health checks report instance as
-     * unhealthy i.e. not ready for traffic. No REST requests should be received in this state.
+     * Application does not process any queue (command, response, event or application work). ELB health checks report
+     * instance as unhealthy i.e. not ready for traffic. No REST requests should be received in this state.
      */
     TERMINATED
 

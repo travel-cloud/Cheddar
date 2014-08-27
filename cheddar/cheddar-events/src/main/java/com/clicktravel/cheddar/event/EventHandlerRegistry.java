@@ -20,12 +20,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.PreDestroy;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 
@@ -34,7 +30,7 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
  * 
  * @param <E> Base class for all events associated with this message listener
  */
-public class EventHandlerRegistry<E extends Event> implements ApplicationListener<ContextRefreshedEvent> {
+public class EventHandlerRegistry<E extends Event> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final MessageListener eventMessageListener;
@@ -55,33 +51,16 @@ public class EventHandlerRegistry<E extends Event> implements ApplicationListene
     }
 
     public void init() {
-        final StringBuffer sb = new StringBuffer();
         for (final EventHandler<E> eventHandler : eventHandlers) {
             try {
                 final E domainEventPrototype = eventHandler.getEventClass().newInstance();
                 final String eventType = domainEventPrototype.type();
                 eventMessageHandler.registerEventHandler(eventType, eventHandler);
                 eventMessageListener.registerMessageHandler(eventType, eventMessageHandler);
-                if (sb.length() != 0) {
-                    sb.append(", ");
-                }
-                sb.append(eventType);
             } catch (final Exception e) {
                 logger.warn("Unable to register event handler: [" + eventHandler.getClass() + "]", e);
             }
         }
-        logger.info("EventHandlerRegistry initialized for the following events: [" + sb.toString() + "]");
-    }
-
-    @Override
-    public void onApplicationEvent(final ContextRefreshedEvent event) {
-        logger.debug("Starting EventHandlerRegistry for queue: " + eventMessageListener.queueName());
-        eventMessageListener.start();
-    }
-
-    @PreDestroy
-    public void destroy() {
-        eventMessageListener.destroy();
     }
 
 }

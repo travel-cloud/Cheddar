@@ -21,8 +21,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.PreDestroy;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
@@ -71,12 +69,6 @@ public class MessageRouter implements MessageHandler, ApplicationListener<Contex
             }
             sb.append(route);
         }
-        logger.debug("Starting MessageRouter for these message types: [" + sb.toString() + "]");
-        messageListener.start();
-    }
-
-    @PreDestroy
-    public void destroy() {
-        messageListener.destroy();
+        logger.debug("Started MessageRouter for these message types: [" + sb.toString() + "]");
     }
 }
