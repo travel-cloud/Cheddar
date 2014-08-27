@@ -35,8 +35,6 @@ import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.CloudSe
  * Amazon Web Services CloudSearch Infrastructure Manager
  * 
  * The responsibility of implementing classes is to create tables
- * @author bjanjua
- * 
  */
 public class CloudSearchInfrastructureManager {
 

@@ -23,11 +23,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 /**
  * Exception to be used in the persistence layer when the client has asked for a unique value but either none or many
  * have been returned.
- * 
- * @author jamesbutherway
- * 
  */
-
 public class NonUniqueResultException extends PersistenceException {
 
     private static final long serialVersionUID = 1L;

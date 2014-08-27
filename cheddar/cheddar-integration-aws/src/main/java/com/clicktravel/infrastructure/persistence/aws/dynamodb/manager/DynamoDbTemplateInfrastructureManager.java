@@ -37,8 +37,6 @@ import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDbTemplate;
  * Amazon Web Services Persistence Infrastructure Manager
  * 
  * The responsibility of implementing classes is to create tables
- * @author bjanjua
- * 
  */
 @Component
 public class DynamoDbTemplateInfrastructureManager {

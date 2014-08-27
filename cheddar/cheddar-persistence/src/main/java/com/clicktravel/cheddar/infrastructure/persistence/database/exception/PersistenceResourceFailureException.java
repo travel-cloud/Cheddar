@@ -16,10 +16,6 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 
-/**
- * @author bjanjua
- * 
- */
 public class PersistenceResourceFailureException extends PersistenceException {
 
     private static final long serialVersionUID = 1L;

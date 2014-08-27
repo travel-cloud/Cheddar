@@ -49,8 +49,6 @@ import com.clicktravel.common.http.client.authentication.oauth2.OAuthConfigurati
 
 /**
  * A wrapper around Jersey's Client to perform basic, high-level HTTP interaction.
- * 
- * @author bjanjua
  */
 public class HttpClient {
 

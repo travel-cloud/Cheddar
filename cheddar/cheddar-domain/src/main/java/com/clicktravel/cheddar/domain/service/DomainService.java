@@ -18,9 +18,6 @@ package com.clicktravel.cheddar.domain.service;
 
 /**
  * This is a marker interface to indicate that the implementing class is a Domain Service
- * 
- * @author bjanjua
- * 
  */
 public interface DomainService {
 

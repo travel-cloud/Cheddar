@@ -22,11 +22,7 @@ import org.glassfish.jersey.client.oauth2.ClientIdentifier;
  * Configuration object used by HTTP client to setup the values needed for OAuth authentication. If used in the building
  * of a HttpClient the client with assume that it is meant for OAuth authentication and begin the flows based on the
  * values provided.
- * 
- * @author jamesbutherway
- * 
  */
-
 public class OAuthConfiguration {
     private final ClientIdentifier clientIdentifier;
     private final OAuthUserAgent serviceAuthenticationClient;
@@ -36,7 +32,6 @@ public class OAuthConfiguration {
     private final String refreshTokenUri;
 
     /**
-     * 
      * @param clientIdentifier OAuth client identifier object
      * @param oauthServiceAuthenticationClient OAuth service authenticator for contacting authentication service in
      *            three-legged OAuth
@@ -45,7 +40,6 @@ public class OAuthConfiguration {
      * @param redirectUri The URL to which the OAuth 2.0 server will expect to redirect to
      * @param refreshTokenUri The URL to which the OAuth 2.0 refresh token request will be made to
      */
-
     public OAuthConfiguration(final ClientIdentifier clientIdentifier,
             final OAuthUserAgent serviceAuthenticationClient, final String authorisationUri,
             final String accessTokenUri, final String redirectUri, final String refreshTokenUri) {

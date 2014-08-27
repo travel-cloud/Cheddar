@@ -18,12 +18,11 @@ package com.clicktravel.cheddar.infrastructure.persistence.document.search.query
 
 /**
  * Supported query types, these are currently expected to match ignoring case directly to the supported parser types in
- * cloud search.
- * 
- * @author robinsmith
- * 
+ * CloudSearch.
  */
 public enum QueryType {
-    SIMPLE, STRUCTURED, LUCENE
+    SIMPLE,
+    STRUCTURED,
+    LUCENE
 
 }
