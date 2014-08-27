@@ -24,6 +24,6 @@ public interface MessageListener extends MessageQueueAccessor {
 
     void registerMessageHandler(String messageType, MessageHandler messageHandler);
 
-    void destroy();
+    void shutdown();
 
 }

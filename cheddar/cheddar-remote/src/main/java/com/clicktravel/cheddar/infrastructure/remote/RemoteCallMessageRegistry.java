@@ -17,17 +17,14 @@
 package com.clicktravel.cheddar.infrastructure.remote;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 
 @Component
-public class RemoteCallMessageRegistry implements ApplicationListener<ContextRefreshedEvent> {
+public class RemoteCallMessageRegistry {
 
     private final MessageListener remoteCallMessageListener;
     private final RemoteCallMessageHandler remoteCallMessageHandler;
@@ -42,15 +39,5 @@ public class RemoteCallMessageRegistry implements ApplicationListener<ContextRef
     @PostConstruct
     public void init() {
         remoteCallMessageListener.registerMessageHandler(RemoteCall.class.getSimpleName(), remoteCallMessageHandler);
-    }
-
-    @PreDestroy
-    public void destroy() {
-        remoteCallMessageListener.destroy();
-    }
-
-    @Override
-    public void onApplicationEvent(final ContextRefreshedEvent event) {
-        remoteCallMessageListener.start();
     }
 }

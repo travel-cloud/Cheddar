@@ -43,6 +43,7 @@ public class SqsMessageProcessor implements Runnable {
      * the actual duration will be shorter.
      */
     private static final int LONG_POLL_DURATION_SECONDS = 20;
+    private static final int SHORT_POLL_DURATION_SECONDS = 2;
     private static final int MAX_RECEIVED_MESSAGES = 10;
     private static final int NUM_THREADS = 10;
     private static final int MAX_RUNNABLES = NUM_THREADS * 2;
@@ -52,11 +53,11 @@ public class SqsMessageProcessor implements Runnable {
     private final AmazonSQS amazonSqsClient;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, MessageHandler> messageHandlers;
-    private volatile boolean processing = false;
     private final ExecutorService executorService;
     private final RateLimiter rateLimiter;
-    private final LinkedBlockingQueue<Runnable> workQueue;
     private final Semaphore semaphore;
+    private volatile boolean shutdownRequested;
+    private volatile boolean shutdownRequestImminent;
 
     public SqsMessageProcessor(final AmazonSQS amazonSqsClient, final String queueName,
             final Map<String, MessageHandler> messageHandlers, final RateLimiter rateLimiter) {
@@ -64,31 +65,41 @@ public class SqsMessageProcessor implements Runnable {
         this.rateLimiter = rateLimiter;
         queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(queueName)).getQueueUrl();
         this.messageHandlers = new HashMap<>(messageHandlers);
-        workQueue = new LinkedBlockingQueue<Runnable>();
+        final LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
         semaphore = new Semaphore(MAX_RUNNABLES);
         executorService = new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 0L, TimeUnit.SECONDS, workQueue);
     }
 
     @Override
     public void run() {
-        processing = true;
-        while (processing) {
-            try {
-                // Block until there is capacity to handle up to MAX_RECEIVED_MESSAGES
-                semaphore.acquire(MAX_RECEIVED_MESSAGES);
-            } catch (final InterruptedException e) {
-                continue;
-            }
+        try {
+            processMessagesUntilShutdownRequested();
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            executorService.shutdown();
+        }
+    }
+
+    private void processMessagesUntilShutdownRequested() throws InterruptedException {
+        while (!shutdownRequested) {
+            // Block until there is capacity to handle up to MAX_RECEIVED_MESSAGES
+            semaphore.acquire(MAX_RECEIVED_MESSAGES);
             List<com.amazonaws.services.sqs.model.Message> sqsMessages = Collections.emptyList();
             try {
-                final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl)
-                        .withWaitTimeSeconds(LONG_POLL_DURATION_SECONDS).withMaxNumberOfMessages(MAX_RECEIVED_MESSAGES);
-                sqsMessages = amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
+                // Check again if message processing is not being shut down
+                if (!shutdownRequested) {
+                    final int pollSeconds = shutdownRequestImminent ? SHORT_POLL_DURATION_SECONDS
+                            : LONG_POLL_DURATION_SECONDS;
+                    final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl)
+                            .withWaitTimeSeconds(pollSeconds).withMaxNumberOfMessages(MAX_RECEIVED_MESSAGES);
+                    sqsMessages = amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
+                }
             } finally {
                 semaphore.release(MAX_RECEIVED_MESSAGES - sqsMessages.size());
             }
             for (final com.amazonaws.services.sqs.model.Message sqsMessage : sqsMessages) {
-                processSqsMessage(sqsMessage);
+                processSqsMessage(sqsMessage); // Must process each received message
             }
         }
     }
@@ -96,8 +107,18 @@ public class SqsMessageProcessor implements Runnable {
     private void processSqsMessage(final com.amazonaws.services.sqs.model.Message sqsMessage) {
         final DeleteMessageRequest deleteMessageRequest = new DeleteMessageRequest().withQueueUrl(queueUrl)
                 .withReceiptHandle(sqsMessage.getReceiptHandle());
-        final Message message = getMessage(sqsMessage);
-        final MessageHandler messageHandler = messageHandlers.get(message.getType());
+        Message message;
+        MessageHandler messageHandler;
+        // TODO Replace the following hack to generalise message listener to handle any message, including foreign ones
+        if (messageHandlers.containsKey(null)) {
+            // Handle foreign message
+            message = new SimpleMessage(null, sqsMessage.getBody());
+            messageHandler = messageHandlers.get(null);
+        } else {
+            // Handle native Cheddar message
+            message = getMessage(sqsMessage);
+            messageHandler = messageHandlers.get(message.getType());
+        }
         if (messageHandler != null) {
             applyRateLimiter();
             executorService.execute(new MessageHandlingWorker(message, messageHandler, amazonSqsClient,
@@ -130,12 +151,15 @@ public class SqsMessageProcessor implements Runnable {
         }
     }
 
-    public void stopProcessing() {
-        processing = false;
-        executorService.shutdown();
+    public void shutdownImminent() {
+        shutdownRequestImminent = true;
+    }
+
+    public void shutdown() {
+        shutdownRequested = true;
     }
 
     public boolean isProcessing() {
-        return processing;
+        return !shutdownRequested;
     }
 }

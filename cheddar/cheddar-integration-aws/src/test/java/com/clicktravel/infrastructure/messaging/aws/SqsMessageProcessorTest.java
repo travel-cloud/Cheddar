@@ -88,7 +88,7 @@ public class SqsMessageProcessorTest {
 
         // Then
         assertNotNull(sqsMessageProcessor);
-        assertFalse(sqsMessageProcessor.isProcessing());
+        assertTrue(sqsMessageProcessor.isProcessing());
         final ArgumentCaptor<GetQueueUrlRequest> getQueueUrlRequestArgumentCaptor = ArgumentCaptor
                 .forClass(GetQueueUrlRequest.class);
         verify(amazonSqsClient).getQueueUrl(getQueueUrlRequestArgumentCaptor.capture());
@@ -140,7 +140,7 @@ public class SqsMessageProcessorTest {
         assertEquals(messageHandler, messageHandlingWorkerArgumentCaptor.getValue().messageHandler());
 
         // When
-        sqsMessageProcessor.stopProcessing();
+        sqsMessageProcessor.shutdown();
 
         // Then
         assertFalse(sqsMessageProcessor.isProcessing());
@@ -173,7 +173,7 @@ public class SqsMessageProcessorTest {
         assertTrue(sqsMessageProcessorThread.isAlive());
 
         // When
-        sqsMessageProcessor.stopProcessing();
+        sqsMessageProcessor.shutdown();
 
         // Then
         assertFalse(sqsMessageProcessor.isProcessing());

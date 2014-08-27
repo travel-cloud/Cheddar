@@ -23,6 +23,10 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -120,15 +124,37 @@ public class StatusResourceTest {
     }
 
     @Test
-    public void shouldReturnReady_whenNotInactive() throws Exception {
-        // Given
-        LifecycleStatus lifecycleStatus = null;
-        while (true) {
-            lifecycleStatus = randomEnum(LifecycleStatus.class);
-            if (lifecycleStatus != LifecycleStatus.INACTIVE) {
-                break;
+    public void shouldReturnReadyOrServiceUnavailable_onLifecycleStatus() throws Exception {
+        for (final LifecycleStatus lifecycleStatus : LifecycleStatus.values()) {
+            final Set<LifecycleStatus> readyResponseLifecycleStates = new HashSet<LifecycleStatus>(Arrays.asList(
+                    LifecycleStatus.PAUSED, LifecycleStatus.RUNNING, LifecycleStatus.HALTING_LOW_PRIORITY_EVENTS));
+            final boolean shouldReturnReady = readyResponseLifecycleStates.contains(lifecycleStatus);
+            if (shouldReturnReady) {
+                shouldReturnReady_onLifecycleStatus(lifecycleStatus);
+            } else {
+                shouldReturnServiceUnavailable_onLifecycleStatus(lifecycleStatus);
             }
         }
+    }
+
+    private void shouldReturnServiceUnavailable_onLifecycleStatus(final LifecycleStatus lifecycleStatus)
+            throws Exception {
+        // Given
+        when(mockLifecycleStatusHolder.getLifecycleStatus()).thenReturn(lifecycleStatus);
+        final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
+                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
+                mockRateLimiterConfiguration);
+
+        // When
+        final Response response = statusResource.getHealthCheck();
+
+        // Then
+        assertNotNull(response);
+        assertEquals(Status.SERVICE_UNAVAILABLE.getStatusCode(), response.getStatus());
+    }
+
+    private void shouldReturnReady_onLifecycleStatus(final LifecycleStatus lifecycleStatus) throws Exception {
+        // Given
         when(mockLifecycleStatusHolder.getLifecycleStatus()).thenReturn(lifecycleStatus);
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
                 mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
@@ -143,22 +169,5 @@ public class StatusResourceTest {
         final Object entity = response.getEntity();
         assertTrue(entity instanceof String);
         assertEquals("Ready", entity);
-    }
-
-    @Test
-    public void shouldReturnServiceUnavailable_whenInactive() throws Exception {
-        // Given
-        final LifecycleStatus lifecycleStatus = LifecycleStatus.INACTIVE;
-        when(mockLifecycleStatusHolder.getLifecycleStatus()).thenReturn(lifecycleStatus);
-        final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
-                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
-                mockRateLimiterConfiguration);
-
-        // When
-        final Response response = statusResource.getHealthCheck();
-
-        // Then
-        assertNotNull(response);
-        assertEquals(Status.SERVICE_UNAVAILABLE.getStatusCode(), response.getStatus());
     }
 }

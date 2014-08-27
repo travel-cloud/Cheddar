@@ -30,11 +30,16 @@ public class DomainServiceRegistry {
     private static final Map<Class<? extends DomainService>, DomainService> DOMAIN_SERVICES = new HashMap<>();
 
     public static void init(final Collection<? extends DomainService> domainServices) {
-        logger.debug("Registering the following domain services: " + domainServices);
+        final StringBuilder sb = new StringBuilder();
         DOMAIN_SERVICES.clear();
         for (final DomainService domainService : domainServices) {
             DOMAIN_SERVICES.put(domainService.getClass(), domainService);
+            if (sb.length() != 0) {
+                sb.append(", ");
+            }
+            sb.append(domainService.getClass().getSimpleName());
         }
+        logger.debug("Registered the following domain services: [" + sb.toString() + "]");
     }
 
     @SuppressWarnings("unchecked")

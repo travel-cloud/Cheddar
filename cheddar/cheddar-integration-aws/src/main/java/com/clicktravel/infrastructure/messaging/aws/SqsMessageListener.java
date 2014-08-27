@@ -19,6 +19,8 @@ package com.clicktravel.infrastructure.messaging.aws;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.PreDestroy;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +47,10 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     @Override
     public void start() {
         if (queueProcessor != null) {
-            logger.debug("Already listening for messages on queue: " + queueName());
+            logger.debug("Already listening for messages on queue [" + queueName() + "]");
         } else {
-            logger.info("Starting to listen for messages on queue: " + queueName());
+            logger.info("Starting to listen for messages on queue [" + queueName() + "] for these message types :["
+                    + messageTypeSummary() + "]");
             queueProcessor = new SqsMessageProcessor(amazonSqsClient(), queueName(), messageHandlers, rateLimiter);
             new Thread(queueProcessor).start();
         }
@@ -59,8 +62,24 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     }
 
     @Override
-    public void destroy() {
-        queueProcessor.stopProcessing();
+    public void shutdown() {
+        logger.debug("Starting shutdown of processing for queue [" + queueName() + "]");
+        queueProcessor.shutdown();
     }
 
+    @PreDestroy
+    public void destroy() {
+        shutdown();
+    }
+
+    private String messageTypeSummary() {
+        final StringBuilder sb = new StringBuilder();
+        for (final String messageType : messageHandlers.keySet()) {
+            if (sb.length() != 0) {
+                sb.append(", ");
+            }
+            sb.append(messageType);
+        }
+        return sb.toString();
+    }
 }
