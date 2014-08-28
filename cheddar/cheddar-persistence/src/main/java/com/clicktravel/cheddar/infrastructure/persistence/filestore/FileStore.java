@@ -16,11 +16,15 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 
+import java.net.URL;
+
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 
 public interface FileStore {
 
     FileItem read(FilePath filePath) throws NonExistentItemException;
+
+    URL publicUrlForFilePath(FilePath filePath) throws NonExistentItemException;
 
     void write(FilePath filePath, FileItem fileItem);
 

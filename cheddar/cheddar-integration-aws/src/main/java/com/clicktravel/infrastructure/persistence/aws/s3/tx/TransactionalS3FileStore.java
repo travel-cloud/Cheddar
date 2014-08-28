@@ -16,6 +16,8 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.s3.tx;
 
+import java.net.URL;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,5 +88,10 @@ public class TransactionalS3FileStore implements FileStore, TransactionalResourc
     @Override
     public void abort() throws TransactionException {
         currentTransaction.remove();
+    }
+
+    @Override
+    public URL publicUrlForFilePath(final FilePath filePath) throws NonExistentItemException {
+        return s3FileStore.publicUrlForFilePath(filePath);
     }
 }
