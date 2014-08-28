@@ -110,10 +110,10 @@ public class SqsMessageProcessor implements Runnable {
         Message message;
         MessageHandler messageHandler;
         // TODO Replace the following hack to generalise message listener to handle any message, including foreign ones
-        if (messageHandlers.containsKey(null)) {
+        if (messageHandlers.containsKey("")) {
             // Handle foreign message
-            message = new SimpleMessage(null, sqsMessage.getBody());
-            messageHandler = messageHandlers.get(null);
+            message = new SimpleMessage("", sqsMessage.getBody());
+            messageHandler = messageHandlers.get("");
         } else {
             // Handle native Cheddar message
             message = getMessage(sqsMessage);
