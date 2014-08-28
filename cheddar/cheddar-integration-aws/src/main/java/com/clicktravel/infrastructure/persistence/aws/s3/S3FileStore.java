@@ -46,7 +46,7 @@ public class S3FileStore implements FileStore {
 
     private final String bucketSchema;
     private boolean initialized;
-    protected AmazonS3 amazonS3Client;
+    private AmazonS3 amazonS3Client;
     private final DateTimeFormatter formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC();
 
     private final Collection<String> missingItemErrorCodes = Arrays.asList("NoSuchBucket", "NoSuchKey");
