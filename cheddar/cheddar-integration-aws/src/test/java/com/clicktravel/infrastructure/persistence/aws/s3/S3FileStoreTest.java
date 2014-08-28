@@ -22,7 +22,6 @@ import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,9 +35,11 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -61,6 +62,12 @@ public class S3FileStoreTest {
     @Before
     public void setup() {
         bucketSchema = randomString(10);
+
+    }
+
+    @After
+    public void tearDown() {
+        DateTimeUtils.setCurrentMillisSystem();
     }
 
     @Test
@@ -200,12 +207,14 @@ public class S3FileStoreTest {
         // Given
         final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
         s3FileStore.initialize(mockAmazonS3Client);
+        final int randommillis = Randoms.randomInt(1000);
+        DateTimeUtils.setCurrentMillisFixed(randommillis);
 
         // When
         final URL url = s3FileStore.publicUrlForFilePath(filePath);
 
         // Then
-        verify(mockAmazonS3Client).generatePresignedUrl(eq(bucketSchema + "-" + filePath.directory()),
-                eq(filePath.filename()), any(Date.class), eq(HttpMethod.GET));
+        verify(mockAmazonS3Client).generatePresignedUrl(bucketSchema + "-" + filePath.directory(), filePath.filename(),
+                new Date(3600000 + randommillis), HttpMethod.GET);
     }
 }

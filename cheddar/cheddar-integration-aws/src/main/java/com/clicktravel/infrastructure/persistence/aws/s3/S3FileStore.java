@@ -35,9 +35,9 @@ import com.amazonaws.services.s3.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
-import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileStore;
+import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFileStore;
 
-public class S3FileStore implements FileStore {
+public class S3FileStore implements InternetFileStore {
 
     private static final String USER_METADATA_FILENAME = "filename";
     private static final String USER_METADATA_LAST_UPDATED_TIME = "last-updated-time";
@@ -143,7 +143,7 @@ public class S3FileStore implements FileStore {
 
     @Override
     public URL publicUrlForFilePath(final FilePath filePath) throws NonExistentItemException {
-        return amazonS3Client.generatePresignedUrl(bucketNameForFilePath(filePath), filePath.filename(), new DateTime()
+        return amazonS3Client.generatePresignedUrl(bucketNameForFilePath(filePath), filePath.filename(), DateTime.now()
                 .plusHours(1).toDate(), HttpMethod.GET);
     }
 

@@ -16,14 +16,17 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 
+import java.net.URL;
+
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 
-public interface FileStore {
+/**
+ * Interface for file store that exist on the web such as s3 where extra functionality is available such as public urls
+ * 
+ * 
+ */
+public interface InternetFileStore extends FileStore {
 
-    FileItem read(FilePath filePath) throws NonExistentItemException;
-
-    void write(FilePath filePath, FileItem fileItem);
-
-    void delete(FilePath filePath) throws NonExistentItemException;
+    URL publicUrlForFilePath(FilePath filePath) throws NonExistentItemException;
 
 }
