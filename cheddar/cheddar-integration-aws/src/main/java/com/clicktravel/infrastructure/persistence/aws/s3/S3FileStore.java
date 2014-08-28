@@ -19,6 +19,7 @@ package com.clicktravel.infrastructure.persistence.aws.s3;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -28,14 +29,15 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
-import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileStore;
+import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFileStore;
 
-public class S3FileStore implements FileStore {
+public class S3FileStore implements InternetFileStore {
 
     private static final String USER_METADATA_FILENAME = "filename";
     private static final String USER_METADATA_LAST_UPDATED_TIME = "last-updated-time";
@@ -69,7 +71,7 @@ public class S3FileStore implements FileStore {
     @Override
     public FileItem read(final FilePath filePath) throws NonExistentItemException {
         checkInitialization();
-        final GetObjectRequest getObjectRequest = new GetObjectRequest(bucketSchema + "." + filePath.directory(),
+        final GetObjectRequest getObjectRequest = new GetObjectRequest(bucketNameForFilePath(filePath),
                 filePath.filename());
         try {
             final S3Object s3Object = amazonS3Client.getObject(getObjectRequest);
@@ -109,9 +111,9 @@ public class S3FileStore implements FileStore {
         metadata.addUserMetadata(USER_METADATA_LAST_UPDATED_TIME, formatter.print(fileItem.lastUpdatedTime()));
         metadata.setContentLength(fileItem.getBytes().length);
         final InputStream is = new ByteArrayInputStream(fileItem.getBytes());
-        final String bucketName = bucketSchema + "." + filePath.directory();
+        final String bucketName = bucketNameForFilePath(filePath);
         if (!amazonS3Client.doesBucketExist(bucketName)) {
-            amazonS3Client.createBucket(bucketName);
+            createBucket(bucketName);
         }
         final PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, filePath.filename(), is, metadata);
         amazonS3Client.putObject(putObjectRequest);
@@ -121,7 +123,7 @@ public class S3FileStore implements FileStore {
     public void delete(final FilePath filePath) {
         checkInitialization();
         try {
-            amazonS3Client.deleteObject(bucketSchema + "." + filePath.directory(), filePath.filename());
+            amazonS3Client.deleteObject(bucketNameForFilePath(filePath), filePath.filename());
         } catch (final AmazonS3Exception e) {
             if (missingItemErrorCodes.contains(e.getErrorCode())) {
                 throw new NonExistentItemException("Item does not exist" + filePath.directory() + "->"
@@ -129,6 +131,20 @@ public class S3FileStore implements FileStore {
             }
             throw e;
         }
+    }
+
+    private String bucketNameForFilePath(final FilePath filePath) {
+        return bucketSchema + "-" + filePath.directory();
+    }
+
+    private void createBucket(final String bucketName) {
+        amazonS3Client.createBucket(bucketName);
+    }
+
+    @Override
+    public URL publicUrlForFilePath(final FilePath filePath) throws NonExistentItemException {
+        return amazonS3Client.generatePresignedUrl(bucketNameForFilePath(filePath), filePath.filename(), DateTime.now()
+                .plusHours(1).toDate(), HttpMethod.GET);
     }
 
 }

@@ -16,20 +16,22 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.s3.tx;
 
+import java.net.URL;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
-import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileStore;
+import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFileStore;
 import com.clicktravel.cheddar.infrastructure.tx.NestedTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.NonExistentTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.TransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.TransactionalResource;
 import com.clicktravel.infrastructure.persistence.aws.s3.S3FileStore;
 
-public class TransactionalS3FileStore implements FileStore, TransactionalResource {
+public class TransactionalS3FileStore implements InternetFileStore, TransactionalResource {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -86,5 +88,10 @@ public class TransactionalS3FileStore implements FileStore, TransactionalResourc
     @Override
     public void abort() throws TransactionException {
         currentTransaction.remove();
+    }
+
+    @Override
+    public URL publicUrlForFilePath(final FilePath filePath) throws NonExistentItemException {
+        return s3FileStore.publicUrlForFilePath(filePath);
     }
 }

@@ -28,23 +28,28 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
-import com.clicktravel.common.random.Randoms;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
+import com.clicktravel.common.random.Randoms;
 
 public class S3FileStoreTest {
 
@@ -57,6 +62,12 @@ public class S3FileStoreTest {
     @Before
     public void setup() {
         bucketSchema = randomString(10);
+
+    }
+
+    @After
+    public void tearDown() {
+        DateTimeUtils.setCurrentMillisSystem();
     }
 
     @Test
@@ -126,7 +137,7 @@ public class S3FileStoreTest {
         final ArgumentCaptor<PutObjectRequest> putObjectRequestArgumentCaptor = ArgumentCaptor
                 .forClass(PutObjectRequest.class);
         verify(mockAmazonS3Client).putObject(putObjectRequestArgumentCaptor.capture());
-        assertEquals(bucketSchema + "." + filePath.directory(), putObjectRequestArgumentCaptor.getValue()
+        assertEquals(bucketSchema + "-" + filePath.directory(), putObjectRequestArgumentCaptor.getValue()
                 .getBucketName());
         assertEquals(filePath.filename(), putObjectRequestArgumentCaptor.getValue().getKey());
         final InputStream inputStream = putObjectRequestArgumentCaptor.getValue().getInputStream();
@@ -171,7 +182,7 @@ public class S3FileStoreTest {
         final ArgumentCaptor<GetObjectRequest> getObjectRequestArgumentCaptor = ArgumentCaptor
                 .forClass(GetObjectRequest.class);
         verify(mockAmazonS3Client).getObject(getObjectRequestArgumentCaptor.capture());
-        assertEquals(bucketSchema + "." + filePath.directory(), getObjectRequestArgumentCaptor.getValue()
+        assertEquals(bucketSchema + "-" + filePath.directory(), getObjectRequestArgumentCaptor.getValue()
                 .getBucketName());
         assertEquals(filePath.filename(), getObjectRequestArgumentCaptor.getValue().getKey());
         assertEquals(filename, fileItem.filename());
@@ -188,6 +199,22 @@ public class S3FileStoreTest {
         s3FileStore.delete(filePath);
 
         // Then
-        verify(mockAmazonS3Client).deleteObject(bucketSchema + "." + filePath.directory(), filePath.filename());
+        verify(mockAmazonS3Client).deleteObject(bucketSchema + "-" + filePath.directory(), filePath.filename());
+    }
+
+    @Test
+    public void shouldGetURL() throws IOException {
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
+        s3FileStore.initialize(mockAmazonS3Client);
+        final int randommillis = Randoms.randomInt(1000);
+        DateTimeUtils.setCurrentMillisFixed(randommillis);
+
+        // When
+        final URL url = s3FileStore.publicUrlForFilePath(filePath);
+
+        // Then
+        verify(mockAmazonS3Client).generatePresignedUrl(bucketSchema + "-" + filePath.directory(), filePath.filename(),
+                new Date(3600000 + randommillis), HttpMethod.GET);
     }
 }

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,10 +34,10 @@ import org.junit.rules.TemporaryFolder;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.clicktravel.common.random.Randoms;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
+import com.clicktravel.common.random.Randoms;
 import com.clicktravel.infrastructure.integration.aws.AwsIntegration;
 import com.clicktravel.infrastructure.persistence.aws.s3.S3FileStore;
 
@@ -109,6 +110,22 @@ public class S3FileStoreIntegrationTest {
         }
         // Then
         assertNotNull(actualReadException);
+    }
+
+    @Test
+    public void shouldGetURL() throws IOException {
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(BUCKET_SCHEMA);
+        s3FileStore.initialize(amazonS3Client);
+        final FileItem fileItemS3 = new FileItem(randomString(10), randomString(255));
+        final FilePath filePath = new FilePath(BUCKET_NAME, Randoms.randomId() + "-test");
+        s3FileStore.write(filePath, fileItemS3);
+
+        // When
+        final URL url = s3FileStore.publicUrlForFilePath(filePath);
+
+        // Then
+        assertNotNull(url);
     }
 
 }
