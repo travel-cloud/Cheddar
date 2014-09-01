@@ -16,6 +16,9 @@
  */
 package com.clicktravel.cheddar.infrastructure.remote;
 
+import static com.clicktravel.common.random.Randoms.randomBoolean;
+import static com.clicktravel.common.random.Randoms.randomInt;
+import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -35,11 +38,8 @@ import org.mockito.ArgumentCaptor;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.clicktravel.common.random.Randoms;
-import com.clicktravel.cheddar.infrastructure.remote.RemoteCall;
-import com.clicktravel.cheddar.infrastructure.remote.RemoteCallInvocationHandler;
-import com.clicktravel.cheddar.infrastructure.remote.RemotingGateway;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
+import com.clicktravel.common.random.Randoms;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(SecurityContextHolder.class)
@@ -47,6 +47,7 @@ public class RemoteCallInvocationHandlerTest {
 
     private RemotingGateway mockRemotingGateway;
     private String principal;
+    private RemoteCallTagLogic mockRemoteCallTagLogic;
 
     @Before
     public void setUp() {
@@ -54,15 +55,18 @@ public class RemoteCallInvocationHandlerTest {
         principal = Randoms.randomString();
         mockStatic(SecurityContextHolder.class);
         when(SecurityContextHolder.getPrincipal()).thenReturn(principal);
+        mockRemoteCallTagLogic = mock(RemoteCallTagLogic.class);
     }
 
     @Test
     public void shouldInvokeAsynchronously_whenInvokingAsynchronousMethod() throws Exception {
         // Given
-        final String method1Parameter1 = Randoms.randomString();
-        final int method1Parameter2 = Randoms.randomInt(100);
+        final String method1Parameter1 = randomString();
+        final int method1Parameter2 = randomInt(100);
         final RemoteCallInvocationHandler remoteCallInvocationHandler = new RemoteCallInvocationHandler(
-                mockRemotingGateway);
+                mockRemotingGateway, mockRemoteCallTagLogic);
+        final boolean tag = randomBoolean();
+        when(mockRemoteCallTagLogic.shouldTagRemoteCall()).thenReturn(tag);
 
         // When
         final TestService proxyTestService = remoteCallInvocationHandler.createProxy(TestService.class);
@@ -82,16 +86,19 @@ public class RemoteCallInvocationHandlerTest {
         assertTrue(Arrays.equals(expectedParameters, actualRemoteCall.getParameters()));
         assertTrue(actualRemoteCall.getAttemptsRemaining() > 0);
         assertEquals(principal, actualRemoteCall.getPrincipal());
+        assertEquals(tag, actualRemoteCall.hasTag());
     }
 
     @Test
     public void shouldInvokeSynchronously_whenInvokingSynchronousMethod() throws Throwable {
         // Given
-        final TestObject testObject = new TestObject(Randoms.randomString(), Randoms.randomString());
-        final String[] method2returnValue = new String[] { Randoms.randomString() };
+        final TestObject testObject = new TestObject(randomString(), randomString());
+        final String[] method2returnValue = new String[] { randomString() };
         when(mockRemotingGateway.invokeSynchronously(any(RemoteCall.class))).thenReturn(method2returnValue);
         final RemoteCallInvocationHandler remoteCallInvocationHandler = new RemoteCallInvocationHandler(
-                mockRemotingGateway);
+                mockRemotingGateway, mockRemoteCallTagLogic);
+        final boolean tag = randomBoolean();
+        when(mockRemoteCallTagLogic.shouldTagRemoteCall()).thenReturn(tag);
 
         // When
         final TestService proxyTestService = remoteCallInvocationHandler.createProxy(TestService.class);
@@ -112,5 +119,6 @@ public class RemoteCallInvocationHandlerTest {
         assertTrue(Arrays.equals(expectedParameters, actualRemoteCall.getParameters()));
         assertTrue(actualRemoteCall.getAttemptsRemaining() > 0);
         assertEquals(principal, actualRemoteCall.getPrincipal());
+        assertEquals(tag, actualRemoteCall.hasTag());
     }
 }

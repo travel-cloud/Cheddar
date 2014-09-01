@@ -14,21 +14,16 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.infrastructure.messaging.aws;
 
-import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageListenerException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-public interface MessageListener extends MessageQueueAccessor {
+public class SqsMessageProcessorExecutor extends ThreadPoolExecutor {
 
-    void start() throws MessageListenerException;
-
-    void registerMessageHandler(String messageType, MessageHandler messageHandler);
-
-    void shutdown();
-
-    void shutdownImminent();
-
-    void shutdownWhenQueueDrained();
-
-    void awaitTermination();
+    public SqsMessageProcessorExecutor(final String queueName, final int numThreads) {
+        super(numThreads, numThreads, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+                new SqsMessageProcessorThreadFactory(queueName));
+    }
 }

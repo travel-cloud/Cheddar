@@ -27,19 +27,21 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.clicktravel.common.remote.Asynchronous;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
+import com.clicktravel.common.remote.Asynchronous;
 
 @Component
 public class RemoteCallInvocationHandler implements InvocationHandler {
 
     private final Map<Object, String> proxyToInterfaceNameMap = new HashMap<>();
-
     private final RemotingGateway remotingGateway;
+    private final RemoteCallTagLogic remoteCallTagLogic;
 
     @Autowired
-    public RemoteCallInvocationHandler(final RemotingGateway remotingGateway) {
+    public RemoteCallInvocationHandler(final RemotingGateway remotingGateway,
+            final RemoteCallTagLogic remoteCallTagLogic) {
         this.remotingGateway = remotingGateway;
+        this.remoteCallTagLogic = remoteCallTagLogic;
     }
 
     public <T> T createProxy(final Class<T> remoteInterface) {
@@ -76,9 +78,8 @@ public class RemoteCallInvocationHandler implements InvocationHandler {
         }
         final String[] methodParameterTypesArray = methodParameterTypesList.toArray(new String[0]);
         final String principal = SecurityContextHolder.getPrincipal();
-        final boolean tag = false; // TODO Fetch from ThreadLocal; true for commands due to handling deferrable event
         return new RemoteCall(proxyToInterfaceNameMap.get(proxy), method.getName(), methodParameterTypesArray, args,
-                principal, tag);
+                principal, remoteCallTagLogic.shouldTagRemoteCall());
     }
 
     private boolean shouldReceiveResponse(final Method method) {

@@ -14,21 +14,21 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.cheddar.server.flow.control;
 
-import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageListenerException;
+import java.util.concurrent.CountDownLatch;
 
-public interface MessageListener extends MessageQueueAccessor {
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-    void start() throws MessageListenerException;
+/**
+ * Configuration for CountDownLatch bean controlling start of REST request processing
+ */
+@Configuration
+public class RestAdapterStartLatchConfiguration {
 
-    void registerMessageHandler(String messageType, MessageHandler messageHandler);
-
-    void shutdown();
-
-    void shutdownImminent();
-
-    void shutdownWhenQueueDrained();
-
-    void awaitTermination();
+    @Bean
+    public CountDownLatch restAdapterStartLatch() {
+        return new CountDownLatch(1); // start latch is initially blocked
+    }
 }

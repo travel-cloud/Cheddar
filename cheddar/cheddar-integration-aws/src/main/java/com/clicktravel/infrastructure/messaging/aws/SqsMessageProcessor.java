@@ -20,7 +20,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,35 +40,61 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SqsMessageProcessor implements Runnable {
 
     /**
-     * Maximum duration (in seconds) to wait for messages on the queue. If there is at least one message on the queue,
-     * the actual duration will be shorter.
+     * Maximum duration (in seconds) to wait for messages on the queue during normal processing. If there is at least
+     * one message on the queue, the actual duration will be shorter.
      */
     private static final int LONG_POLL_DURATION_SECONDS = 20;
+
+    /**
+     * Maximum duration (in seconds) to wait for messages on the queue during handing over to a new application instance
+     * in a blue-green deployment. This is shorter to enable prompt termination of this message processor.
+     */
     private static final int SHORT_POLL_DURATION_SECONDS = 2;
+
+    /**
+     * Maximum number of messages to receive per call to SQS. Using larger numbers decreases the number of network calls
+     * and thus increases throughput, at the possible expense of continuous performance.
+     */
     private static final int MAX_RECEIVED_MESSAGES = 10;
-    private static final int NUM_THREADS = 10;
-    private static final int MAX_RUNNABLES = NUM_THREADS * 2;
+
+    /**
+     * Controls when messages are received from the SQS queue by setting an ideal minimum number of runnable tasks for
+     * each thread. This minimum includes the currently executing task and those on the thread pool work queue. When the
+     * number of runnable tasks dips below the ideal, more messages are received.
+     */
+    private static final int IDEAL_RUNNABLES_PER_THREAD = 2; // Each thread has 1 executing + 1 queued runnable
+
+    /**
+     * Minimum number of empty responses for consecutive ReceiveMessageRequests to conclude queue is empty
+     */
+    private static final int QUEUE_DRAINED_THRESHOLD = 2;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final String queueName;
     private final String queueUrl;
     private final AmazonSQS amazonSqsClient;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, MessageHandler> messageHandlers;
-    private final ExecutorService executorService;
+    private final SqsMessageProcessorExecutor executor;
     private final RateLimiter rateLimiter;
     private final Semaphore semaphore;
+    private int noReceivedMessagesCount;
     private volatile boolean shutdownRequested;
+    private volatile boolean shutdownWhenQueueDrainedRequested;
     private volatile boolean shutdownRequestImminent;
 
     public SqsMessageProcessor(final AmazonSQS amazonSqsClient, final String queueName,
-            final Map<String, MessageHandler> messageHandlers, final RateLimiter rateLimiter) {
+            final Map<String, MessageHandler> messageHandlers, final RateLimiter rateLimiter,
+            final SqsMessageProcessorExecutor executor) {
         this.amazonSqsClient = amazonSqsClient;
+        this.queueName = queueName;
         this.rateLimiter = rateLimiter;
+        this.executor = executor;
         queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(queueName)).getQueueUrl();
         this.messageHandlers = new HashMap<>(messageHandlers);
-        final LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>();
-        semaphore = new Semaphore(MAX_RUNNABLES);
-        executorService = new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 0L, TimeUnit.SECONDS, workQueue);
+        final int minRunnables = executor.getMaximumPoolSize() * IDEAL_RUNNABLES_PER_THREAD;
+        final int maxRunnables = minRunnables + MAX_RECEIVED_MESSAGES - 1;
+        semaphore = new Semaphore(maxRunnables);
     }
 
     @Override
@@ -77,12 +104,14 @@ public class SqsMessageProcessor implements Runnable {
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
-            executorService.shutdown();
+            logger.debug("Stopped receiving messages from queue [" + queueName
+                    + "]; Initiating shutdown of task executor");
+            executor.shutdown();
         }
     }
 
     private void processMessagesUntilShutdownRequested() throws InterruptedException {
-        while (!shutdownRequested) {
+        while (!(shutdownRequested || (shutdownWhenQueueDrainedRequested && queueDrained()))) {
             // Block until there is capacity to handle up to MAX_RECEIVED_MESSAGES
             semaphore.acquire(MAX_RECEIVED_MESSAGES);
             List<com.amazonaws.services.sqs.model.Message> sqsMessages = Collections.emptyList();
@@ -94,6 +123,9 @@ public class SqsMessageProcessor implements Runnable {
                     final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl)
                             .withWaitTimeSeconds(pollSeconds).withMaxNumberOfMessages(MAX_RECEIVED_MESSAGES);
                     sqsMessages = amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
+                    if (shutdownWhenQueueDrainedRequested) {
+                        noReceivedMessagesCount = sqsMessages.isEmpty() ? (noReceivedMessagesCount + 1) : 0;
+                    }
                 }
             } finally {
                 semaphore.release(MAX_RECEIVED_MESSAGES - sqsMessages.size());
@@ -121,8 +153,8 @@ public class SqsMessageProcessor implements Runnable {
         }
         if (messageHandler != null) {
             applyRateLimiter();
-            executorService.execute(new MessageHandlingWorker(message, messageHandler, amazonSqsClient,
-                    deleteMessageRequest, semaphore));
+            executor.execute(new MessageHandlingWorker(message, messageHandler, amazonSqsClient, deleteMessageRequest,
+                    semaphore));
         } else {
             logger.debug("Unsupported message type: " + message.getType());
             amazonSqsClient.deleteMessage(deleteMessageRequest);
@@ -151,6 +183,10 @@ public class SqsMessageProcessor implements Runnable {
         }
     }
 
+    private boolean queueDrained() {
+        return noReceivedMessagesCount >= QUEUE_DRAINED_THRESHOLD;
+    }
+
     public void shutdownImminent() {
         shutdownRequestImminent = true;
     }
@@ -159,7 +195,17 @@ public class SqsMessageProcessor implements Runnable {
         shutdownRequested = true;
     }
 
-    public boolean isProcessing() {
-        return !shutdownRequested;
+    public void shutdownWhenQueueDrained() {
+        shutdownWhenQueueDrainedRequested = true;
+    }
+
+    public void awaitTermnation() {
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+                logger.warn("SqsMessageProcessor executor for queue [" + queueName + "] did not terminate");
+            }
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

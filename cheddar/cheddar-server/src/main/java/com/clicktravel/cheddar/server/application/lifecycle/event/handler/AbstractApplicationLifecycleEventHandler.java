@@ -16,38 +16,17 @@
  */
 package com.clicktravel.cheddar.server.application.lifecycle.event.handler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
-import com.clicktravel.cheddar.system.event.SystemEvent;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleController;
 import com.clicktravel.cheddar.system.event.handler.AbstractSystemEventHandler;
 
 public abstract class AbstractApplicationLifecycleEventHandler extends AbstractSystemEventHandler {
 
-    private final LifecycleStatusHolder lifecycleStatusHolder;
-    private final LifecycleStatus expectedLifecycleStatus;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    protected LifecycleController lifecycleController;
 
     protected AbstractApplicationLifecycleEventHandler(final ApplicationConfiguration applicationConfiguration,
-            final LifecycleStatusHolder lifecycleStatusHolder, final LifecycleStatus expectedLifecycleStatus) {
+            final LifecycleController lifecycleController) {
         super(applicationConfiguration.name(), applicationConfiguration.version());
-        this.lifecycleStatusHolder = lifecycleStatusHolder;
-        this.expectedLifecycleStatus = expectedLifecycleStatus;
+        this.lifecycleController = lifecycleController;
     }
-
-    @Override
-    protected void handleSystemEvent(final SystemEvent event) {
-        final LifecycleStatus lifecycleStatus = lifecycleStatusHolder.getLifecycleStatus();
-        if (lifecycleStatus.equals(expectedLifecycleStatus)) {
-            handleApplicationLifecycleEvent(event);
-        } else {
-            logger.warn("Received unexpected system event [" + event.type() + "] while in lifecycle status ["
-                    + lifecycleStatus + "]");
-        }
-    }
-
-    protected abstract void handleApplicationLifecycleEvent(SystemEvent event);
 }

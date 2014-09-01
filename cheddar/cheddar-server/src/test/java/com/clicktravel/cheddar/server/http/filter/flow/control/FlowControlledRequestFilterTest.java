@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
+import java.util.concurrent.CountDownLatch;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.UriInfo;
@@ -33,11 +34,12 @@ import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
 import com.clicktravel.common.random.Randoms;
 
-public class RateLimitedRequestFilterTest {
+public class FlowControlledRequestFilterTest {
 
-    private RateLimitedRequestFilter rateLimitedRequestFilter;
+    private FlowControlledRequestFilter flowControlledRequestFilter;
     private RateLimiter mockRateLimiter;
     private ContainerRequestContext mockContainerRequestContext;
+    private CountDownLatch mockrestAdapterStartLatch;
 
     @Before
     public void setUp() {
@@ -45,43 +47,45 @@ public class RateLimitedRequestFilterTest {
         final RateLimiterConfiguration mockRateLimiterConfiguration = mock(RateLimiterConfiguration.class);
         mockRateLimiter = mock(RateLimiter.class);
         when(mockRateLimiterConfiguration.restRequestRateLimiter()).thenReturn(mockRateLimiter);
-        rateLimitedRequestFilter = new RateLimitedRequestFilter(mockRateLimiterConfiguration);
+        mockrestAdapterStartLatch = mock(CountDownLatch.class);
+        flowControlledRequestFilter = new FlowControlledRequestFilter(mockRateLimiterConfiguration, mockrestAdapterStartLatch);
     }
 
     @Test
-    public void shouldRateLimit_NonStatusResourceRequest() throws Exception {
+    public void shouldApplyFlowControl_onNonStatusResourceRequest() throws Exception {
         // Given
         setUpRequestPath("http://www.example.com/request");
 
         // When
-        rateLimitedRequestFilter.filter(mockContainerRequestContext);
+        flowControlledRequestFilter.filter(mockContainerRequestContext);
 
         // Then
+        verify(mockrestAdapterStartLatch).await();
         verify(mockRateLimiter).takeToken();
     }
 
     @Test
-    public void shouldNotRateLimit_StatusResourceRequest() throws Exception {
+    public void shouldNotApplyFlowControl_onStatusResourceRequest() throws Exception {
         // Given
         setUpRequestPath("http://www.example.com/status");
 
         // When
-        rateLimitedRequestFilter.filter(mockContainerRequestContext);
+        flowControlledRequestFilter.filter(mockContainerRequestContext);
 
         // Then
-        verifyZeroInteractions(mockRateLimiter);
+        verifyZeroInteractions(mockrestAdapterStartLatch, mockRateLimiter);
     }
 
     @Test
-    public void shouldNotRateLimit_StatusSubresourceRequest() throws Exception {
+    public void shouldNotApplyFlowControl_onStatusSubresourceRequest() throws Exception {
         // Given
         setUpRequestPath("http://www.example.com/status/" + Randoms.randomString());
 
         // When
-        rateLimitedRequestFilter.filter(mockContainerRequestContext);
+        flowControlledRequestFilter.filter(mockContainerRequestContext);
 
         // Then
-        verifyZeroInteractions(mockRateLimiter);
+        verifyZeroInteractions(mockrestAdapterStartLatch, mockRateLimiter);
     }
 
     private void setUpRequestPath(final String path) throws Exception {

@@ -23,10 +23,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -124,23 +120,9 @@ public class StatusResourceTest {
     }
 
     @Test
-    public void shouldReturnReadyOrServiceUnavailable_onLifecycleStatus() throws Exception {
-        for (final LifecycleStatus lifecycleStatus : LifecycleStatus.values()) {
-            final Set<LifecycleStatus> readyResponseLifecycleStates = new HashSet<LifecycleStatus>(Arrays.asList(
-                    LifecycleStatus.PAUSED, LifecycleStatus.RUNNING, LifecycleStatus.HALTING_LOW_PRIORITY_EVENTS));
-            final boolean shouldReturnReady = readyResponseLifecycleStates.contains(lifecycleStatus);
-            if (shouldReturnReady) {
-                shouldReturnReady_onLifecycleStatus(lifecycleStatus);
-            } else {
-                shouldReturnServiceUnavailable_onLifecycleStatus(lifecycleStatus);
-            }
-        }
-    }
-
-    private void shouldReturnServiceUnavailable_onLifecycleStatus(final LifecycleStatus lifecycleStatus)
-            throws Exception {
+    public void shouldReturnServiceUnavailable_onNotAcceptingRestRequests() throws Exception {
         // Given
-        when(mockLifecycleStatusHolder.getLifecycleStatus()).thenReturn(lifecycleStatus);
+        when(mockRestAdapterStatusHolder.isAcceptingRequests()).thenReturn(false);
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
                 mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
                 mockRateLimiterConfiguration);
@@ -153,9 +135,10 @@ public class StatusResourceTest {
         assertEquals(Status.SERVICE_UNAVAILABLE.getStatusCode(), response.getStatus());
     }
 
-    private void shouldReturnReady_onLifecycleStatus(final LifecycleStatus lifecycleStatus) throws Exception {
+    @Test
+    public void shouldReturnReady_onAcceptingRestRequests() throws Exception {
         // Given
-        when(mockLifecycleStatusHolder.getLifecycleStatus()).thenReturn(lifecycleStatus);
+        when(mockRestAdapterStatusHolder.isAcceptingRequests()).thenReturn(true);
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
                 mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
                 mockRateLimiterConfiguration);

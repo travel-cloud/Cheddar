@@ -20,8 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleController;
 import com.clicktravel.cheddar.system.event.SystemEvent;
 import com.clicktravel.cheddar.system.event.application.lifecycle.OldAppInstancesTerminatedEvent;
 
@@ -30,8 +29,8 @@ public class OldAppInstancesTerminatedEventHandler extends AbstractApplicationLi
 
     @Autowired
     public OldAppInstancesTerminatedEventHandler(final ApplicationConfiguration applicationConfiguration,
-            final LifecycleStatusHolder lifecycleStatusHolder) {
-        super(applicationConfiguration, lifecycleStatusHolder, LifecycleStatus.PAUSED);
+            final LifecycleController lifecycleController) {
+        super(applicationConfiguration, lifecycleController);
     }
 
     @Override
@@ -40,8 +39,8 @@ public class OldAppInstancesTerminatedEventHandler extends AbstractApplicationLi
     }
 
     @Override
-    protected void handleApplicationLifecycleEvent(final SystemEvent event) {
-        // TODO Step 14 Activate processing of REST requests
+    protected void handleSystemEvent(final SystemEvent event) {
+        lifecycleController.enterRunningState();
     }
 
 }

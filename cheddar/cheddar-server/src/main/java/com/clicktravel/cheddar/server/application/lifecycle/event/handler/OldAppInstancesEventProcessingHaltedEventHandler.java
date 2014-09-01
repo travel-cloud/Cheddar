@@ -20,8 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleController;
 import com.clicktravel.cheddar.system.event.SystemEvent;
 import com.clicktravel.cheddar.system.event.application.lifecycle.OldAppInstancesEventProcessingHaltedEvent;
 
@@ -30,8 +29,8 @@ public class OldAppInstancesEventProcessingHaltedEventHandler extends AbstractAp
 
     @Autowired
     public OldAppInstancesEventProcessingHaltedEventHandler(final ApplicationConfiguration applicationConfiguration,
-            final LifecycleStatusHolder lifecycleStatusHolder) {
-        super(applicationConfiguration, lifecycleStatusHolder, LifecycleStatus.INACTIVE);
+            final LifecycleController lifecycleController) {
+        super(applicationConfiguration, lifecycleController);
     }
 
     @Override
@@ -40,9 +39,8 @@ public class OldAppInstancesEventProcessingHaltedEventHandler extends AbstractAp
     }
 
     @Override
-    protected void handleApplicationLifecycleEvent(final SystemEvent event) {
-        // TODO Step 7 Change ELB health check status to healthy. Will start to receive REST requests, don't process
-        // them
+    protected void handleSystemEvent(final SystemEvent event) {
+        lifecycleController.enterPausedState();
     }
 
 }
