@@ -19,11 +19,11 @@ package com.clicktravel.cheddar.system.event.application.lifecycle;
 import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
 
 /**
- * System event indicating all 'old' version application instances participating in a blue-green deployment have
- * finished processing REST requests.
- * <p>
- * This event is broadcast to all instances running the 'old' application version.
+ * System event indicating that this application instance (and others in its group) should immediately proceed to
+ * {@code RUNNING} state without following a standard blue-green deployment procedure. This will happen when
+ * applications started with {@code blue.green.mode = true} are required to run because there are no 'old' application
+ * instances present.
  */
-public class OldAppInstancesRestRequestsDrainedEvent extends AbstractSystemEvent {
+public class AppInstancesReadyToRunEvent extends AbstractSystemEvent {
 
 }

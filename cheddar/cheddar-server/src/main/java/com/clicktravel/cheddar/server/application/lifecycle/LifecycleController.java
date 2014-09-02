@@ -34,6 +34,11 @@ import org.springframework.stereotype.Component;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 
+/**
+ * Controls the start and shutdown of all {@link MessageListeners}. This class progresses the lifecycle status of this
+ * application instance when various enterXXXstate() methods are called. These methods are called by an external trigger
+ * (system event handlers) under the control of a scripted blue-green deployment procedure.
+ */
 @Component
 public class LifecycleController implements ApplicationListener<ContextRefreshedEvent> {
 
@@ -71,20 +76,26 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
         logger.debug("Initial lifecycle status: " + currentLifecycleStatus);
         systemEventMessageListener.start();
         if (currentLifecycleStatus.equals(RUNNING)) {
-            logger.debug("Application instance NOT using blue-green deployment procedure");
+            logger.debug("Application instances in this environment do not use blue-green deployment");
             processRunningState();
         } else {
-            logger.debug("Application instance using blue-green deployment procedure");
+            logger.debug("Application instances in this environment typically use blue-green deployment");
         }
     }
 
     public void enterPausedState() {
-        checkAndChangeLifecycleStatus(INACTIVE, PAUSED);
+        checkAndSetLifecycleStatus(INACTIVE, PAUSED);
         logger.debug("Application instance now accepts REST requests, instance responds with positive health check. However, do not process REST requests.");
     }
 
     public void enterRunningState() {
-        checkAndChangeLifecycleStatus(PAUSED, RUNNING);
+        checkAndSetLifecycleStatus(PAUSED, RUNNING);
+        processRunningState();
+    }
+
+    public void enterRunningStateWithoutBlueGreenDeployment() {
+        checkAndSetLifecycleStatus(INACTIVE, RUNNING);
+        logger.debug("Skipping blue-green deployment procedure, proceeding directly to RUNNING state");
         processRunningState();
     }
 
@@ -95,7 +106,7 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
     }
 
     public void enterHaltingLowPriorityEventsState() {
-        checkAndChangeLifecycleStatus(RUNNING, HALTING_LOW_PRIORITY_EVENTS);
+        checkAndSetLifecycleStatus(RUNNING, HALTING_LOW_PRIORITY_EVENTS);
         logger.debug("Application instance closing down, using blue-green deployment procedure.");
         shutdownImminentlyAllMessageListeners();
         logger.debug("Halting low-priority domain event handling and general application work queue handling.");
@@ -104,11 +115,12 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
     }
 
     public void enterDrainingRequestsState() {
-        checkAndChangeLifecycleStatus(HALTING_LOW_PRIORITY_EVENTS, DRAINING_REQUESTS);
+        checkAndSetLifecycleStatus(HALTING_LOW_PRIORITY_EVENTS, DRAINING_REQUESTS);
         logger.debug("Application instance now responds with negative health check, diverting REST requests away; Start to drain requests in progress.");
     }
 
     public void enterHaltingHighPriorityEventsState() {
+        checkAndSetLifecycleStatus(DRAINING_REQUESTS, HALTING_HIGH_PRIORITY_EVENTS);
         terminationThread.start();
     }
 
@@ -120,51 +132,46 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
             processTerminatedState();
             logger.info("Application instance terminated");
         }
-
-        private void processHaltingHighPriorityEventsState() {
-            checkAndChangeLifecycleStatus(DRAINING_REQUESTS, HALTING_HIGH_PRIORITY_EVENTS);
-            logger.debug("Halting high-priority domain event processing");
-            shutdownAll(eventMessageListener, highPriorityEventMessageListener);
-            eventMessageListener.awaitTermination();
-            highPriorityEventMessageListener.awaitTermination();
-        }
-
-        private void processTerminatingState() {
-            checkAndChangeLifecycleStatus(HALTING_HIGH_PRIORITY_EVENTS, TERMINATING);
-            logger.debug("Draining command queue");
-            remoteCallMessageListener.shutdownAfterQueueDrained();
-            remoteCallMessageListener.awaitTermination();
-            logger.debug("Draining command response queue");
-            remoteResponseMessageListener.shutdownAfterQueueDrained();
-            remoteResponseMessageListener.awaitTermination();
-        }
-
-        private void processTerminatedState() {
-            checkAndChangeLifecycleStatus(TERMINATING, TERMINATED);
-            logger.debug("Halting system queue processing");
-            systemEventMessageListener.shutdown();
-            systemEventMessageListener.awaitTermination();
-        }
     }
 
-    private void checkAndChangeLifecycleStatus(final LifecycleStatus expectedCurrentStatus,
-            final LifecycleStatus newStatus) {
+    private void processHaltingHighPriorityEventsState() {
+        logger.debug("Halting high-priority domain event processing");
+        shutdownAll(eventMessageListener, highPriorityEventMessageListener);
+        eventMessageListener.awaitTermination();
+        highPriorityEventMessageListener.awaitTermination();
+    }
+
+    private void processTerminatingState() {
+        setLifecycleStatus(TERMINATING);
+        logger.debug("Draining command queue");
+        remoteCallMessageListener.shutdownAfterQueueDrained();
+        remoteCallMessageListener.awaitTermination();
+        logger.debug("Draining command response queue");
+        remoteResponseMessageListener.shutdownAfterQueueDrained();
+        remoteResponseMessageListener.awaitTermination();
+    }
+
+    private void processTerminatedState() {
+        setLifecycleStatus(TERMINATED);
+        logger.debug("Halting system queue processing");
+        systemEventMessageListener.shutdown();
+        systemEventMessageListener.awaitTermination();
+    }
+
+    private void checkAndSetLifecycleStatus(final LifecycleStatus expectedCurrentStatus, final LifecycleStatus newStatus) {
         final LifecycleStatus currentStatus = lifecycleStatusHolder.getLifecycleStatus();
         if (currentStatus.equals(expectedCurrentStatus)) {
-            changeLifecycleStatus(currentStatus, newStatus);
+            setLifecycleStatus(newStatus);
         } else {
-            warnFailedLifecycleStatusChange(currentStatus, newStatus);
+            logger.warn("Failed attempt to change lifecycle status from:[" + currentStatus + "] to:[" + newStatus + "]");
+            throw new IllegalStateException("Cannot change status from " + currentStatus + " to " + newStatus);
         }
     }
 
-    private void warnFailedLifecycleStatusChange(final LifecycleStatus currentStatus, final LifecycleStatus newStatus) {
-        logger.warn("Failed attempt to change lifecycle status from:[" + currentStatus + "] to:[" + newStatus + "]");
-        throw new IllegalStateException("Cannot change status from " + currentStatus + " to " + newStatus);
-    }
-
-    private void changeLifecycleStatus(final LifecycleStatus currentStatus, final LifecycleStatus newStatus) {
-        logger.debug("Changing lifecycle states; from:[" + currentStatus + "] to:[" + newStatus + "]");
-        lifecycleStatusHolder.setLifecycleStatus(newStatus);
+    private void setLifecycleStatus(final LifecycleStatus lifecycleStatus) {
+        logger.debug("Changing lifecycle states; from:[" + lifecycleStatusHolder.getLifecycleStatus() + "] to:["
+                + lifecycleStatus + "]");
+        lifecycleStatusHolder.setLifecycleStatus(lifecycleStatus);
     }
 
     private void startAll(final Collection<MessageListener> messageListenersToStart) {

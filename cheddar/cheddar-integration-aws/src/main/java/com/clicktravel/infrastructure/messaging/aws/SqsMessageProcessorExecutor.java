@@ -16,10 +16,15 @@
  */
 package com.clicktravel.infrastructure.messaging.aws;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Convenience class for creating a {@link ExecutorService} for use with a {@link SqsMessageProcessor}. This ensures a
+ * fixed size thread pool is used, and the threads are named correctly.
+ */
 public class SqsMessageProcessorExecutor extends ThreadPoolExecutor {
 
     public SqsMessageProcessorExecutor(final String queueName, final int numThreads) {
