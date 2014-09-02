@@ -16,7 +16,10 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.dynamodb.tx;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +27,14 @@ import org.slf4j.LoggerFactory;
 import com.clicktravel.cheddar.infrastructure.persistence.database.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonUniqueResultException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Query;
-import com.clicktravel.cheddar.infrastructure.tx.NestedTransactionException;
-import com.clicktravel.cheddar.infrastructure.tx.NonExistentTransactionException;
-import com.clicktravel.cheddar.infrastructure.tx.TransactionException;
-import com.clicktravel.cheddar.infrastructure.tx.TransactionalResource;
+import com.clicktravel.cheddar.infrastructure.tx.*;
 import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDbTemplate;
 
-public class TransactionalDynamoDbTemplate implements DatabaseTemplate, TransactionalResource {
+public class TransactionalDynamoDbTemplate implements ExceptionHandlingDatabaseTemplate, TransactionalResource {
+
+    private static final PersistenceExceptionHandler<?>[] EMPTY_PERSISTENCE_EXCEPTION_HANDLERS = new PersistenceExceptionHandler[] {};
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -63,29 +66,55 @@ public class TransactionalDynamoDbTemplate implements DatabaseTemplate, Transact
     public void commit() throws TransactionException {
         final DatabaseTransaction transaction = getCurrentTransaction();
         logger.trace("Committing transaction: " + transaction.transactionId());
-        transaction.applyActions(dynamoDbTemplate);
-        currentTransaction.remove();
-        logger.trace("Transaction successfully commit: " + transaction.transactionId());
+        try {
+            transaction.applyActions(dynamoDbTemplate);
+            currentTransaction.remove();
+            logger.trace("Transaction successfully commit: " + transaction.transactionId());
+        } catch (final Throwable e) {
+            throw new TransactionalResourceException("Failed to commit DynamoDb transaction: "
+                    + transaction.transactionId(), e);
+        }
     }
 
     @Override
     public <T extends Item> T create(final T item) {
-        final DatabaseTransaction transaction = getCurrentTransaction();
-        final T createdItem = transaction.addCreateAction(item);
-        return createdItem;
+        return create(item, EMPTY_PERSISTENCE_EXCEPTION_HANDLERS);
     }
 
     @Override
     public <T extends Item> T update(final T item) {
-        final DatabaseTransaction transaction = getCurrentTransaction();
-        final T createdItem = transaction.addUpdateAction(item);
-        return createdItem;
+        return update(item, EMPTY_PERSISTENCE_EXCEPTION_HANDLERS);
     }
 
     @Override
     public void delete(final Item item) {
+        delete(item, EMPTY_PERSISTENCE_EXCEPTION_HANDLERS);
+    }
+
+    @Override
+    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final DatabaseTransaction transaction = getCurrentTransaction();
-        transaction.addDeleteAction(item);
+        final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlerList = new ArrayList<PersistenceExceptionHandler<?>>();
+        Collections.addAll(persistenceExceptionHandlerList, persistenceExceptionHandlers);
+        final T createdItem = transaction.addCreateAction(item, persistenceExceptionHandlerList);
+        return createdItem;
+    }
+
+    @Override
+    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+        final DatabaseTransaction transaction = getCurrentTransaction();
+        final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlerList = new ArrayList<PersistenceExceptionHandler<?>>();
+        Collections.addAll(persistenceExceptionHandlerList, persistenceExceptionHandlers);
+        final T createdItem = transaction.addUpdateAction(item, persistenceExceptionHandlerList);
+        return createdItem;
+    }
+
+    @Override
+    public void delete(final Item item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+        final DatabaseTransaction transaction = getCurrentTransaction();
+        final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlerList = new ArrayList<PersistenceExceptionHandler<?>>();
+        Collections.addAll(persistenceExceptionHandlerList, persistenceExceptionHandlers);
+        transaction.addDeleteAction(item, persistenceExceptionHandlerList);
     }
 
     @Override

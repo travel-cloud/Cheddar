@@ -66,7 +66,6 @@ public class AbstractDatabaseTemplateTest {
 
             @Override
             public GeneratedKeyHolder generateKeys(final SequenceKeyGenerator sequenceKeyGenerator) {
-                // TODO Auto-generated method stub
                 return null;
             }
 
@@ -113,7 +112,6 @@ public class AbstractDatabaseTemplateTest {
 
             @Override
             public GeneratedKeyHolder generateKeys(final SequenceKeyGenerator sequenceKeyGenerator) {
-                // TODO Auto-generated method stub
                 return null;
             }
 

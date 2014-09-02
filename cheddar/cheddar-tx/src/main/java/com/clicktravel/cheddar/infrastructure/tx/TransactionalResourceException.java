@@ -14,27 +14,14 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.infrastructure.persistence.aws.dynamodb.tx;
+package com.clicktravel.cheddar.infrastructure.tx;
 
-import com.clicktravel.cheddar.infrastructure.persistence.database.DatabaseTemplate;
+public class TransactionalResourceException extends TransactionException {
 
-public abstract class DatabaseAction<T> {
+    private static final long serialVersionUID = 1L;
 
-    private final T item;
-
-    public DatabaseAction(final T item) {
-        this.item = item;
-    }
-
-    public T item() {
-        return item;
-    }
-
-    public abstract void apply(DatabaseTemplate databaseTemplate);
-
-    @Override
-    public String toString() {
-        return "DatabaseAction (" + getClass().getSimpleName() + ") [item=" + item + "]";
+    public TransactionalResourceException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 
 }

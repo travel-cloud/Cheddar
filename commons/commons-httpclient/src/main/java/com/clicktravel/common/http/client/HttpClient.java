@@ -325,6 +325,8 @@ public class HttpClient {
     private ClientConfig clientConfig() {
         final ClientConfig clientConfig = new ClientConfig();
         clientConfig.property(ClientProperties.FOLLOW_REDIRECTS, Boolean.FALSE);
+        clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 30000);
+        clientConfig.property(ClientProperties.READ_TIMEOUT, 90000);
         return clientConfig;
     }
 

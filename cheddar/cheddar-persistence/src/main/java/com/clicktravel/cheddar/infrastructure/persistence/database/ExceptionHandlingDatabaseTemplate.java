@@ -14,20 +14,16 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.infrastructure.persistence.aws.dynamodb.tx;
+package com.clicktravel.cheddar.infrastructure.persistence.database;
 
-import com.clicktravel.cheddar.infrastructure.persistence.database.DatabaseTemplate;
-import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 
-public class DeleteAction<T extends Item> extends DatabaseAction<T> {
+public interface ExceptionHandlingDatabaseTemplate extends DatabaseTemplate {
 
-    public DeleteAction(final T item) {
-        super(item);
-    }
+    <T extends Item> T create(T item, PersistenceExceptionHandler<?>... persistenceExceptionHandlers);
 
-    @Override
-    public void apply(final DatabaseTemplate databaseTemplate) {
-        databaseTemplate.delete(item());
-    }
+    <T extends Item> T update(T item, PersistenceExceptionHandler<?>... persistenceExceptionHandlers);
+
+    void delete(Item item, PersistenceExceptionHandler<?>... persistenceExceptionHandlers);
 
 }
