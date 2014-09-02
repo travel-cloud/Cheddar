@@ -132,10 +132,10 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
         private void processTerminatingState() {
             checkAndChangeLifecycleStatus(HALTING_HIGH_PRIORITY_EVENTS, TERMINATING);
             logger.debug("Draining command queue");
-            remoteCallMessageListener.shutdownWhenQueueDrained();
+            remoteCallMessageListener.shutdownAfterQueueDrained();
             remoteCallMessageListener.awaitTermination();
             logger.debug("Draining command response queue");
-            remoteResponseMessageListener.shutdownWhenQueueDrained();
+            remoteResponseMessageListener.shutdownAfterQueueDrained();
             remoteResponseMessageListener.awaitTermination();
         }
 
@@ -185,7 +185,7 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
 
     private void shutdownImminentlyAllMessageListeners() {
         for (final MessageListener messageListener : messageListeners) {
-            messageListener.shutdownImminent();
+            messageListener.prepareForShutdown();
         }
     }
 

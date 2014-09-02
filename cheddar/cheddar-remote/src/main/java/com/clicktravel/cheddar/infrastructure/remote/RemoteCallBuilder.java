@@ -16,16 +16,20 @@
  */
 package com.clicktravel.cheddar.infrastructure.remote;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
+import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 
 @Component
-public class RemoteCallTagLogic {
+public class RemoteCallBuilder {
 
     /**
      * Names of message queues which when processed by a MessageListener and cause remote call commands to be issued,
@@ -34,7 +38,7 @@ public class RemoteCallTagLogic {
     private final Set<String> nonTaggedMessageQueueNames = new HashSet<>();
 
     @Autowired
-    public RemoteCallTagLogic(final MessageListener eventMessageListener,
+    public RemoteCallBuilder(final MessageListener eventMessageListener,
             final MessageListener highPriorityEventMessageListener, final MessageListener remoteCallMessageListener,
             final MessageListener remoteResponseMessageListener, final MessageListener systemEventMessageListener) {
         for (final MessageListener messageListener : new MessageListener[] { eventMessageListener,
@@ -42,6 +46,17 @@ public class RemoteCallTagLogic {
                 systemEventMessageListener }) {
             nonTaggedMessageQueueNames.add(messageListener.queueName());
         }
+    }
+
+    public RemoteCall build(final String interfaceName, final Method method, final Object[] args) {
+        final List<String> methodParameterTypesList = new ArrayList<>();
+        for (final Class<?> parameterClass : method.getParameterTypes()) {
+            methodParameterTypesList.add(parameterClass.getName());
+        }
+        final String[] methodParameterTypesArray = methodParameterTypesList.toArray(new String[0]);
+        final String principal = SecurityContextHolder.getPrincipal();
+        return new RemoteCall(interfaceName, method.getName(), methodParameterTypesArray, args, principal,
+                shouldTagRemoteCall());
     }
 
     /**
@@ -58,5 +73,4 @@ public class RemoteCallTagLogic {
         final String sqsMessageProcessorQueueName = threadName.split(":")[1];
         return !nonTaggedMessageQueueNames.contains(sqsMessageProcessorQueueName);
     }
-
 }

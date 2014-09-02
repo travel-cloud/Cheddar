@@ -37,6 +37,15 @@ import com.clicktravel.common.concurrent.RateLimiter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Receives messages from an SQS queue, parses each SQS message as a {@link Message} and invokes the appropriate
+ * {@link MessageHandler}. This processing continues until commanded to shutdown. The {@link MessageHandler} is executed
+ * in its own thread provided by a {@link SqsMessageProcessorExecutor}. An optional {@link RateLimiter} is used to
+ * control the rate of message processing.
+ * <p>
+ * Messages are received from the SQS queue when there is sufficient processing capacity to handle the messages. A
+ * semaphore guards against receiving too many messages, but also aims to keep all processing threads active.
+ */
 public class SqsMessageProcessor implements Runnable {
 
     /**
@@ -68,6 +77,11 @@ public class SqsMessageProcessor implements Runnable {
      * Minimum number of empty responses for consecutive ReceiveMessageRequests to conclude queue is empty
      */
     private static final int QUEUE_DRAINED_THRESHOLD = 2;
+
+    /**
+     * Maximum time (in seconds) to wait for executor to complete termination
+     */
+    private static final int TERMINATION_TIMEOUT_SECONDS = 300;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String queueName;
@@ -199,9 +213,9 @@ public class SqsMessageProcessor implements Runnable {
         shutdownWhenQueueDrainedRequested = true;
     }
 
-    public void awaitTermnation() {
+    public void awaitTermination() {
         try {
-            if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+            if (!executor.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 logger.warn("SqsMessageProcessor executor for queue [" + queueName + "] did not terminate");
             }
         } catch (final InterruptedException e) {

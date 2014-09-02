@@ -26,9 +26,9 @@ public interface MessageListener extends MessageQueueAccessor {
 
     void shutdown();
 
-    void shutdownImminent();
+    void prepareForShutdown();
 
-    void shutdownWhenQueueDrained();
+    void shutdownAfterQueueDrained();
 
     void awaitTermination();
 }

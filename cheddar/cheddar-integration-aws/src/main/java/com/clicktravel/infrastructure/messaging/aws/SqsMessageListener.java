@@ -65,7 +65,7 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     }
 
     @Override
-    public void shutdownImminent() {
+    public void prepareForShutdown() {
         logger.debug("Shutdown of processing for queue [" + queueName() + "] is imminent. Reducing queue poll time.");
         queueProcessor.shutdownImminent();
     }
@@ -82,7 +82,7 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     }
 
     @Override
-    public void shutdownWhenQueueDrained() {
+    public void shutdownAfterQueueDrained() {
         logger.debug("Draining then shutting down processing for queue [" + queueName() + "]");
         queueProcessor.shutdownWhenQueueDrained();
     }
@@ -90,7 +90,7 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     @Override
     public void awaitTermination() {
         logger.debug("Awaiting termination of processing for queue [" + queueName() + "]");
-        queueProcessor.awaitTermnation();
+        queueProcessor.awaitTermination();
         logger.debug("Terminated processing for queue [" + queueName() + "]");
     }
 

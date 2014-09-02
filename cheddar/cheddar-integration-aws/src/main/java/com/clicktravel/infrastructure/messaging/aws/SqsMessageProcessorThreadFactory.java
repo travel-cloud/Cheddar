@@ -19,6 +19,11 @@ package com.clicktravel.infrastructure.messaging.aws;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * A {@link ThreadFactory} that names each thread, identifying it as a messaging processing thread for a particular
+ * queue.
+ * @see SqsMessageProcessor
+ */
 public class SqsMessageProcessorThreadFactory implements ThreadFactory {
 
     private final AtomicInteger threadSequenceNumber = new AtomicInteger();

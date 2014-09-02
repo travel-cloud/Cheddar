@@ -19,15 +19,12 @@ package com.clicktravel.cheddar.infrastructure.remote;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 import com.clicktravel.common.remote.Asynchronous;
 
 @Component
@@ -35,13 +32,12 @@ public class RemoteCallInvocationHandler implements InvocationHandler {
 
     private final Map<Object, String> proxyToInterfaceNameMap = new HashMap<>();
     private final RemotingGateway remotingGateway;
-    private final RemoteCallTagLogic remoteCallTagLogic;
+    private final RemoteCallBuilder remoteCallBuilder;
 
     @Autowired
-    public RemoteCallInvocationHandler(final RemotingGateway remotingGateway,
-            final RemoteCallTagLogic remoteCallTagLogic) {
+    public RemoteCallInvocationHandler(final RemotingGateway remotingGateway, final RemoteCallBuilder remoteCallBuilder) {
         this.remotingGateway = remotingGateway;
-        this.remoteCallTagLogic = remoteCallTagLogic;
+        this.remoteCallBuilder = remoteCallBuilder;
     }
 
     public <T> T createProxy(final Class<T> remoteInterface) {
@@ -62,24 +58,13 @@ public class RemoteCallInvocationHandler implements InvocationHandler {
 
     private Object invokeRemote(final Object proxy, final Method method, final Object[] args) throws Throwable {
         Object returnValue = null;
-        final RemoteCall remoteCall = buildRemoteCall(proxy, method, args);
+        final RemoteCall remoteCall = remoteCallBuilder.build(proxyToInterfaceNameMap.get(proxy), method, args);
         if (shouldReceiveResponse(method)) {
             returnValue = remotingGateway.invokeSynchronously(remoteCall);
         } else {
             remotingGateway.invokeAsynchronouslyWithoutResponse(remoteCall);
         }
         return returnValue;
-    }
-
-    private RemoteCall buildRemoteCall(final Object proxy, final Method method, final Object[] args) {
-        final List<String> methodParameterTypesList = new ArrayList<>();
-        for (final Class<?> parameterClass : method.getParameterTypes()) {
-            methodParameterTypesList.add(parameterClass.getName());
-        }
-        final String[] methodParameterTypesArray = methodParameterTypesList.toArray(new String[0]);
-        final String principal = SecurityContextHolder.getPrincipal();
-        return new RemoteCall(proxyToInterfaceNameMap.get(proxy), method.getName(), methodParameterTypesArray, args,
-                principal, remoteCallTagLogic.shouldTagRemoteCall());
     }
 
     private boolean shouldReceiveResponse(final Method method) {
