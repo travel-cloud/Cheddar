@@ -14,16 +14,21 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.system.event.application.lifecycle;
+package com.clicktravel.cheddar.server.flow.control;
 
-import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
+import java.util.concurrent.CountDownLatch;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * System event indicating all 'old' version application instances participating in a blue-green deployment have
- * finished processing REST requests.
- * <p>
- * This event is broadcast to all instances running the 'old' application version.
+ * Configuration for CountDownLatch bean controlling start of REST request processing
  */
-public class OldAppInstancesRestRequestsDrainedEvent extends AbstractSystemEvent {
+@Configuration
+public class RestAdapterStartLatchConfiguration {
 
+    @Bean
+    public CountDownLatch restAdapterStartLatch() {
+        return new CountDownLatch(1); // start latch is initially blocked
+    }
 }

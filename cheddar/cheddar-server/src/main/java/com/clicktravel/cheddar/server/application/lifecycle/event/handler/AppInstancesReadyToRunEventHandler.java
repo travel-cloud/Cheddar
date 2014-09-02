@@ -16,17 +16,31 @@
  */
 package com.clicktravel.cheddar.server.application.lifecycle.event.handler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
 import com.clicktravel.cheddar.server.application.lifecycle.LifecycleController;
-import com.clicktravel.cheddar.system.event.handler.AbstractSystemEventHandler;
+import com.clicktravel.cheddar.system.event.SystemEvent;
+import com.clicktravel.cheddar.system.event.application.lifecycle.AppInstancesReadyToRunEvent;
 
-public abstract class AbstractApplicationLifecycleEventHandler extends AbstractSystemEventHandler {
+@Component
+public class AppInstancesReadyToRunEventHandler extends AbstractApplicationLifecycleEventHandler {
 
-    protected LifecycleController lifecycleController;
-
-    protected AbstractApplicationLifecycleEventHandler(final ApplicationConfiguration applicationConfiguration,
+    @Autowired
+    public AppInstancesReadyToRunEventHandler(final ApplicationConfiguration applicationConfiguration,
             final LifecycleController lifecycleController) {
-        super(applicationConfiguration.name(), applicationConfiguration.version());
-        this.lifecycleController = lifecycleController;
+        super(applicationConfiguration, lifecycleController);
     }
+
+    @Override
+    public Class<? extends SystemEvent> getEventClass() {
+        return AppInstancesReadyToRunEvent.class;
+    }
+
+    @Override
+    protected void handleSystemEvent(final SystemEvent event) {
+        lifecycleController.enterRunningStateWithoutBlueGreenDeployment();
+    }
+
 }

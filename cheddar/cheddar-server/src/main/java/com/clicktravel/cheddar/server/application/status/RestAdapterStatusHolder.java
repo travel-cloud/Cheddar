@@ -16,17 +16,35 @@
  */
 package com.clicktravel.cheddar.server.application.status;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.http.filter.flow.control.FlowControlledRequestFilter;
+
 /**
- * Monitors the processing of REST requests; determines if any REST requests are currently in progress.
+ * Monitors the processing of REST requests; determines if any REST requests are currently in progress. Also controls if
+ * REST requests for application services should be accepted by the server.
  */
 @Component
 public class RestAdapterStatusHolder {
 
+    private static final Set<LifecycleStatus> LIFECYCLE_STATES_FOR_ACCEPTING_REQUESTS = new HashSet<>(Arrays.asList(
+            LifecycleStatus.PAUSED, LifecycleStatus.RUNNING, LifecycleStatus.HALTING_LOW_PRIORITY_EVENTS));
+
     private final AtomicInteger numRestRequestsInProgress = new AtomicInteger();
+    private final LifecycleStatusHolder lifecycleStatusHolder;
+
+    @Autowired
+    public RestAdapterStatusHolder(final LifecycleStatusHolder lifecycleStatusHolder) {
+        this.lifecycleStatusHolder = lifecycleStatusHolder;
+    }
 
     public void requestProcessingStarted() {
         numRestRequestsInProgress.incrementAndGet();
@@ -41,5 +59,16 @@ public class RestAdapterStatusHolder {
 
     public int restRequestsInProgress() {
         return numRestRequestsInProgress.get();
+    }
+
+    /**
+     * @return {@code true} if the server should indicate to its environment it is ready to accept REST requests. In an
+     *         AWS environment, this indication is a positive response to an ELB health check. Note that readiness to
+     *         accept requests does not imply received requests will be processed; in {@link LifecycleStatus#PAUSED}
+     *         state the worker threads handling the received requests are blocked by
+     *         {@link FlowControlledRequestFilter}.
+     */
+    public boolean isAcceptingRequests() {
+        return LIFECYCLE_STATES_FOR_ACCEPTING_REQUESTS.contains(lifecycleStatusHolder.getLifecycleStatus());
     }
 }

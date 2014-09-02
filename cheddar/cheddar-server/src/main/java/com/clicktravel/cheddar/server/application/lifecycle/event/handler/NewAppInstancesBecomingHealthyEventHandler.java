@@ -20,8 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleController;
 import com.clicktravel.cheddar.system.event.SystemEvent;
 import com.clicktravel.cheddar.system.event.application.lifecycle.NewAppInstancesBecomingHealthyEvent;
 
@@ -30,8 +29,8 @@ public class NewAppInstancesBecomingHealthyEventHandler extends AbstractApplicat
 
     @Autowired
     public NewAppInstancesBecomingHealthyEventHandler(final ApplicationConfiguration applicationConfiguration,
-            final LifecycleStatusHolder lifecycleStatusHolder) {
-        super(applicationConfiguration, lifecycleStatusHolder, LifecycleStatus.HALTING_LOW_PRIORITY_EVENTS);
+            final LifecycleController lifecycleController) {
+        super(applicationConfiguration, lifecycleController);
     }
 
     @Override
@@ -40,8 +39,8 @@ public class NewAppInstancesBecomingHealthyEventHandler extends AbstractApplicat
     }
 
     @Override
-    protected void handleApplicationLifecycleEvent(final SystemEvent event) {
-        // TODO Step 9 Start draining REST requests
+    protected void handleSystemEvent(final SystemEvent event) {
+        lifecycleController.enterDrainingRequestsState();
     }
 
 }

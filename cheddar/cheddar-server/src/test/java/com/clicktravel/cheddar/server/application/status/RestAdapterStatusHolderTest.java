@@ -17,26 +17,31 @@
 package com.clicktravel.cheddar.server.application.status;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
 import com.clicktravel.common.random.Randoms;
-import com.clicktravel.cheddar.server.application.status.RestAdapterStatusHolder;
 
 public class RestAdapterStatusHolderTest {
 
-    private RestAdapterStatusHolder holder;
+    private RestAdapterStatusHolder restAdapterStatusHolder;
+    private LifecycleStatusHolder mockLifecycleStatusHolder;
 
     @Before
     public void setUp() {
-        holder = new RestAdapterStatusHolder();
+        mockLifecycleStatusHolder = mock(LifecycleStatusHolder.class);
+        restAdapterStatusHolder = new RestAdapterStatusHolder(mockLifecycleStatusHolder);
     }
 
     @Test
     public void shouldReturn0_onNoRequestsProcessed() {
         // When
-        final int numRequests = holder.restRequestsInProgress();
+        final int numRequests = restAdapterStatusHolder.restRequestsInProgress();
 
         // Then
         assertEquals(0, numRequests);
@@ -49,7 +54,7 @@ public class RestAdapterStatusHolderTest {
         startAndCompleteRequests(numRequests, 0);
 
         // When
-        final int actualNumRequests = holder.restRequestsInProgress();
+        final int actualNumRequests = restAdapterStatusHolder.restRequestsInProgress();
 
         // Then
         assertEquals(numRequests, actualNumRequests);
@@ -62,7 +67,7 @@ public class RestAdapterStatusHolderTest {
         startAndCompleteRequests(numRequests, numRequests);
 
         // When
-        final int actualNumRequests = holder.restRequestsInProgress();
+        final int actualNumRequests = restAdapterStatusHolder.restRequestsInProgress();
 
         // Then
         assertEquals(0, actualNumRequests);
@@ -76,18 +81,39 @@ public class RestAdapterStatusHolderTest {
         startAndCompleteRequests(numRequests, numRequestsCompleted);
 
         // When
-        final int actualNumRequests = holder.restRequestsInProgress();
+        final int actualNumRequests = restAdapterStatusHolder.restRequestsInProgress();
 
         // Then
         assertEquals(numRequests - numRequestsCompleted, actualNumRequests);
     }
 
+    @Test
+    public void shouldReturnCorrectIsAcceptingRequests() {
+        for (final LifecycleStatus lifecycleStatus : LifecycleStatus.values()) {
+            shouldReturnCorrecIsAcceptingRequests_forLifecycleStatus(lifecycleStatus);
+        }
+    }
+
+    private void shouldReturnCorrecIsAcceptingRequests_forLifecycleStatus(final LifecycleStatus lifecycleStatus) {
+        // Given
+        when(mockLifecycleStatusHolder.getLifecycleStatus()).thenReturn(lifecycleStatus);
+        final boolean expectedIsAcceptingRequests = lifecycleStatus.equals(LifecycleStatus.PAUSED)
+                || lifecycleStatus.equals(LifecycleStatus.RUNNING)
+                || lifecycleStatus.equals(LifecycleStatus.HALTING_LOW_PRIORITY_EVENTS);
+
+        // When
+        final boolean actualIsAcceptingRequests = restAdapterStatusHolder.isAcceptingRequests();
+
+        // Then
+        assertEquals(expectedIsAcceptingRequests, actualIsAcceptingRequests);
+    }
+
     private void startAndCompleteRequests(final int numRequests, final int numRequestsCompleted) {
         for (int n = 0; n < numRequests; n++) {
-            holder.requestProcessingStarted();
+            restAdapterStatusHolder.requestProcessingStarted();
         }
         for (int n = 0; n < numRequestsCompleted; n++) {
-            holder.requestProcessingFinished();
+            restAdapterStatusHolder.requestProcessingFinished();
         }
     }
 }

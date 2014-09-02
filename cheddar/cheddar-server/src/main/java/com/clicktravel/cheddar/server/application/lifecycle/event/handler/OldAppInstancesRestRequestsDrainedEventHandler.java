@@ -20,8 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.application.lifecycle.LifecycleController;
 import com.clicktravel.cheddar.system.event.SystemEvent;
 import com.clicktravel.cheddar.system.event.application.lifecycle.OldAppInstancesRestRequestsDrainedEvent;
 
@@ -30,8 +29,8 @@ public class OldAppInstancesRestRequestsDrainedEventHandler extends AbstractAppl
 
     @Autowired
     public OldAppInstancesRestRequestsDrainedEventHandler(final ApplicationConfiguration applicationConfiguration,
-            final LifecycleStatusHolder lifecycleStatusHolder) {
-        super(applicationConfiguration, lifecycleStatusHolder, LifecycleStatus.DRAINING_REQUESTS);
+            final LifecycleController lifecycleController) {
+        super(applicationConfiguration, lifecycleController);
     }
 
     @Override
@@ -40,9 +39,8 @@ public class OldAppInstancesRestRequestsDrainedEventHandler extends AbstractAppl
     }
 
     @Override
-    protected void handleApplicationLifecycleEvent(final SystemEvent event) {
-        // TODO Step 12 Start shutdown of high priority domain event handlers. Move to HALTING_HIGH_PRIORITY_EVENTS
-        // state
+    protected void handleSystemEvent(final SystemEvent event) {
+        lifecycleController.enterHaltingHighPriorityEventsState();
     }
 
 }

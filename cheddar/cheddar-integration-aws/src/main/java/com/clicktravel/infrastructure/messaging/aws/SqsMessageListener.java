@@ -30,6 +30,7 @@ import com.clicktravel.common.concurrent.RateLimiter;
 
 public class SqsMessageListener extends SqsMessageQueueAccessor implements MessageListener {
 
+    private static final int NUM_THREADS = 10;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<String, MessageHandler> messageHandlers = new ConcurrentHashMap<>();
     private final RateLimiter rateLimiter;
@@ -51,7 +52,9 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
         } else {
             logger.info("Starting to listen for messages on queue [" + queueName() + "] for these message types :["
                     + messageTypeSummary() + "]");
-            queueProcessor = new SqsMessageProcessor(amazonSqsClient(), queueName(), messageHandlers, rateLimiter);
+            final SqsMessageProcessorExecutor executor = new SqsMessageProcessorExecutor(queueName(), NUM_THREADS);
+            queueProcessor = new SqsMessageProcessor(amazonSqsClient(), queueName(), messageHandlers, rateLimiter,
+                    executor);
             new Thread(queueProcessor).start();
         }
     }
@@ -59,6 +62,12 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     @Override
     public void registerMessageHandler(final String messageType, final MessageHandler messageHandler) {
         messageHandlers.put(messageType, messageHandler);
+    }
+
+    @Override
+    public void prepareForShutdown() {
+        logger.debug("Shutdown of processing for queue [" + queueName() + "] is imminent. Reducing queue poll time.");
+        queueProcessor.shutdownImminent();
     }
 
     @Override
@@ -72,6 +81,19 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
         shutdown();
     }
 
+    @Override
+    public void shutdownAfterQueueDrained() {
+        logger.debug("Draining then shutting down processing for queue [" + queueName() + "]");
+        queueProcessor.shutdownWhenQueueDrained();
+    }
+
+    @Override
+    public void awaitTermination() {
+        logger.debug("Awaiting termination of processing for queue [" + queueName() + "]");
+        queueProcessor.awaitTermination();
+        logger.debug("Terminated processing for queue [" + queueName() + "]");
+    }
+
     private String messageTypeSummary() {
         final StringBuilder sb = new StringBuilder();
         for (final String messageType : messageHandlers.keySet()) {
@@ -82,4 +104,5 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
         }
         return sb.toString();
     }
+
 }

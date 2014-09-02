@@ -17,9 +17,6 @@
 package com.clicktravel.cheddar.server.rest.resource.status;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -32,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.remote.TaggedRemoteCallStatusHolder;
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
 import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
 import com.clicktravel.cheddar.server.application.status.RestAdapterStatusHolder;
 import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
@@ -40,9 +36,6 @@ import com.clicktravel.common.concurrent.RateLimiter;
 
 @Path("/status")
 public class StatusResource {
-
-    private static final Set<LifecycleStatus> HEALTHY_LIFECYCLE_STATES = new HashSet<>(Arrays.asList(
-            LifecycleStatus.PAUSED, LifecycleStatus.RUNNING, LifecycleStatus.HALTING_LOW_PRIORITY_EVENTS));
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ApplicationConfiguration applicationConfiguration;
@@ -115,7 +108,7 @@ public class StatusResource {
     @GET
     @Path("/healthCheck")
     public Response getHealthCheck() {
-        if (HEALTHY_LIFECYCLE_STATES.contains(lifecycleStatusHolder.getLifecycleStatus())) {
+        if (restAdapterStatusHolder.isAcceptingRequests()) {
             return Response.status(Status.OK).entity("Ready").build();
         } else {
             return Response.status(Status.SERVICE_UNAVAILABLE).build();
