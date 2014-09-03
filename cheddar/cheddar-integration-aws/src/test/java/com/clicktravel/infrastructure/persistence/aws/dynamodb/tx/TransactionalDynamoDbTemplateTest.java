@@ -270,7 +270,8 @@ public class TransactionalDynamoDbTemplateTest {
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
         when(dynamoDbTemplate.create(item)).thenThrow(persistenceException);
-        doThrow(RuntimeException.class).when(persistenceExceptionHandler).handle(persistenceException);
+        final RuntimeException runtimeException = mock(RuntimeException.class);
+        doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
 
         final TransactionalDynamoDbTemplate transactionalDynamoDbTemplate = new TransactionalDynamoDbTemplate(
                 dynamoDbTemplate);
@@ -287,6 +288,7 @@ public class TransactionalDynamoDbTemplateTest {
 
         // Then
         assertNotNull(actualException);
+        assertEquals(runtimeException, actualException.getCause());
     }
 
     @Test
@@ -394,7 +396,9 @@ public class TransactionalDynamoDbTemplateTest {
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
         when(dynamoDbTemplate.update(item)).thenThrow(persistenceException);
-        doThrow(RuntimeException.class).when(persistenceExceptionHandler).handle(persistenceException);
+        final RuntimeException runtimeException = mock(RuntimeException.class);
+        doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
+
         final TransactionalDynamoDbTemplate transactionalDynamoDbTemplate = new TransactionalDynamoDbTemplate(
                 dynamoDbTemplate);
         transactionalDynamoDbTemplate.begin();
@@ -410,6 +414,7 @@ public class TransactionalDynamoDbTemplateTest {
 
         // Then
         assertNotNull(actualException);
+        assertEquals(runtimeException, actualException.getCause());
     }
 
     @Test
@@ -516,7 +521,9 @@ public class TransactionalDynamoDbTemplateTest {
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
         doThrow(persistenceException).when(dynamoDbTemplate).delete(item);
-        doThrow(RuntimeException.class).when(persistenceExceptionHandler).handle(persistenceException);
+        final RuntimeException runtimeException = mock(RuntimeException.class);
+        doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
+
         final TransactionalDynamoDbTemplate transactionalDynamoDbTemplate = new TransactionalDynamoDbTemplate(
                 dynamoDbTemplate);
         transactionalDynamoDbTemplate.begin();
@@ -532,6 +539,7 @@ public class TransactionalDynamoDbTemplateTest {
 
         // Then
         assertNotNull(actualException);
+        assertEquals(runtimeException, actualException.getCause());
     }
 
     private StubItem randomStubItem() {
