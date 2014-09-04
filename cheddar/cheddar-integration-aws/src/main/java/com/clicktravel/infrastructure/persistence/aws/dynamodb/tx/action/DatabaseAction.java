@@ -38,6 +38,9 @@ public abstract class DatabaseAction<T> {
     public abstract void apply(DatabaseTemplate databaseTemplate) throws Throwable;
 
     protected void handlePersistenceException(final PersistenceException persistenceException) throws Throwable {
+        if (persistenceExceptionHandlers.isEmpty()) {
+            throw persistenceException;
+        }
         for (final PersistenceExceptionHandler<?> persistenceExceptionHandler : persistenceExceptionHandlers) {
             Method method;
             try {
