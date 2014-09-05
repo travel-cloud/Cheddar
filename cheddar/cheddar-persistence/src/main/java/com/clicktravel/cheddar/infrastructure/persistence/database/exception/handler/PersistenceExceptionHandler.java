@@ -14,13 +14,12 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.infrastructure.tx;
+package com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler;
 
-public class NonExistentTransactionException extends TransactionException {
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceException;
 
-    private static final long serialVersionUID = 1L;
+public interface PersistenceExceptionHandler<T extends PersistenceException> {
 
-    public NonExistentTransactionException() {
-        super("Expected to be in a transaction");
-    }
+    abstract void handle(T exception);
+
 }

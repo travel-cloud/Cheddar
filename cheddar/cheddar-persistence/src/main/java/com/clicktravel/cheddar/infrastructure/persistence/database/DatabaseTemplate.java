@@ -44,4 +44,5 @@ public interface DatabaseTemplate {
     <T extends Item> T fetchUnique(final Query query, Class<T> itemClass) throws NonUniqueResultException;
 
     GeneratedKeyHolder generateKeys(SequenceKeyGenerator sequenceKeyGenerator);
+
 }

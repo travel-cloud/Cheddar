@@ -45,8 +45,12 @@ public class TransactionalAspect {
 
     // Runs after beginTransaction() and advised method, if no exceptions were thrown by either method
     @AfterReturning("@annotation(com.clicktravel.cheddar.application.tx.Transactional)")
-    public void commitTransaction() throws TransactionException {
-        transactionalResourceManager.commit();
+    public void commitTransaction() throws Throwable {
+        try {
+            transactionalResourceManager.commit();
+        } catch (final TransactionException e) {
+            throw e.getCause();
+        }
     }
 
     // Runs after any exception is thrown during beginTransaction(), the advised method, or commitTransaction()

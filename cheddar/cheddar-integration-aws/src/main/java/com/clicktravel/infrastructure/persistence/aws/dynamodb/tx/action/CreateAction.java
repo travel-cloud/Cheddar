@@ -14,22 +14,30 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.infrastructure.persistence.aws.dynamodb.tx;
+package com.clicktravel.infrastructure.persistence.aws.dynamodb.tx.action;
+
+import java.util.List;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.DatabaseTemplate;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 
 public class CreateAction<T extends Item> extends DatabaseAction<T> {
 
-    public CreateAction(final T item) {
-        super(item);
+    public CreateAction(final T item, final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlers) {
+        super(item, persistenceExceptionHandlers);
     }
 
     @Override
-    public void apply(final DatabaseTemplate databaseTemplate) {
+    public void apply(final DatabaseTemplate databaseTemplate) throws Throwable {
         final T item = item();
         item.setVersion(null);
-        databaseTemplate.create(item());
+        try {
+            databaseTemplate.create(item());
+        } catch (final PersistenceException e) {
+            handlePersistenceException(e);
+        }
     }
 
 }
