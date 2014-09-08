@@ -14,12 +14,19 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.common.remote;
+package com.clicktravel.cheddar.remote;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Handle an exception that is thrown from an @Asynchronous void remote call that has failed all its attempts.
+ * Method annotation to indicate which local method should be invoked when if an exception is raised within the given
+ * method.
  */
-public interface AsynchronousExceptionHandler {
-
-    void handle(Throwable exception);
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ExceptionHandler {
+    String value();
 }

@@ -43,14 +43,13 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.beans.factory.ListableBeanFactory;
 
-import com.clicktravel.common.random.Randoms;
-import com.clicktravel.common.remote.AsynchronousExceptionHandler;
-import com.clicktravel.common.validation.ValidationException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceResourceFailureException;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
+import com.clicktravel.common.random.Randoms;
+import com.clicktravel.common.validation.ValidationException;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(SecurityContextHolder.class)
+@PrepareForTest({ SecurityContextHolder.class, DefaultTestService.class })
 public class RemoteCallHandlerTest {
 
     private ListableBeanFactory mockListableBeanFactory;
@@ -64,7 +63,6 @@ public class RemoteCallHandlerTest {
     private String principal;
     private boolean tag;
     private RemoteCallContextHolder mockRemoteCallContextHolder;
-    private AsynchronousExceptionHandler mockAsynchronousExceptionHandler;
     private TaggedRemoteCallStatusHolderImpl mockTaggedRemoteCallStatusHolder;
 
     @Before
@@ -73,11 +71,9 @@ public class RemoteCallHandlerTest {
         mockRemoteCallSender = mock(RemoteCallSender.class);
         mockRemoteResponseSender = mock(RemoteResponseSender.class);
         mockRemoteCallContextHolder = mock(RemoteCallContextHolder.class);
-        mockAsynchronousExceptionHandler = mock(AsynchronousExceptionHandler.class);
         mockTaggedRemoteCallStatusHolder = mock(TaggedRemoteCallStatusHolderImpl.class);
         remoteCallHandler = new RemoteCallHandler(mockListableBeanFactory, mockRemoteCallSender,
-                mockRemoteResponseSender, mockRemoteCallContextHolder, mockAsynchronousExceptionHandler,
-                mockTaggedRemoteCallStatusHolder);
+                mockRemoteResponseSender, mockRemoteCallContextHolder, mockTaggedRemoteCallStatusHolder);
         final Map<String, TestService> beanMap = new HashMap<>();
         defaultTestService = new DefaultTestService();
         beanMap.put("defaultTestService", defaultTestService);
@@ -317,27 +313,7 @@ public class RemoteCallHandlerTest {
     }
 
     @Test
-    public void shouldAttemptCallAndNotReturnException_withSuspendedSyncRemoteCallAndLastFailure() {
-        // Given
-        attemptsRemaining = 1;
-        setUpMethod2RemoteCall();
-        final RuntimeException thrownException = new RuntimeException();
-        defaultTestService.setExceptionToThrow(thrownException);
-        when(mockRemoteCallContextHolder.isResponseSuspended()).thenReturn(true);
-
-        // When
-        remoteCallHandler.handle(mockRemoteCall);
-
-        // Then
-        PowerMockito.verifyStatic();
-        SecurityContextHolder.setPrincipal(principal);
-        PowerMockito.verifyStatic();
-        SecurityContextHolder.clearPrincipal();
-        verify(mockRemoteResponseSender, never()).sendRemoteResponse(any(RemoteResponse.class));
-    }
-
-    @Test
-    public void shouldAttemptCallAndNotReturnResponse_withAsyncRemoteCallAndLastFailure() {
+    public void shouldAttemptCallAndReturnException_withSyncRemoteCallAndLastFailureAndNoExceptionHandler() {
         // Given
         attemptsRemaining = 1;
         setUpMethod1RemoteCall();
@@ -353,8 +329,72 @@ public class RemoteCallHandlerTest {
         PowerMockito.verifyStatic();
         SecurityContextHolder.clearPrincipal();
         assertTrue(defaultTestService.isMethod1Called());
-        verify(mockRemoteResponseSender, never()).sendRemoteResponse(any(RemoteResponse.class));
-        verify(mockAsynchronousExceptionHandler).handle(thrownException);
+        final ArgumentCaptor<RemoteResponse> remoteResponseCaptor = ArgumentCaptor.forClass(RemoteResponse.class);
+        verify(mockRemoteResponseSender).sendRemoteResponse(remoteResponseCaptor.capture());
+        final RemoteResponse remoteResponse = remoteResponseCaptor.getValue();
+        assertEquals(callId, remoteResponse.getCallId());
+        assertNull(remoteResponse.getReturnValue());
+        assertSame(thrownException, remoteResponse.getThrownException());
+    }
+
+    @Test
+    public void shouldAttemptCallAndReturnNoException_withSyncRemoteCallAndLastFailureAndExceptionHandler() {
+        // Given
+        attemptsRemaining = 1;
+        setUpMethod3RemoteCall();
+        final RuntimeException thrownException = new RuntimeException();
+        defaultTestService.setExceptionToThrow(thrownException);
+        final Map<String, TestService> beanMap = new HashMap<>();
+        beanMap.put("defaultTestService", defaultTestService);
+        when(mockListableBeanFactory.getBeansOfType(TestService.class)).thenReturn(beanMap);
+
+        // When
+        remoteCallHandler.handle(mockRemoteCall);
+
+        // Then
+        PowerMockito.verifyStatic();
+        SecurityContextHolder.setPrincipal(principal);
+        PowerMockito.verifyStatic();
+        SecurityContextHolder.clearPrincipal();
+        assertTrue(defaultTestService.isMethod3Called());
+        assertTrue(defaultTestService.isMethod4Called());
+        final ArgumentCaptor<RemoteResponse> remoteResponseCaptor = ArgumentCaptor.forClass(RemoteResponse.class);
+        verify(mockRemoteResponseSender).sendRemoteResponse(remoteResponseCaptor.capture());
+        final RemoteResponse remoteResponse = remoteResponseCaptor.getValue();
+        assertEquals(callId, remoteResponse.getCallId());
+        assertNull(remoteResponse.getReturnValue());
+        assertNull(remoteResponse.getThrownException());
+    }
+
+    @Test
+    public void shouldAttemptCallAndReturnException_withSyncRemoteCallAndLastFailureAndExceptionHandlerThrowingException() {
+        // Given
+        attemptsRemaining = 1;
+        setUpMethod3RemoteCall();
+        final RuntimeException thrownException = new RuntimeException();
+        final RuntimeException exceptionToThrowOnExceptionHandle = new RuntimeException();
+        defaultTestService.setExceptionToThrow(thrownException);
+        defaultTestService.setExceptionToThrowOnExceptionHandle(exceptionToThrowOnExceptionHandle);
+        final Map<String, TestService> beanMap = new HashMap<>();
+        beanMap.put("defaultTestService", defaultTestService);
+        when(mockListableBeanFactory.getBeansOfType(TestService.class)).thenReturn(beanMap);
+
+        // When
+        remoteCallHandler.handle(mockRemoteCall);
+
+        // Then
+        PowerMockito.verifyStatic();
+        SecurityContextHolder.setPrincipal(principal);
+        PowerMockito.verifyStatic();
+        SecurityContextHolder.clearPrincipal();
+        assertTrue(defaultTestService.isMethod3Called());
+        assertTrue(defaultTestService.isMethod4Called());
+        final ArgumentCaptor<RemoteResponse> remoteResponseCaptor = ArgumentCaptor.forClass(RemoteResponse.class);
+        verify(mockRemoteResponseSender).sendRemoteResponse(remoteResponseCaptor.capture());
+        final RemoteResponse remoteResponse = remoteResponseCaptor.getValue();
+        assertEquals(callId, remoteResponse.getCallId());
+        assertNull(remoteResponse.getReturnValue());
+        assertSame(exceptionToThrowOnExceptionHandle, remoteResponse.getThrownException());
     }
 
     @Test
@@ -433,6 +473,16 @@ public class RemoteCallHandlerTest {
         final TestObject testObject = new TestObject(Randoms.randomString(), Randoms.randomString());
         when(mockRemoteCall.getInterfaceName()).thenReturn(TestService.class.getName());
         when(mockRemoteCall.getMethodName()).thenReturn("method2");
+        when(mockRemoteCall.getMethodParameterTypes()).thenReturn(new String[] { TestObject.class.getName() });
+        when(mockRemoteCall.getParameters()).thenReturn(new Object[] { testObject });
+        when(mockRemoteCall.hasTag()).thenReturn(tag);
+        when(mockRemoteCallContextHolder.isResponseSuspended()).thenReturn(false);
+    }
+
+    private void setUpMethod3RemoteCall() {
+        final TestObject testObject = new TestObject(Randoms.randomString(), Randoms.randomString());
+        when(mockRemoteCall.getInterfaceName()).thenReturn(TestService.class.getName());
+        when(mockRemoteCall.getMethodName()).thenReturn("method3");
         when(mockRemoteCall.getMethodParameterTypes()).thenReturn(new String[] { TestObject.class.getName() });
         when(mockRemoteCall.getParameters()).thenReturn(new Object[] { testObject });
         when(mockRemoteCall.hasTag()).thenReturn(tag);

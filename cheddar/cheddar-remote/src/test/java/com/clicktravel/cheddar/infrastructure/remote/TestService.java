@@ -24,4 +24,7 @@ public interface TestService {
     void method1(String parameter1, int parameter2);
 
     String[] method2(TestObject testObject);
+
+    void method3(TestObject testObject);
+
 }
