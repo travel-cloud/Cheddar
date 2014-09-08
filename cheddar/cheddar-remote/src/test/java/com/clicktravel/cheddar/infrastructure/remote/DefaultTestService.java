@@ -16,14 +16,18 @@
  */
 package com.clicktravel.cheddar.infrastructure.remote;
 
+import com.clicktravel.cheddar.remote.ExceptionHandler;
 import com.clicktravel.cheddar.remote.FailImmediatelyOnException;
 
 public class DefaultTestService implements TestService {
 
     private boolean method1Called;
     private boolean method2Called;
+    private boolean method3Called;
+    private boolean method4Called;
     private String[] method2ReturnValue;
     private RuntimeException exceptionToThrow;
+    private RuntimeException exceptionToThrowOnExceptionHandle;
 
     @Override
     public void method1(final String parameter1, final int parameter2) {
@@ -44,6 +48,22 @@ public class DefaultTestService implements TestService {
         }
     }
 
+    @Override
+    public void method3(final TestObject testObject) {
+        method3Called = true;
+        if (exceptionToThrow != null) {
+            throw exceptionToThrow;
+        }
+    }
+
+    @ExceptionHandler("method3")
+    public void method4(final RuntimeException exception, final TestObject testObject) {
+        method4Called = true;
+        if (exceptionToThrowOnExceptionHandle != null) {
+            throw exceptionToThrowOnExceptionHandle;
+        }
+    }
+
     public void setMethod2ReturnValue(final String[] method2ReturnValue) {
         this.method2ReturnValue = method2ReturnValue;
     }
@@ -56,8 +76,20 @@ public class DefaultTestService implements TestService {
         return method2Called;
     }
 
+    public boolean isMethod3Called() {
+        return method3Called;
+    }
+
+    public boolean isMethod4Called() {
+        return method4Called;
+    }
+
     public void setExceptionToThrow(final RuntimeException exceptionToThrow) {
         this.exceptionToThrow = exceptionToThrow;
+    }
+
+    public void setExceptionToThrowOnExceptionHandle(final RuntimeException exceptionToThrowOnExceptionHandle) {
+        this.exceptionToThrowOnExceptionHandle = exceptionToThrowOnExceptionHandle;
     }
 
 }

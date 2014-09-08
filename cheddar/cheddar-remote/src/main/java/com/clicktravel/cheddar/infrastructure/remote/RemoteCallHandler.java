@@ -16,8 +16,10 @@
  */
 package com.clicktravel.cheddar.infrastructure.remote;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -29,12 +31,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 
-import com.clicktravel.common.remote.Asynchronous;
-import com.clicktravel.common.remote.AsynchronousExceptionHandler;
-import com.clicktravel.common.validation.ValidationException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceResourceFailureException;
+import com.clicktravel.cheddar.remote.ExceptionHandler;
 import com.clicktravel.cheddar.remote.FailImmediatelyOnException;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
+import com.clicktravel.common.remote.Asynchronous;
+import com.clicktravel.common.validation.ValidationException;
 
 /**
  * Handles a remote call by executing the specified method locally and optionally returning the response
@@ -61,19 +63,16 @@ public class RemoteCallHandler {
     private final RemoteCallSender remoteCallSender;
     private final RemoteResponseSender remoteResponseSender;
     private final RemoteCallContextHolder remoteCallContextHolder;
-    private final AsynchronousExceptionHandler asynchronousExceptionHandler;
     private final TaggedRemoteCallStatusHolderImpl taggedRemoteCallStatusHolderImpl;
 
     @Autowired
     public RemoteCallHandler(final ListableBeanFactory listableBeanFactory, final RemoteCallSender remoteCallSender,
             final RemoteResponseSender remoteResponseSender, final RemoteCallContextHolder remoteCallContextHolder,
-            final AsynchronousExceptionHandler asynchronousExceptionHandler,
             final TaggedRemoteCallStatusHolderImpl taggedRemoteCallStatusHolderImpl) {
         this.listableBeanFactory = listableBeanFactory;
         this.remoteCallSender = remoteCallSender;
         this.remoteResponseSender = remoteResponseSender;
         this.remoteCallContextHolder = remoteCallContextHolder;
-        this.asynchronousExceptionHandler = asynchronousExceptionHandler;
         this.taggedRemoteCallStatusHolderImpl = taggedRemoteCallStatusHolderImpl;
     }
 
@@ -150,19 +149,82 @@ public class RemoteCallHandler {
             logger.trace("Remote call attempt failed, will retry method call; " + logMessageDetail);
             remoteCallSender.sendDelayedRemoteCall(remoteCall, COMMAND_RETRY_DELAY_SECONDS);
         } else {
+            final Throwable handledException = getHandledException(remoteCall, thrownException, beanMethod);
             if (attemptsRemaining == 0) {
-                logger.debug("Remote call failed all attempts; " + logMessageDetail, thrownException);
+                final boolean exceptionProcessed = thrownException.equals(handledException);
+                logger.debug("Remote call failed all attempts; " + logMessageDetail, exceptionProcessed ? null
+                        : thrownException);
             } else {
                 logger.debug("Will not retry remote call; " + logMessageDetail);
             }
-            if (isAsynchronousVoid(interfaceMethod)) {
-                asynchronousExceptionHandler.handle(thrownException);
-            } else if (!isResponseSuspended) {
-                final RemoteResponse remoteResponse = new RemoteResponse(remoteCall.getCallId());
-                remoteResponse.setThrownException(thrownException);
-                remoteResponseSender.sendRemoteResponse(remoteResponse);
+            final RemoteResponse remoteResponse = new RemoteResponse(remoteCall.getCallId());
+            remoteResponse.setThrownException(handledException);
+            remoteResponseSender.sendRemoteResponse(remoteResponse);
+        }
+    }
+
+    private Throwable getHandledException(final RemoteCall remoteCall, final Throwable thrownException,
+            final Method beanMethod) {
+        final Class<?> targetClass;
+        final Object targetBean;
+        final Method exceptionHandlerMethod;
+        try {
+            targetClass = Class.forName(remoteCall.getInterfaceName());
+            targetBean = targetBean(targetClass);
+        } catch (final Exception e) {
+            return thrownException;
+        }
+        exceptionHandlerMethod = getExceptionHandlerMethod(beanMethod, thrownException,
+                remoteCall.getMethodParameterTypes());
+        if (exceptionHandlerMethod == null) {
+            return thrownException;
+        }
+        try {
+            final Object[] args = getExceptionHandlerArgs(thrownException, remoteCall.getParameters());
+            if (targetBean instanceof Proxy) {
+                final InvocationHandler proxyInvocationHandler = Proxy.getInvocationHandler(targetBean);
+                proxyInvocationHandler.invoke(targetBean, exceptionHandlerMethod, args);
+            } else {
+                try {
+                    exceptionHandlerMethod.invoke(targetBean, args);
+                } catch (final InvocationTargetException invocationTargetException) {
+                    throw invocationTargetException.getCause();
+                }
+            }
+            return null;
+        } catch (final Throwable exceptionThrownFromExceptionHandlingMethod) {
+            return exceptionThrownFromExceptionHandlingMethod;
+        }
+    }
+
+    private Object[] getExceptionHandlerArgs(final Throwable thrownException, final Object[] remoteCallParameters) {
+        final Object[] args = new Object[remoteCallParameters.length + 1];
+        args[0] = thrownException;
+        System.arraycopy(remoteCallParameters, 0, args, 1, remoteCallParameters.length);
+        return args;
+    }
+
+    private Method getExceptionHandlerMethod(final Method beanMethod, final Throwable thrownException,
+            final String[] methodParameterTypeNames) {
+        final Class<?>[] parameterTypes = new Class[methodParameterTypeNames.length + 1];
+        parameterTypes[0] = thrownException.getClass();
+        for (int i = 0; i < methodParameterTypeNames.length; i++) {
+            try {
+                parameterTypes[i + 1] = Class.forName(methodParameterTypeNames[i]);
+            } catch (final ClassNotFoundException e) {
+                parameterTypes[i + 1] = null;
             }
         }
+        for (final Method method : beanMethod.getDeclaringClass().getMethods()) {
+            if (!Arrays.equals(parameterTypes, method.getParameterTypes())) {
+                continue;
+            }
+            final ExceptionHandler exceptionHandlerAnotation = method.getAnnotation(ExceptionHandler.class);
+            if (beanMethod.getName().equals(exceptionHandlerAnotation.value())) {
+                return method;
+            }
+        }
+        return null;
     }
 
     /**
