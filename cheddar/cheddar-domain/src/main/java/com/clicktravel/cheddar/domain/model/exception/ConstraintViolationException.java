@@ -16,13 +16,10 @@
  */
 package com.clicktravel.cheddar.domain.model.exception;
 
-import com.clicktravel.cheddar.domain.event.DomainEvent;
 
 public class ConstraintViolationException extends IllegalStateException {
 
     private static final long serialVersionUID = 3662580310625716490L;
-
-    private DomainEvent domainEvent;
 
     public ConstraintViolationException(final String message) {
         super(message);
@@ -30,15 +27,6 @@ public class ConstraintViolationException extends IllegalStateException {
 
     public ConstraintViolationException(final String message, final Throwable cause) {
         super(message, cause);
-    }
-
-    public ConstraintViolationException(final DomainEvent domainEvent) {
-        super(domainEvent.type());
-        this.domainEvent = domainEvent;
-    }
-
-    public DomainEvent getDomainEvent() {
-        return domainEvent;
     }
 
 }
