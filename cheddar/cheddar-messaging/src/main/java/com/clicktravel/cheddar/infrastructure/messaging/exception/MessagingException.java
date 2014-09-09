@@ -16,11 +16,20 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging.exception;
 
-public class MessageHandlingException extends MessagingException {
+public abstract class MessagingException extends RuntimeException {
 
-    private static final long serialVersionUID = 5991755885193413206L;
+    private static final long serialVersionUID = 2298979185760123743L;
 
-    public MessageHandlingException(final String message, final Throwable cause) {
+    public MessagingException(final String message, final Throwable cause) {
         super(message, cause);
     }
+
+    public MessagingException(final String message) {
+        super(message);
+    }
+
+    public MessagingException(final Throwable cause) {
+        super(cause);
+    }
+
 }
