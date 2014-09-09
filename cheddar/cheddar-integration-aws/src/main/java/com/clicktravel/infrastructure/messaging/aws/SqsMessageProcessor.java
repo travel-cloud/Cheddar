@@ -153,8 +153,9 @@ public class SqsMessageProcessor implements Runnable {
     private void processSqsMessage(final com.amazonaws.services.sqs.model.Message sqsMessage) {
         final DeleteMessageRequest deleteMessageRequest = new DeleteMessageRequest().withQueueUrl(queueUrl)
                 .withReceiptHandle(sqsMessage.getReceiptHandle());
-        Message message;
-        MessageHandler messageHandler;
+        Message message = null;
+        MessageHandler messageHandler = null;
+
         // TODO Replace the following hack to generalise message listener to handle any message, including foreign ones
         if (messageHandlers.containsKey("")) {
             // Handle foreign message
@@ -163,14 +164,19 @@ public class SqsMessageProcessor implements Runnable {
         } else {
             // Handle native Cheddar message
             message = getMessage(sqsMessage);
-            messageHandler = messageHandlers.get(message.getType());
+            if (message != null) {
+                messageHandler = messageHandlers.get(message.getType());
+                if (messageHandler == null) {
+                    logger.debug("Unsupported message type: " + message.getType());
+                }
+            }
         }
+
         if (messageHandler != null) {
             applyRateLimiter();
             executor.execute(new MessageHandlingWorker(message, messageHandler, amazonSqsClient, deleteMessageRequest,
                     semaphore));
         } else {
-            logger.debug("Unsupported message type: " + message.getType());
             amazonSqsClient.deleteMessage(deleteMessageRequest);
             semaphore.release();
         }
@@ -183,7 +189,8 @@ public class SqsMessageProcessor implements Runnable {
             final String messagePayload = jsonNode.get("Message").textValue();
             return new SimpleMessage(messageType, messagePayload);
         } catch (final Exception e) {
-            throw new IllegalStateException("Could not parse message from SQS message: " + sqsMessage.getBody(), e);
+            logger.debug("Could not parse message from SQS message: " + sqsMessage.getBody());
+            return null;
         }
     }
 
