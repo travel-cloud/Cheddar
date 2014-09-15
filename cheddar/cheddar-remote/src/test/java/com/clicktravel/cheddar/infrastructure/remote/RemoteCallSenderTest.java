@@ -26,17 +26,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.clicktravel.common.random.Randoms;
-import com.clicktravel.cheddar.infrastructure.messaging.HoldableMessageSender;
 import com.clicktravel.cheddar.infrastructure.messaging.Message;
-import com.clicktravel.cheddar.infrastructure.remote.RemoteCall;
-import com.clicktravel.cheddar.infrastructure.remote.RemoteCallSender;
+import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.common.random.Randoms;
 
 public class RemoteCallSenderTest {
 
     RemoteCall mockRemoteCall;
     String serialized;
-    HoldableMessageSender holdableMessageSender;
+    MessageSender messageSender;
     RemoteCallSender remoteCallSender;
 
     @Before
@@ -45,8 +43,8 @@ public class RemoteCallSenderTest {
         mockRemoteCall = mock(RemoteCall.class);
         serialized = Randoms.randomString();
         when(mockRemoteCall.serialize()).thenReturn(serialized);
-        holdableMessageSender = mock(HoldableMessageSender.class);
-        remoteCallSender = new RemoteCallSender(holdableMessageSender);
+        messageSender = mock(MessageSender.class);
+        remoteCallSender = new RemoteCallSender(messageSender);
     }
 
     @Test
@@ -68,28 +66,10 @@ public class RemoteCallSenderTest {
         checkSendMessage(commandDelaySeconds);
     }
 
-    @Test
-    public void shouldHoldMessages_withPause() {
-        // When
-        remoteCallSender.pause();
-
-        // Then
-        verify(holdableMessageSender).holdMessages();
-    }
-
-    @Test
-    public void shouldForwardMessages_withResume() {
-        // When
-        remoteCallSender.resume();
-
-        // Then
-        verify(holdableMessageSender).forwardMessages();
-    }
-
     private void checkSendMessage(final int messageDelaySeconds) {
         final String messageType = mockRemoteCall.getClass().getSimpleName();
         final ArgumentCaptor<Message> messageCaptor = ArgumentCaptor.forClass(Message.class);
-        verify(holdableMessageSender).sendDelayedMessage(messageCaptor.capture(), eq(messageDelaySeconds));
+        verify(messageSender).sendDelayedMessage(messageCaptor.capture(), eq(messageDelaySeconds));
         final Message actualMessage = messageCaptor.getValue();
         assertEquals(messageType, actualMessage.getType());
         assertEquals(serialized, actualMessage.getPayload());

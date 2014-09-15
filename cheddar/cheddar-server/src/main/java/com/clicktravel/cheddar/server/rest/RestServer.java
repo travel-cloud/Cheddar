@@ -43,40 +43,46 @@ public class RestServer {
     private static final int STATUS_WORKER_THREADS = 2;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final int servicePort;
+    private final int statusPort;
     private final HttpServer httpServer;
 
     public static final String SERVICE_POOL_NAME_PREFIX = "Grizzly-Service";
     public static final String STATUS_POOL_NAME_PREFIX = "Grizzly-Status";
 
     public RestServer(final int servicePort, final int statusPort, final String bindAddress) {
+        this.servicePort = servicePort;
+        this.statusPort = statusPort;
         final ResourceConfig resourceConfig = new RestResourceConfig();
         logger.info("Registering resources has finished");
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
-        configureThreadPools(httpServer.getListener("grizzly").getTransport(), SERVICE_POOL_NAME_PREFIX,
-                SERVICE_WORKER_THREADS);
+        configureThreadPools(httpServer.getListener("grizzly"), SERVICE_POOL_NAME_PREFIX, SERVICE_WORKER_THREADS);
         logger.info("Configuring REST status resources on port " + statusPort);
         final NetworkListener statusPortListener = new NetworkListener("status", baseUri.getHost(), statusPort);
-        configureThreadPools(statusPortListener.getTransport(), STATUS_POOL_NAME_PREFIX, STATUS_WORKER_THREADS);
+        configureThreadPools(statusPortListener, STATUS_POOL_NAME_PREFIX, STATUS_WORKER_THREADS);
         httpServer.addListener(statusPortListener);
     }
 
-    private void configureThreadPools(final TCPNIOTransport transport, final String poolNamePrefix, final int threads) {
+    private void configureThreadPools(final NetworkListener networkListener, final String poolNamePrefix,
+            final int workerThreads) {
+        final TCPNIOTransport transport = networkListener.getTransport();
         transport.getKernelThreadPoolConfig().setPoolName(poolNamePrefix + "-Kernel");
-        transport.getWorkerThreadPoolConfig().setPoolName(poolNamePrefix + "-Worker").setMaxPoolSize(threads)
-                .setCorePoolSize(threads);
+        transport.getWorkerThreadPoolConfig().setPoolName(poolNamePrefix + "-Worker").setMaxPoolSize(workerThreads)
+                .setCorePoolSize(workerThreads);
     }
 
     public void start() throws IOException {
-        logger.info("Starting REST server");
+        logger.info("Starting REST server; servicePort:[" + servicePort + "] statusPort:[" + statusPort + "]");
         httpServer.start();
     }
 
     public void stop() {
         try {
-            logger.info("Stopping REST server");
+            logger.info("Stopping REST server; servicePort:[" + servicePort + "] statusPort:[" + statusPort + "]");
             httpServer.stop();
+            logger.info("REST server stopped");
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }

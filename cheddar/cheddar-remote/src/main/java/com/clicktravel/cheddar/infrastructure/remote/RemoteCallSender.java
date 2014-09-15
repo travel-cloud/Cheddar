@@ -21,19 +21,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.clicktravel.cheddar.infrastructure.messaging.HoldableMessageSender;
 import com.clicktravel.cheddar.infrastructure.messaging.Message;
+import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
 import com.clicktravel.cheddar.infrastructure.messaging.SimpleMessage;
 
 @Component
 public class RemoteCallSender {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final HoldableMessageSender holdableMessageSender;
+    private final MessageSender remoteCallMessageSender;
 
     @Autowired
-    public RemoteCallSender(final HoldableMessageSender remoteCallHoldableMessageSender) {
-        holdableMessageSender = remoteCallHoldableMessageSender;
+    public RemoteCallSender(final MessageSender remoteCallMessageSender) {
+        this.remoteCallMessageSender = remoteCallMessageSender;
     }
 
     /**
@@ -54,22 +54,6 @@ public class RemoteCallSender {
     public void sendDelayedRemoteCall(final RemoteCall remoteCall, final int delaySeconds) {
         logger.debug("Sending remote call; " + remoteCall);
         final Message message = new SimpleMessage(remoteCall.getClass().getSimpleName(), remoteCall.serialize());
-        holdableMessageSender.sendDelayedMessage(message, delaySeconds);
-    }
-
-    /**
-     * Pause remote calls by holding them in a temporary store rather than sending them. This affects future calls to
-     * {@link #sendRemoteCall(RemoteCall)} and {@link #sendDelayedRemoteCall(RemoteCall, int)}. Use {@link #resume()} to
-     * flush the held messages.
-     */
-    public void pause() {
-        holdableMessageSender.holdMessages();
-    }
-
-    /**
-     * Flush any held remote calls during pause and resume normal processing of remote calls.
-     */
-    public void resume() {
-        holdableMessageSender.forwardMessages();
+        remoteCallMessageSender.sendDelayedMessage(message, delaySeconds);
     }
 }

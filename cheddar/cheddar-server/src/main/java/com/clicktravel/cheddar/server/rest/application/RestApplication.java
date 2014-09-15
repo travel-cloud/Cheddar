@@ -18,6 +18,8 @@ package com.clicktravel.cheddar.server.rest.application;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
@@ -33,7 +35,7 @@ public class RestApplication {
      *            <li>{@code context} - Name of application, defaults to {@code UNKNOWN}</li>
      *            <li>{@code service-port} - Port number for REST service endpoints, defaults to {@code 8080}</li>
      *            <li>{@code status-port} - Port number for REST status endpoints ({@code /status} and
-     *            {@code /healthCheck}), defaults to {@code service-port + 100}</li>
+     *            {@code /status/healthCheck}), defaults to {@code service-port + 100}</li>
      *            <li>{@code bind-address} - Local IP address to bind server to, defaults to {@code 0.0.0.0}</li>
      *            </ul>
      * 
@@ -47,19 +49,19 @@ public class RestApplication {
         MDC.put("context", context);
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
+        final Logger logger = LoggerFactory.getLogger(RestApplication.class);
         final RestServer restServer = new RestServer(servicePort, statusPort, bindAddress);
-        try {
-            restServer.start();
-        } catch (final IOException e) {
-            e.printStackTrace();
-            restServer.stop();
-            System.exit(1);
-        }
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
                 restServer.stop();
             }
         }));
+        try {
+            restServer.start();
+            Thread.currentThread().join();
+        } catch (final IOException e) {
+            logger.error("Error running REST server", e);
+        }
     }
 }
