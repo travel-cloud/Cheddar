@@ -108,7 +108,7 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
     public void enterHaltingLowPriorityEventsState() {
         checkAndSetLifecycleStatus(RUNNING, HALTING_LOW_PRIORITY_EVENTS);
         logger.debug("Application instance closing down, using blue-green deployment procedure.");
-        shutdownImminentlyAllMessageListeners();
+        prepareAllMessageListenersForShutdown();
         logger.debug("Halting low-priority domain event handling and general application work queue handling.");
         shutdownAll(messageListenersExcept(eventMessageListener, highPriorityEventMessageListener,
                 remoteCallMessageListener, remoteResponseMessageListener, systemEventMessageListener));
@@ -149,13 +149,13 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
         logger.debug("Draining command response queue");
         remoteResponseMessageListener.shutdownAfterQueueDrained();
         remoteResponseMessageListener.awaitTermination();
+        logger.debug("Halting system queue processing");
+        systemEventMessageListener.shutdown();
+        systemEventMessageListener.awaitTermination();
     }
 
     private void processTerminatedState() {
         setLifecycleStatus(TERMINATED);
-        logger.debug("Halting system queue processing");
-        systemEventMessageListener.shutdown();
-        systemEventMessageListener.awaitTermination();
     }
 
     private void checkAndSetLifecycleStatus(final LifecycleStatus expectedCurrentStatus, final LifecycleStatus newStatus) {
@@ -190,7 +190,7 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
         shutdownAll(Arrays.asList(messageListenersToShutdown));
     }
 
-    private void shutdownImminentlyAllMessageListeners() {
+    private void prepareAllMessageListenersForShutdown() {
         for (final MessageListener messageListener : messageListeners) {
             messageListener.prepareForShutdown();
         }
