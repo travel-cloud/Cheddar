@@ -4,14 +4,14 @@
 
 ## Click's Hexagonal Domain-Driven Architecture
 
-Cheddar is Java framework for enterprise applications on Amazon Web Services (AWS) using domain-driven design (DDD). Bounded contexts are implemented as microservices which are integrated using an event-driven architecture and expose a REST API. Cheddar has full AWS integration using native services such as [SQS](http://aws.amazon.com/sqs/), [SNS](http://aws.amazon.com/sns/), [DynamoDB](http://aws.amazon.com/dynamodb/) and [CloudSearch](http://aws.amazon.com/cloudsearch/).
+Cheddar is Java framework for enterprise applications on Amazon Web Services (AWS) using _domain-driven design_ (DDD). Bounded contexts are implemented as microservices which are integrated using an _event-driven architecture_ and expose a REST API. Cheddar has full AWS integration using native services such as [SQS](http://aws.amazon.com/sqs/), [SNS](http://aws.amazon.com/sns/), [DynamoDB](http://aws.amazon.com/dynamodb/) and [CloudSearch](http://aws.amazon.com/cloudsearch/).
 
 ## Domain-Driven Design
-_Domain-Driven Design_ (DDD) is an approach for developing software that closely aligns the implementation to evolving business concepts.
+Domain-Driven Design (DDD) is an approach for developing software that closely aligns the implementation to evolving business concepts.
 
 DDD promotes focus on the subjects most important to the business problem at hand, identifying these as _core domains_. Complex systems are decomposed to several orthogonal domains using _strategic modelling_, avoiding cross-contamination and enabling modeling of relationships between domains.
 
-To talk about domain, a _domain model_ and supporting [_ubiquitous language_](http://martinfowler.com/bliki/UbiquitousLanguage.html) is used. _Domain experts_ use the ubiquitous language every day when talking about the domain. The ubiquitous language and domain model form the basis for a solution that addresses the domain, known as a _bounded context_. A [rich domain model](http://www.martinfowler.com/bliki/AnemicDomainModel.html) encapsulates all its domain (business) logic.
+To talk about the domain, a _domain model_ and supporting [_ubiquitous language_](http://martinfowler.com/bliki/UbiquitousLanguage.html) is used. _Domain experts_ use the ubiquitous language every day when talking about the domain. The ubiquitous language and domain model form the basis for a solution that addresses the domain, known as a _bounded context_. A [rich domain model](http://www.martinfowler.com/bliki/AnemicDomainModel.html) encapsulates all its domain (business) logic.
 
 Domain models publish _domain events_ when something of potential interest occurs in the model. Domain events may be consumed by the local or (after mapping by an _anti-corruption layer_) foreign bounded contexts. This application of the [observer pattern](http://en.wikipedia.org/wiki/Observer_pattern) promotes decoupling of the domains.
 
