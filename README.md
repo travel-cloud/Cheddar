@@ -4,7 +4,7 @@
 
 ## Click's Hexagonal Domain-Driven Architecture
 
-Cheddar is Java framework for enterprise applications on Amazon Web Services (AWS) using _domain-driven design_ (DDD). Bounded contexts are implemented as microservices which are integrated using an _event-driven architecture_ and expose a REST API. Cheddar has full AWS integration using native services such as [SQS](http://aws.amazon.com/sqs/), [SNS](http://aws.amazon.com/sns/), [DynamoDB](http://aws.amazon.com/dynamodb/) and [CloudSearch](http://aws.amazon.com/cloudsearch/).
+Cheddar is a Java framework for enterprise applications on Amazon Web Services (AWS) using _domain-driven design_ (DDD). Bounded contexts are implemented as microservices which are integrated using an _event-driven architecture_ and expose a REST API. Cheddar has full AWS integration using native services such as [SQS](http://aws.amazon.com/sqs/), [SNS](http://aws.amazon.com/sns/), [DynamoDB](http://aws.amazon.com/dynamodb/) and [CloudSearch](http://aws.amazon.com/cloudsearch/).
 
 ## Domain-Driven Design
 Domain-Driven Design (DDD) is an approach for developing software that closely aligns the implementation to evolving business concepts.
@@ -20,14 +20,17 @@ Practical concerns irrelevant to the domain but vital for a working implementati
 By modelling the business in software, DDD enables building of flexible, scalable solutions tightly aligned with business goals.
 
 ### More resources
+
+#### Online articles
 - [Wikipedia article on Domain-Driven Design](http://en.wikipedia.org/wiki/Domain-driven_design)
 - [Vaughn Vernon's blog](http://vaughnvernon.co/)
 - [Martin Fowler's blog articles on Domain-Driven Design](http://martinfowler.com/tags/domain%20driven%20design.html)
 - [DDD Community](http://dddcommunity.org/)
 - [Short intro to DDD](http://domainlanguage.com/ddd/)
 - [Domain-Driven Design presentation](http://www.slideshare.net/panesofglass/domain-driven-design)
+- [An Introduction To Domain-Driven Design](http://msdn.microsoft.com/en-us/magazine/dd419654.aspx)
 
-### Books
+#### Books
 - [Vaughn Vernon - Implementing Domain-Driven Design](https://vaughnvernon.co/?page_id=168)
 - [Eric Evans - Domain-driven Design: Tackling Complexity in the Heart of Software](http://www.amazon.co.uk/Domain-driven-Design-Tackling-Complexity-Software/dp/0321125215)
 - [InfoQ free book - Domain Driven Design Quickly](http://www.infoq.com/minibooks/domain-driven-design-quickly)
