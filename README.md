@@ -4,12 +4,12 @@
 
 ## Click's Hexagonal Domain-Driven Architecture
 
-Cheddar is a Java framework for enterprise applications on Amazon Web Services (AWS) using _domain-driven design_ (DDD). Bounded contexts are implemented as microservices which are integrated using an _event-driven architecture_ and expose a REST API. Cheddar has full AWS integration using native services such as [SQS](http://aws.amazon.com/sqs/), [SNS](http://aws.amazon.com/sns/), [DynamoDB](http://aws.amazon.com/dynamodb/) and [CloudSearch](http://aws.amazon.com/cloudsearch/).
+Cheddar is a Java framework for enterprise applications on Amazon Web Services (AWS) using _domain-driven design_ (DDD). Bounded contexts are implemented as microservices, which are integrated using an _event-driven architecture_ and expose a REST API. Cheddar has full AWS integration using native services such as [SQS](http://aws.amazon.com/sqs/), [SNS](http://aws.amazon.com/sns/), [DynamoDB](http://aws.amazon.com/dynamodb/) and [CloudSearch](http://aws.amazon.com/cloudsearch/).
 
 ## Domain-Driven Design
 Domain-Driven Design (DDD) is an approach for developing software that closely aligns the implementation to evolving business concepts.
 
-DDD promotes focus on the subjects most important to the business problem at hand, identifying these as _core domains_. Complex systems are decomposed to several orthogonal domains using _strategic modelling_, avoiding cross-contamination and enabling modeling of relationships between domains.
+DDD promotes focus on the subjects most important to the business problem at hand, identifying these as _core domains_. Complex systems are decomposed to several orthogonal domains using _strategic modelling_, avoiding cross-contamination and enabling modelling of relationships between domains.
 
 To talk about the domain, a _domain model_ and supporting [_ubiquitous language_](http://martinfowler.com/bliki/UbiquitousLanguage.html) is used. _Domain experts_ use the ubiquitous language every day when talking about the domain. The ubiquitous language and domain model form the basis for a solution that addresses the domain, known as a _bounded context_. A [rich domain model](http://www.martinfowler.com/bliki/AnemicDomainModel.html) encapsulates all its domain (business) logic.
 
@@ -36,10 +36,10 @@ By modelling the business in software, DDD enables building of flexible, scalabl
 - [InfoQ free book - Domain Driven Design Quickly](http://www.infoq.com/minibooks/domain-driven-design-quickly)
 
 ## Cheddar applications
-Cheddar provides a well defined Java project structure for implementing each bounded context as a REST HTTP application hosted on AWS.
+Cheddar provides a well-defined Java project structure for implementing each bounded context as a REST HTTP application hosted on AWS.
 
 ### Hexagonal architecture
-Cheddar uses a [_hexagonal architecture_](http://alistair.cockburn.us/Hexagonal+architecture) to house each bounded context, meaning the domain model is surrounded by an _application layer_ and an _adapter layer_.
+Cheddar uses a [_hexagonal architecture_](http://alistair.cockburn.us/Hexagonal+architecture) to house each bounded context, meaning an _application layer_ and an _adapter layer_ surround the domain model.
 
 ![Hexagonal architecture diagram](http://googledrive.com/host/0B3KE77--Zs7eOVJUZko4eDhQbkk/ "Hexagonal architecture")
 
@@ -50,7 +50,7 @@ Central to the implementation is the domain model, containing rich domain object
 The application layer is responsible for co-ordination of operations performed on the domain model, application of security and transaction boundaries. The public interfaces for the application layer form the API for the bounded context. This API satisfies the use cases for the bounded context. No domain logic resides in the application layer.
 
 #### Adapter layer
-The adapter layer adapts all communication for the bounded context, both inbound and outbound. It abstracts technical detail for various communcation forms:
+The adapter layer adapts all communication for the bounded context, both inbound and outbound. It abstracts technical detail for various communication forms:
 * Messaging using [SQS](http://aws.amazon.com/sqs/)
 * Persistence using [DynamoDB](http://aws.amazon.com/dynamodb/)
 * Multiple data versions and formats
