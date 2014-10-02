@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 
+import java.util.List;
+
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 
 public interface FileStore {
@@ -26,4 +28,5 @@ public interface FileStore {
 
     void delete(FilePath filePath) throws NonExistentItemException;
 
+    List<String> list(String directory, String prefix) throws NonExistentItemException;
 }

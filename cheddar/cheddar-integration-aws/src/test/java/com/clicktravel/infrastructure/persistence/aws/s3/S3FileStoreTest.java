@@ -29,10 +29,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
@@ -216,5 +213,54 @@ public class S3FileStoreTest {
         // Then
         verify(mockAmazonS3Client).generatePresignedUrl(bucketSchema + "-" + filePath.directory(), filePath.filename(),
                 new Date(3600000 + randommillis), HttpMethod.GET);
+    }
+
+    @Test
+    public void shouldList_withPrefix() {
+
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
+        s3FileStore.initialize(mockAmazonS3Client);
+        final String directory = randomString(10);
+        final String prefix = randomString(10);
+
+        final ObjectListing mockObjectListing = mock(ObjectListing.class);
+        when(mockAmazonS3Client.listObjects(bucketSchema + "-" + directory, prefix)).thenReturn(mockObjectListing);
+        final S3ObjectSummary mockS3ObjectSummary = mock(S3ObjectSummary.class);
+        final ArrayList<S3ObjectSummary> s3objectSummaries = new ArrayList<S3ObjectSummary>();
+        s3objectSummaries.add(mockS3ObjectSummary);
+        when(mockObjectListing.getObjectSummaries()).thenReturn(s3objectSummaries);
+        when(mockS3ObjectSummary.getKey()).thenReturn(randomString(10));
+
+        // When
+        final List<String> objects = s3FileStore.list(directory, prefix);
+
+        // Then
+        verify(mockAmazonS3Client).listObjects(bucketSchema + "-" + directory, prefix);
+        assertNotNull(objects);
+    }
+
+    @Test
+    public void shouldList_withNoPrefix() {
+
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
+        s3FileStore.initialize(mockAmazonS3Client);
+        final String directory = randomString(10);
+
+        final ObjectListing mockObjectListing = mock(ObjectListing.class);
+        when(mockAmazonS3Client.listObjects(bucketSchema + "-" + directory, null)).thenReturn(mockObjectListing);
+        final S3ObjectSummary mockS3ObjectSummary = mock(S3ObjectSummary.class);
+        final ArrayList<S3ObjectSummary> s3objectSummaries = new ArrayList<S3ObjectSummary>();
+        s3objectSummaries.add(mockS3ObjectSummary);
+        when(mockObjectListing.getObjectSummaries()).thenReturn(s3objectSummaries);
+        when(mockS3ObjectSummary.getKey()).thenReturn(randomString(10));
+
+        // When
+        final List<String> objects = s3FileStore.list(directory, null);
+
+        // Then
+        verify(mockAmazonS3Client).listObjects(bucketSchema + "-" + directory, null);
+        assertNotNull(objects);
     }
 }

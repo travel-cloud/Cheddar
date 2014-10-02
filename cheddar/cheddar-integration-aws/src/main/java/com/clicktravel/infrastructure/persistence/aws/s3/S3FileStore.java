@@ -20,8 +20,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -137,6 +139,10 @@ public class S3FileStore implements InternetFileStore {
         return bucketSchema + "-" + filePath.directory();
     }
 
+    private String bucketNameForDirectory(final String directory) {
+        return bucketSchema + "-" + directory;
+    }
+
     private void createBucket(final String bucketName) {
         amazonS3Client.createBucket(bucketName);
     }
@@ -147,4 +153,29 @@ public class S3FileStore implements InternetFileStore {
                 .plusHours(1).toDate(), HttpMethod.GET);
     }
 
+    @Override
+    public List<String> list(final String directory, final String prefix) {
+
+        try {
+
+            final List<String> objects = new ArrayList<String>();
+            final ObjectListing objectListing = amazonS3Client.listObjects(bucketNameForDirectory(directory), prefix);
+
+            final List<S3ObjectSummary> s3objectSummaries = objectListing.getObjectSummaries();
+            for (final S3ObjectSummary s3ObjectSummary : s3objectSummaries) {
+                objects.add(s3ObjectSummary.getKey());
+            }
+
+            return objects;
+
+        } catch (final AmazonS3Exception e) {
+
+            if (missingItemErrorCodes.contains(e.getErrorCode())) {
+                throw new NonExistentItemException("No items found in directory -> " + directory
+                        + " with the specified prefix -> " + prefix);
+            }
+
+            throw e;
+        }
+    }
 }
