@@ -28,5 +28,14 @@ public interface FileStore {
 
     void delete(FilePath filePath) throws NonExistentItemException;
 
+    /**
+     * Lists the contents of a FileStore.
+     * 
+     * @param directory The directory of the FileStore to list the contents of.
+     * @param prefix The prefix to limit the results by.
+     * @return The contents of the FileStore.
+     * 
+     * @throws NonExistentItemException If the specified directory does not exist.
+     */
     List<String> list(String directory, String prefix) throws NonExistentItemException;
 }

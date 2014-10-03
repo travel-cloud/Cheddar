@@ -139,6 +139,12 @@ public class S3FileStore implements InternetFileStore {
         return bucketSchema + "-" + filePath.directory();
     }
 
+    /**
+     * Returns the correct bucket name for the supplied directory.
+     * 
+     * @param directory The directory for which the bucket name is required.
+     * @return The correct bucket name for the supplied directory.
+     */
     private String bucketNameForDirectory(final String directory) {
         return bucketSchema + "-" + directory;
     }
