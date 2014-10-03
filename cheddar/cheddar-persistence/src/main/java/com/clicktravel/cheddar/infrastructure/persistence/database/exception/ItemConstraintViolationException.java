@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
+
 /**
  * Exception to be used in the persistence layer when an item-level constraint has been violated for example unique
  * constraints.

@@ -33,8 +33,8 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.ItemConstraintViolationException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceResourceFailureException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
 public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchDatabaseTemplate {
 

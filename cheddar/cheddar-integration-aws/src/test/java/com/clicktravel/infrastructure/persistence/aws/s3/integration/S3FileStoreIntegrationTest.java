@@ -20,10 +20,12 @@ import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -128,4 +130,41 @@ public class S3FileStoreIntegrationTest {
         assertNotNull(url);
     }
 
+    @Test
+    public void shouldList_withPrefix() throws IOException {
+
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(BUCKET_SCHEMA);
+        s3FileStore.initialize(amazonS3Client);
+
+        final String randomSubFolder = "/" + randomString(10) + "/";
+        for (int i = 0; i < 3; i++) {
+            final String fileName = "ListWithPrefixTest" + randomSubFolder + randomString(10);
+            final FileItem fileItem = new FileItem(fileName, randomString(255));
+            final FilePath filePath = new FilePath(BUCKET_NAME, fileName);
+            s3FileStore.write(filePath, fileItem);
+        }
+
+        // When
+        final List<FilePath> filePathList = s3FileStore.list(BUCKET_NAME, "ListWithPrefixTest" + randomSubFolder);
+
+        // Then
+        assertNotNull(filePathList);
+        assertTrue(filePathList.size() == 3);
+    }
+
+    @Test
+    public void shouldList_withNoPrefix() throws IOException {
+
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(BUCKET_SCHEMA);
+        s3FileStore.initialize(amazonS3Client);
+
+        // When
+        final List<FilePath> filePathList = s3FileStore.list(BUCKET_NAME, null);
+
+        // Then
+        assertNotNull(filePathList);
+        assertTrue(filePathList.size() > 0);
+    }
 }

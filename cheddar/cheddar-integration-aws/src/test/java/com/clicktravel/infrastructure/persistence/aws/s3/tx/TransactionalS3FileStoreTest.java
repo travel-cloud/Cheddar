@@ -31,6 +31,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
 import com.clicktravel.cheddar.infrastructure.tx.NestedTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.NonExistentTransactionException;
+import com.clicktravel.common.random.Randoms;
 import com.clicktravel.infrastructure.persistence.aws.s3.S3FileStore;
 
 public class TransactionalS3FileStoreTest {
@@ -226,4 +227,32 @@ public class TransactionalS3FileStoreTest {
         verify(mockS3FileStore).delete(filePath);
     }
 
+    @Test
+    public void shouldList_withPrefix() throws Exception {
+
+        // Given
+        final TransactionalS3FileStore transactionalS3FileStore = new TransactionalS3FileStore(mockS3FileStore);
+        final String directory = Randoms.randomString();
+        final String prefix = Randoms.randomString();
+
+        // When
+        transactionalS3FileStore.list(directory, prefix);
+
+        // Then
+        verify(mockS3FileStore).list(directory, prefix);
+    }
+
+    @Test
+    public void shouldList_withNoPrefix() throws Exception {
+
+        // Given
+        final TransactionalS3FileStore transactionalS3FileStore = new TransactionalS3FileStore(mockS3FileStore);
+        final String directory = Randoms.randomString();
+
+        // When
+        transactionalS3FileStore.list(directory, null);
+
+        // Then
+        verify(mockS3FileStore).list(directory, null);
+    }
 }

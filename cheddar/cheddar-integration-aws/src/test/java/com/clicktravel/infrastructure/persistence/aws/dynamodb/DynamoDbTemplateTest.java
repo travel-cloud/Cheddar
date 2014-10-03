@@ -43,10 +43,10 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
 import com.clicktravel.cheddar.infrastructure.persistence.database.SequenceKeyGenerator;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.ItemConstraintViolationException;
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceResourceFailureException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Condition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.common.random.Randoms;
 
 @SuppressWarnings("unchecked")

@@ -20,8 +20,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -33,6 +35,7 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFileStore;
@@ -137,6 +140,16 @@ public class S3FileStore implements InternetFileStore {
         return bucketSchema + "-" + filePath.directory();
     }
 
+    /**
+     * Returns the correct bucket name for the supplied directory.
+     * 
+     * @param directory The directory for which the bucket name is required.
+     * @return The correct bucket name for the supplied directory.
+     */
+    private String bucketNameForDirectory(final String directory) {
+        return bucketSchema + "-" + directory;
+    }
+
     private void createBucket(final String bucketName) {
         amazonS3Client.createBucket(bucketName);
     }
@@ -147,4 +160,25 @@ public class S3FileStore implements InternetFileStore {
                 .plusHours(1).toDate(), HttpMethod.GET);
     }
 
+    @Override
+    public List<FilePath> list(final String directory, final String prefix) {
+
+        try {
+
+            final List<FilePath> filePathList = new ArrayList<FilePath>();
+            final ObjectListing objectListing = amazonS3Client.listObjects(bucketNameForDirectory(directory), prefix);
+
+            final List<S3ObjectSummary> s3objectSummaries = objectListing.getObjectSummaries();
+            for (final S3ObjectSummary s3ObjectSummary : s3objectSummaries) {
+                final FilePath filePath = new FilePath(directory, s3ObjectSummary.getKey());
+                filePathList.add(filePath);
+            }
+
+            return filePathList;
+
+        } catch (final AmazonS3Exception e) {
+            throw new PersistenceResourceFailureException("An error occurred obtaining a listing of directory -> "
+                    + directory + " with prefix -> " + prefix, e);
+        }
+    }
 }

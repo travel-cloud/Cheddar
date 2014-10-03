@@ -14,19 +14,21 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
+package com.clicktravel.cheddar.infrastructure.persistence.exception;
 
-public class PersistenceResourceFailureException extends PersistenceException {
+public abstract class PersistenceException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
+    public PersistenceException(final String message) {
+        super(message);
+    }
+
     /**
-     * Constructor for PersistenceResourceFailureException
-     * 
-     * @param message The message associated with the exception
-     * @param cause The cause of the exception
+     * @param message
+     * @param cause
      */
-    public PersistenceResourceFailureException(final String message, final Throwable cause) {
+    public PersistenceException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
