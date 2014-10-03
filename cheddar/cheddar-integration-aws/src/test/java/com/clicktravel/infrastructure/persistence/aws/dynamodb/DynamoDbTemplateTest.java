@@ -1122,4 +1122,88 @@ public class DynamoDbTemplateTest {
 
     }
 
+    @Test
+    public void shouldFetch_Max500TimesForAttributeQueryWithanIndex() throws Exception {
+        // Given
+        final AttributeQuery query = mock(AttributeQuery.class);
+        final Condition mockCondition = mock(Condition.class);
+        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
+        final String itemId = randomId();
+        final String stringProperty = randomString(10);
+        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
+        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(query.getAttributeName()).thenReturn("stringProperty");
+        when(query.getCondition()).thenReturn(mockCondition);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        itemConfiguration.registerIndexes(Arrays.asList(new IndexDefinition("stringProperty")));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        final QueryResult mockQueryResult = mock(QueryResult.class);
+        final Map<String, AttributeValue> mockItem = new HashMap<>();
+        mockItem.put("id", new AttributeValue(itemId));
+        mockItem.put("stringProperty", new AttributeValue(stringProperty));
+        final List<Map<String, AttributeValue>> mockItems = Arrays.asList(mockItem);
+        when(mockQueryResult.getItems()).thenReturn(mockItems);
+        when(mockQueryResult.getLastEvaluatedKey()).thenReturn(mockItem);
+        when(mockAmazonDynamoDbClient.query(any(QueryRequest.class))).thenReturn(mockQueryResult);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        final Collection<StubItem> returnedItems = dynamoDbTemplate.fetch(query, StubItem.class);
+
+        // Then
+        final ArgumentCaptor<QueryRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(mockAmazonDynamoDbClient, times(500)).query(queryRequestArgumentCaptor.capture());
+        final QueryRequest queryRequest = queryRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, queryRequest.getTableName());
+        assertEquals("stringProperty_idx", queryRequest.getIndexName());
+        assertEquals(1, queryRequest.getKeyConditions().size());
+        assertEquals("EQ", queryRequest.getKeyConditions().get("stringProperty").getComparisonOperator());
+        assertEquals(1, queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().size());
+        assertEquals(new AttributeValue(stringProperty), queryRequest.getKeyConditions().get("stringProperty")
+                .getAttributeValueList().get(0));
+        assertNotNull(returnedItems);
+        assertEquals(500, returnedItems.size());
+    }
+
+    @Test
+    public void shouldFetch_Max500TimesForAttributeQueryWithoutanIndex() throws Exception {
+        // Given
+        final AttributeQuery query = mock(AttributeQuery.class);
+        final Condition mockCondition = mock(Condition.class);
+        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
+        final String itemId = randomId();
+        final String stringProperty = randomString(10);
+        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
+        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(query.getAttributeName()).thenReturn("stringProperty");
+        when(query.getCondition()).thenReturn(mockCondition);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        final ScanResult mockScanResult = mock(ScanResult.class);
+        final Map<String, AttributeValue> mockItem = new HashMap<>();
+        mockItem.put("id", new AttributeValue(itemId));
+        mockItem.put("stringProperty", new AttributeValue(stringProperty));
+        final List<Map<String, AttributeValue>> mockItems = Arrays.asList(mockItem);
+        when(mockScanResult.getItems()).thenReturn(mockItems);
+        when(mockScanResult.getLastEvaluatedKey()).thenReturn(mockItem);
+        when(mockAmazonDynamoDbClient.scan(any(ScanRequest.class))).thenReturn(mockScanResult);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        final Collection<StubItem> returnedItems = dynamoDbTemplate.fetch(query, StubItem.class);
+
+        // Then
+        final ArgumentCaptor<ScanRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(ScanRequest.class);
+        verify(mockAmazonDynamoDbClient, times(500)).scan(queryRequestArgumentCaptor.capture());
+        final ScanRequest scanRequest = queryRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, scanRequest.getTableName());
+
+        assertNotNull(returnedItems);
+        assertEquals(500, returnedItems.size());
+    }
+
 }
