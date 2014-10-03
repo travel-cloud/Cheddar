@@ -19,6 +19,7 @@ package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 import java.util.List;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
 public interface FileStore {
 
@@ -31,11 +32,11 @@ public interface FileStore {
     /**
      * Lists the contents of a FileStore.
      * 
-     * @param directory The directory of the FileStore to list the contents of.
+     * @param directory The directory to list the contents of.
      * @param prefix The prefix to limit the results by.
-     * @return The contents of the FileStore.
+     * @return A list of the contents of the FileStore.
      * 
-     * @throws NonExistentItemException If the specified directory does not exist.
+     * @throws PersistenceResourceFailureException If an error occurred listing the directory.
      */
-    List<String> list(String directory, String prefix) throws NonExistentItemException;
+    List<FilePath> list(String directory, String prefix) throws PersistenceResourceFailureException;
 }

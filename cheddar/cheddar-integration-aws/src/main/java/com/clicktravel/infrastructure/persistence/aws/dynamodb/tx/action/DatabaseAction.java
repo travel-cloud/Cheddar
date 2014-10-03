@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.DatabaseTemplate;
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
 public abstract class DatabaseAction<T> {
 

@@ -97,7 +97,7 @@ public class TransactionalS3FileStore implements InternetFileStore, Transactiona
     }
 
     @Override
-    public List<String> list(final String directory, final String prefix) {
+    public List<FilePath> list(final String directory, final String prefix) {
         return s3FileStore.list(directory, prefix);
     }
 }

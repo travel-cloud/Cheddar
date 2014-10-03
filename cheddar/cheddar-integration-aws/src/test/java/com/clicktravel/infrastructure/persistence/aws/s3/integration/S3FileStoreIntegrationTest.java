@@ -146,11 +146,11 @@ public class S3FileStoreIntegrationTest {
         }
 
         // When
-        final List<String> objectList = s3FileStore.list(BUCKET_NAME, "ListWithPrefixTest" + randomSubFolder);
+        final List<FilePath> filePathList = s3FileStore.list(BUCKET_NAME, "ListWithPrefixTest" + randomSubFolder);
 
         // Then
-        assertNotNull(objectList);
-        assertTrue(objectList.size() == 3);
+        assertNotNull(filePathList);
+        assertTrue(filePathList.size() == 3);
     }
 
     @Test
@@ -161,9 +161,10 @@ public class S3FileStoreIntegrationTest {
         s3FileStore.initialize(amazonS3Client);
 
         // When
-        final List<String> objectList = s3FileStore.list(BUCKET_NAME, null);
+        final List<FilePath> filePathList = s3FileStore.list(BUCKET_NAME, null);
 
         // Then
-        assertNotNull(objectList);
+        assertNotNull(filePathList);
+        assertTrue(filePathList.size() > 0);
     }
 }

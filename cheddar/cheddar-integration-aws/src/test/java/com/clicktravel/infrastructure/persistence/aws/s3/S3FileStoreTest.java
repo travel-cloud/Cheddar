@@ -21,6 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -230,14 +231,16 @@ public class S3FileStoreTest {
         final ArrayList<S3ObjectSummary> s3objectSummaries = new ArrayList<S3ObjectSummary>();
         s3objectSummaries.add(mockS3ObjectSummary);
         when(mockObjectListing.getObjectSummaries()).thenReturn(s3objectSummaries);
+        when(mockS3ObjectSummary.getBucketName()).thenReturn(randomString(10));
         when(mockS3ObjectSummary.getKey()).thenReturn(randomString(10));
 
         // When
-        final List<String> objects = s3FileStore.list(directory, prefix);
+        final List<FilePath> filePathList = s3FileStore.list(directory, prefix);
 
         // Then
         verify(mockAmazonS3Client).listObjects(bucketSchema + "-" + directory, prefix);
-        assertNotNull(objects);
+        assertNotNull(filePathList);
+        assertTrue(filePathList.size() == 1);
     }
 
     @Test
@@ -254,13 +257,15 @@ public class S3FileStoreTest {
         final ArrayList<S3ObjectSummary> s3objectSummaries = new ArrayList<S3ObjectSummary>();
         s3objectSummaries.add(mockS3ObjectSummary);
         when(mockObjectListing.getObjectSummaries()).thenReturn(s3objectSummaries);
+        when(mockS3ObjectSummary.getBucketName()).thenReturn(randomString(10));
         when(mockS3ObjectSummary.getKey()).thenReturn(randomString(10));
 
         // When
-        final List<String> objects = s3FileStore.list(directory, null);
+        final List<FilePath> filePathList = s3FileStore.list(directory, null);
 
         // Then
         verify(mockAmazonS3Client).listObjects(bucketSchema + "-" + directory, null);
-        assertNotNull(objects);
+        assertNotNull(filePathList);
+        assertTrue(filePathList.size() == 1);
     }
 }

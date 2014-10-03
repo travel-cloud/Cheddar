@@ -35,6 +35,7 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFileStore;
@@ -160,28 +161,24 @@ public class S3FileStore implements InternetFileStore {
     }
 
     @Override
-    public List<String> list(final String directory, final String prefix) {
+    public List<FilePath> list(final String directory, final String prefix) {
 
         try {
 
-            final List<String> objects = new ArrayList<String>();
+            final List<FilePath> filePathList = new ArrayList<FilePath>();
             final ObjectListing objectListing = amazonS3Client.listObjects(bucketNameForDirectory(directory), prefix);
 
             final List<S3ObjectSummary> s3objectSummaries = objectListing.getObjectSummaries();
             for (final S3ObjectSummary s3ObjectSummary : s3objectSummaries) {
-                objects.add(s3ObjectSummary.getKey());
+                final FilePath filePath = new FilePath(directory, s3ObjectSummary.getKey());
+                filePathList.add(filePath);
             }
 
-            return objects;
+            return filePathList;
 
         } catch (final AmazonS3Exception e) {
-
-            if (missingItemErrorCodes.contains(e.getErrorCode())) {
-                throw new NonExistentItemException("No items found in directory -> " + directory
-                        + " with the specified prefix -> " + prefix);
-            }
-
-            throw e;
+            throw new PersistenceResourceFailureException("An error occurred obtaining a listing of directory -> "
+                    + directory + " with prefix -> " + prefix, e);
         }
     }
 }
