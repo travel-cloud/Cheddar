@@ -44,6 +44,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
     private static final String SEQUENCE_TABLE_NAME = "sequences";
     private static final String SEQUENCE_NAME_ATTRIBUTE = "name";
     private static final String SEQUENCE_CURRENT_VALUE_ATTRIBUTE = "currentValue";
+    public static final int BATCH_SIZE = 500;
 
     private boolean initialized;
     private AmazonDynamoDB amazonDynamoDbClient;
@@ -535,7 +536,6 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         int count = 0;
-        final int maxResultLimit = 500;
         if (itemConfiguration.hasIndexOn(query.getAttributeName())) {
             do {
                 final String queryAttributeName = query.getAttributeName();
@@ -544,7 +544,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 final boolean isPrimaryKeyQuery = queryAttributeName.equals(primaryKeyPropertyName);
                 final QueryRequest queryRequest = new QueryRequest().withTableName(tableName)
                         .withKeyConditions(conditions).withExclusiveStartKey(lastEvaluatedKey);
-                queryRequest.setLimit(maxResultLimit);
+                queryRequest.setLimit(BATCH_SIZE);
                 if (!isPrimaryKeyQuery) {
                     queryRequest.withIndexName(queryAttributeName + "_idx");
                 }
@@ -557,19 +557,19 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, queryResult.getItems()));
                 lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-                if (totalItems.size() >= maxResultLimit) {
+                if (totalItems.size() >= BATCH_SIZE) {
                     break;
                 } else {
                     count += totalItems.size();
                 }
-            } while (lastEvaluatedKey != null && count <= maxResultLimit);
+            } while (lastEvaluatedKey != null && count <= BATCH_SIZE);
 
         } else {
             logger.warn("Performing table scan with query:" + query);
             do {
                 final ScanRequest scanRequest = new ScanRequest().withTableName(tableName).withScanFilter(conditions)
                         .withExclusiveStartKey(lastEvaluatedKey);
-                scanRequest.setLimit(maxResultLimit);
+                scanRequest.setLimit(BATCH_SIZE);
 
                 final ScanResult scanResult;
                 try {
@@ -579,18 +579,18 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, scanResult.getItems()));
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
-                if (totalItems.size() >= maxResultLimit) {
+                if (totalItems.size() >= BATCH_SIZE) {
                     break;
                 } else {
                     count += totalItems.size();
                 }
-            } while (lastEvaluatedKey != null && count <= maxResultLimit);
+            } while (lastEvaluatedKey != null && count <= BATCH_SIZE);
         }
 
         final Collection<T> items = new ArrayList<>();
-        if (totalItems.size() > maxResultLimit) {
+        if (totalItems.size() > BATCH_SIZE) {
             final Iterator<T> iterator = totalItems.iterator();
-            while (items.size() < maxResultLimit && iterator.hasNext()) {
+            while (items.size() < BATCH_SIZE && iterator.hasNext()) {
                 items.add(iterator.next());
             }
         } else {

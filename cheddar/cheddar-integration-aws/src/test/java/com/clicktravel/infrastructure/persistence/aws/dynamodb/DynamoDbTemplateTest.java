@@ -1120,7 +1120,7 @@ public class DynamoDbTemplateTest {
     }
 
     @Test
-    public void shouldFetch_Max500ResultsForAttributeQueryWithanIndex() throws Exception {
+    public void shouldFetch_MaxBatchSizeResultsForAttributeQueryWithanIndex() throws Exception {
         // Given
         final AttributeQuery query = mock(AttributeQuery.class);
         final Condition mockCondition = mock(Condition.class);
@@ -1160,13 +1160,13 @@ public class DynamoDbTemplateTest {
         verify(mockAmazonDynamoDbClient, atLeastOnce()).query(queryRequestArgumentCaptor.capture());
         final QueryRequest queryRequest = queryRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, queryRequest.getTableName());
-        assertTrue(queryRequest.getLimit() == 500);
+        assertTrue(queryRequest.getLimit() == DynamoDbTemplate.BATCH_SIZE);
         assertNotNull(returnedItems);
-        assertTrue(returnedItems.size() <= 500);
+        assertTrue(returnedItems.size() <= DynamoDbTemplate.BATCH_SIZE);
     }
 
     @Test
-    public void shouldFetch_Max500ResultsForAttributeQueryWithoutanIndex() throws Exception {
+    public void shouldFetch_MaxBatchSizeResultsForAttributeQueryWithoutanIndex() throws Exception {
         // Given
         final AttributeQuery query = mock(AttributeQuery.class);
         final Condition mockCondition = mock(Condition.class);
@@ -1204,9 +1204,9 @@ public class DynamoDbTemplateTest {
         final ScanRequest scanRequest = queryRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, scanRequest.getTableName());
 
-        assertTrue(scanRequest.getLimit() == 500);
+        assertTrue(scanRequest.getLimit() == DynamoDbTemplate.BATCH_SIZE);
         assertNotNull(returnedItems);
-        assertTrue(returnedItems.size() <= 500);
+        assertTrue(returnedItems.size() <= DynamoDbTemplate.BATCH_SIZE);
     }
 
 }
