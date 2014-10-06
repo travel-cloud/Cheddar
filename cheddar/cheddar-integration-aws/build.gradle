@@ -9,7 +9,7 @@ dependencies {
     compile project(':cheddar:cheddar-persistence')
     compile project(':cheddar:cheddar-tx')
 
-    compile 'com.amazonaws:aws-java-sdk:1.7.5'
+    compile 'com.amazonaws:aws-java-sdk:1.8.11'
     compile "org.springframework:spring-context-support:${springVersion}"
     compile "org.springframework:spring-aop:${springVersion}"
 
@@ -30,7 +30,6 @@ test {
 processTestResources {
     filter(org.apache.tools.ant.filters.ReplaceTokens,
         tokens: [
-            AWS_ACCOUNT_ID: aws_integration_account_id,
             AWS_ACCESS_KEY_ID: aws_integration_access_key_id,
             AWS_SECRET_KEY_ID: aws_integration_secret_key,
             AWS_DYNAMODB_ENDPOINT: aws_dynamodb_endpoint,
