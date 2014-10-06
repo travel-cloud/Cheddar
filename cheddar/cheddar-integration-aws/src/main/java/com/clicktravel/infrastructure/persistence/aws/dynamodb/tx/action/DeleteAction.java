@@ -20,8 +20,8 @@ import java.util.List;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.DatabaseTemplate;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
 public class DeleteAction<T extends Item> extends DatabaseAction<T> {
 

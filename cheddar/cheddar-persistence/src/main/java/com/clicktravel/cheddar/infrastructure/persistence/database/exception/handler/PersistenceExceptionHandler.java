@@ -16,7 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler;
 
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceException;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
 public interface PersistenceExceptionHandler<T extends PersistenceException> {
 

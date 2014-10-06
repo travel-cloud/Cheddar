@@ -17,6 +17,7 @@
 package com.clicktravel.infrastructure.persistence.aws.s3.tx;
 
 import java.net.URL;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,5 +94,10 @@ public class TransactionalS3FileStore implements InternetFileStore, Transactiona
     @Override
     public URL publicUrlForFilePath(final FilePath filePath) throws NonExistentItemException {
         return s3FileStore.publicUrlForFilePath(filePath);
+    }
+
+    @Override
+    public List<FilePath> list(final String directory, final String prefix) {
+        return s3FileStore.list(directory, prefix);
     }
 }

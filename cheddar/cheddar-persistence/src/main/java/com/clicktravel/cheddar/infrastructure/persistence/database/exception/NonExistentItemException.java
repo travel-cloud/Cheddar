@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
+
 
 /**
  * Exception to be used by the persistence layer to state that the request for an item with the specified id does not

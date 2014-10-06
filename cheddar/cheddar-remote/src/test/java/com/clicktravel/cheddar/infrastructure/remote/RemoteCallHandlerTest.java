@@ -43,7 +43,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.beans.factory.ListableBeanFactory;
 
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceResourceFailureException;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 import com.clicktravel.common.random.Randoms;
 import com.clicktravel.common.validation.ValidationException;

@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.PersistenceResourceFailureException;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.cheddar.remote.ExceptionHandler;
 import com.clicktravel.cheddar.remote.FailImmediatelyOnException;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;

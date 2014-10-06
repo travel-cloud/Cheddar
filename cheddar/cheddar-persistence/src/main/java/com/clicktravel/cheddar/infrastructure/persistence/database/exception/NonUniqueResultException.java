@@ -19,6 +19,7 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 import java.util.Collection;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
 /**
  * Exception to be used in the persistence layer when the client has asked for a unique value but either none or many
