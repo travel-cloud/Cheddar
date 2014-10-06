@@ -532,7 +532,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
 
         final Map<String, com.amazonaws.services.dynamodbv2.model.Condition> conditions = new HashMap<>();
         conditions.put(query.getAttributeName(), condition);
-        final Collection<T> totalItems = new ArrayList<>();
+        final List<T> totalItems = new ArrayList<>();
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         if (itemConfiguration.hasIndexOn(query.getAttributeName())) {
@@ -584,10 +584,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
 
         final Collection<T> items = new ArrayList<>();
         if (totalItems.size() > BATCH_SIZE) {
-            final Iterator<T> iterator = totalItems.iterator();
-            while (items.size() < BATCH_SIZE && iterator.hasNext()) {
-                items.add(iterator.next());
-            }
+            items.addAll(totalItems.subList(0, BATCH_SIZE));
         } else {
             items.addAll(totalItems);
         }
