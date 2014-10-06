@@ -43,13 +43,11 @@ public abstract class CollectionMapper<T1, T2> {
      * @return Mapped collection
      * @throws MapperException - if collection cannot be mapped successfully
      */
-    @SuppressWarnings("unchecked")
-    public <C1 extends Collection<T1>, C2 extends Collection<T2>> C2 map(final C1 inputCollection)
-            throws CollectionElementMapperException {
+    public Collection<T2> map(final Collection<T1> inputCollection) throws CollectionElementMapperException {
         if (inputCollection == null) {
-            return (C2) new ArrayList<T2>();
+            return new ArrayList<T2>();
         }
-        final C2 outputCollection = (C2) new ArrayList<>();
+        final Collection<T2> outputCollection = new ArrayList<>();
         for (final T1 inputItem : inputCollection) {
             try {
                 outputCollection.add(mapper.map(inputItem));
