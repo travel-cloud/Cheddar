@@ -535,7 +535,6 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
         final Collection<T> totalItems = new ArrayList<>();
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-        int count = 0;
         if (itemConfiguration.hasIndexOn(query.getAttributeName())) {
             do {
                 final String queryAttributeName = query.getAttributeName();
@@ -559,10 +558,8 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 lastEvaluatedKey = queryResult.getLastEvaluatedKey();
                 if (totalItems.size() >= BATCH_SIZE) {
                     break;
-                } else {
-                    count += totalItems.size();
                 }
-            } while (lastEvaluatedKey != null && count <= BATCH_SIZE);
+            } while (lastEvaluatedKey != null && totalItems.size() <= BATCH_SIZE);
 
         } else {
             logger.warn("Performing table scan with query:" + query);
@@ -581,10 +578,8 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
                 if (totalItems.size() >= BATCH_SIZE) {
                     break;
-                } else {
-                    count += totalItems.size();
                 }
-            } while (lastEvaluatedKey != null && count <= BATCH_SIZE);
+            } while (lastEvaluatedKey != null && totalItems.size() <= BATCH_SIZE);
         }
 
         final Collection<T> items = new ArrayList<>();
