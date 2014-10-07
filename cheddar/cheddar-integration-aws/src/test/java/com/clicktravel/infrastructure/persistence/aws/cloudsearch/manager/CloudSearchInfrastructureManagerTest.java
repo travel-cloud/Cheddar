@@ -48,11 +48,10 @@ public class CloudSearchInfrastructureManagerTest {
         // Given
         final CloudSearchClient cloudSearchClient = mock(CloudSearchClient.class);
         final CollectionMapper<IndexDefinition, IndexField> indexCollectionMapper = mock(CollectionMapper.class);
-        final String awsAccountId = randomString(10);
 
         // When
         final CloudSearchInfrastructureManager manager = new CloudSearchInfrastructureManager(cloudSearchClient,
-                indexCollectionMapper, awsAccountId);
+                indexCollectionMapper);
 
         // Then
         assertNotNull(manager);
@@ -63,7 +62,6 @@ public class CloudSearchInfrastructureManagerTest {
         // Given
         final CloudSearchEngine mockCloudSearchEngine = mock(CloudSearchEngine.class);
         final CollectionMapper<IndexDefinition, IndexField> indexCollectionMapper = mock(CollectionMapper.class);
-        final String awsAccountId = randomString(10);
         final Collection<CloudSearchEngine> cloudSearchEngines = Arrays.asList(mockCloudSearchEngine);
         final DocumentConfigurationHolder mockDocumentConfigurationHolder = mock(DocumentConfigurationHolder.class);
         final String schemaName = randomString(10);
@@ -85,7 +83,7 @@ public class CloudSearchInfrastructureManagerTest {
         when(mockCreateDomainResponse.getDomainStatus()).thenReturn(mockDomainStatus);
         when(cloudSearchClient.createDomain(any(CreateDomainRequest.class))).thenReturn(mockCreateDomainResponse);
         final CloudSearchInfrastructureManager manager = new CloudSearchInfrastructureManager(cloudSearchClient,
-                indexCollectionMapper, awsAccountId);
+                indexCollectionMapper);
         final IndexField mockIndexField = mock(IndexField.class);
         final Collection<IndexField> indexFields = Arrays.asList(mockIndexField);
         when(indexCollectionMapper.map(anyCollection())).thenReturn(indexFields);
@@ -115,20 +113,9 @@ public class CloudSearchInfrastructureManagerTest {
         assertEquals(domainName, defineIndexFieldRequestArgumentCaptor.getValue().getDomainName());
         final ArgumentCaptor<IndexDocumentsRequest> indexDocumentsRequestArgumentCaptor = ArgumentCaptor
                 .forClass(IndexDocumentsRequest.class);
-        final ArgumentCaptor<UpdateServiceAccessPoliciesRequest> updateServiceAccessPoliciesRequestArgumentCaptor = ArgumentCaptor
-                .forClass(UpdateServiceAccessPoliciesRequest.class);
-        verify(cloudSearchClient).updateServiceAccessPolicies(
-                updateServiceAccessPoliciesRequestArgumentCaptor.capture());
-        assertEquals(domainName, updateServiceAccessPoliciesRequestArgumentCaptor.getValue().getDomainName());
-        assertEquals(policyJson(awsAccountId, domainName), updateServiceAccessPoliciesRequestArgumentCaptor.getValue()
-                .getAccessPolicies());
         verify(cloudSearchClient).indexDocuments(indexDocumentsRequestArgumentCaptor.capture());
         assertEquals(domainName, indexDocumentsRequestArgumentCaptor.getValue().getDomainName());
         verify(mockCloudSearchEngine).initialize(cloudSearchClient);
-    }
-
-    private Object policyJson(final String awsAccountId, final String domainName) {
-        return "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Sid\":\"search_only\",\"Action\":\"cloudsearch:*\",\"Condition\":{\"IpAddress\":{\"aws:SourceIp\":[\"0.0.0.0/0\"]}},\"Principal\":{\"AWS\":[\"*\"]}}]}";
     }
 
     @Test
@@ -136,7 +123,6 @@ public class CloudSearchInfrastructureManagerTest {
         // Given
         final CloudSearchEngine mockCloudSearchEngine = mock(CloudSearchEngine.class);
         final CollectionMapper<IndexDefinition, IndexField> indexCollectionMapper = mock(CollectionMapper.class);
-        final String awsAccountId = randomString(10);
         final Collection<CloudSearchEngine> cloudSearchEngines = Arrays.asList(mockCloudSearchEngine);
         final DocumentConfigurationHolder mockDocumentConfigurationHolder = mock(DocumentConfigurationHolder.class);
         final String schemaName = randomString(10);
@@ -157,7 +143,7 @@ public class CloudSearchInfrastructureManagerTest {
         when(mockCreateDomainResponse.getDomainStatus()).thenReturn(mockDomainStatus);
         when(cloudSearchClient.createDomain(any(CreateDomainRequest.class))).thenReturn(mockCreateDomainResponse);
         final CloudSearchInfrastructureManager manager = new CloudSearchInfrastructureManager(cloudSearchClient,
-                indexCollectionMapper, awsAccountId);
+                indexCollectionMapper);
         manager.setCloudSearchEngines(cloudSearchEngines);
 
         // When
@@ -188,7 +174,6 @@ public class CloudSearchInfrastructureManagerTest {
         // Given
         final CloudSearchEngine mockCloudSearchEngine = mock(CloudSearchEngine.class);
         final CollectionMapper<IndexDefinition, IndexField> indexCollectionMapper = mock(CollectionMapper.class);
-        final String awsAccountId = randomString(10);
         final Collection<CloudSearchEngine> cloudSearchEngines = Arrays.asList(mockCloudSearchEngine);
         final DocumentConfigurationHolder mockDocumentConfigurationHolder = mock(DocumentConfigurationHolder.class);
         final String schemaName = randomString(10);
@@ -210,7 +195,7 @@ public class CloudSearchInfrastructureManagerTest {
         when(mockCreateDomainResponse.getDomainStatus()).thenReturn(mockDomainStatus);
         when(cloudSearchClient.createDomain(any(CreateDomainRequest.class))).thenReturn(mockCreateDomainResponse);
         final CloudSearchInfrastructureManager manager = new CloudSearchInfrastructureManager(cloudSearchClient,
-                indexCollectionMapper, awsAccountId);
+                indexCollectionMapper);
         final IndexField mockIndexField = mock(IndexField.class);
         final Collection<IndexField> indexFields = Arrays.asList(mockIndexField);
         when(indexCollectionMapper.map(anyCollection())).thenReturn(indexFields);

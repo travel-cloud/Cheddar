@@ -21,7 +21,6 @@ import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 
 import com.amazonaws.services.cloudsearchv2.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
@@ -41,16 +40,13 @@ public class CloudSearchInfrastructureManager {
     private final CloudSearchClient cloudSearchClient;
     private final Collection<CloudSearchEngine> cloudSearchEngines;
     private final CollectionMapper<IndexDefinition, IndexField> indexDefinitionToIndexFieldCollectionMapper;
-    private final String awsAccountId;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public CloudSearchInfrastructureManager(final CloudSearchClient cloudSearchClient,
-            final CollectionMapper<IndexDefinition, IndexField> indexDefinitionToIndexFieldCollectionMapper,
-            @Value("${aws.account.id}") final String awsAccountId) {
+            final CollectionMapper<IndexDefinition, IndexField> indexDefinitionToIndexFieldCollectionMapper) {
         this.cloudSearchClient = cloudSearchClient;
         cloudSearchEngines = new ArrayList<>();
         this.indexDefinitionToIndexFieldCollectionMapper = indexDefinitionToIndexFieldCollectionMapper;
-        this.awsAccountId = awsAccountId;
     }
 
     public void setCloudSearchEngines(final Collection<CloudSearchEngine> cloudSearchEngines) {
@@ -107,27 +103,9 @@ public class CloudSearchInfrastructureManager {
                 logger.debug("CloudSearch index created: " + domainName + "->" + indexField.getIndexFieldName());
             }
             final IndexDocumentsRequest indexDocumentsRequest = new IndexDocumentsRequest().withDomainName(domainName);
-            final String policiesJson = getAccessPolicyJson(domainName);
-            final UpdateServiceAccessPoliciesRequest updateServiceAccessPoliciesRequest = new UpdateServiceAccessPoliciesRequest()
-                    .withDomainName(domainName).withAccessPolicies(policiesJson);
-            cloudSearchClient.updateServiceAccessPolicies(updateServiceAccessPoliciesRequest);
             cloudSearchClient.indexDocuments(indexDocumentsRequest);
             logger.debug("CloudSearch index rebuilding started for domain : " + domainName);
         }
     }
 
-    /**
-     * Generates a CloudSearch policy document in JSON format.
-     * 
-     * Unfortunately, the syntax is non-standard so generating JSON from com.amazonaws.auth.policy.Policy is not
-     * possible. Also, this has been fixed to eu-west-1 but will be modified when moved into the Infrastructure Manager
-     * @param domainName
-     * @return
-     */
-    private String getAccessPolicyJson(final String domainName) {
-        final StringBuilder accessPolicyJson = new StringBuilder();
-        accessPolicyJson
-                .append("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Sid\":\"search_only\",\"Action\":\"cloudsearch:*\",\"Condition\":{\"IpAddress\":{\"aws:SourceIp\":[\"0.0.0.0/0\"]}},\"Principal\":{\"AWS\":[\"*\"]}}]}");
-        return accessPolicyJson.toString();
-    }
 }

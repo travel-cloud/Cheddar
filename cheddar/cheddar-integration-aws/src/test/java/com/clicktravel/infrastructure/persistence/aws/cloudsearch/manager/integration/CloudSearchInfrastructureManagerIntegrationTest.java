@@ -18,7 +18,6 @@ package com.clicktravel.infrastructure.persistence.aws.cloudsearch.manager.integ
 
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -35,10 +34,10 @@ import org.junit.experimental.categories.Category;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.cloudsearchv2.model.*;
-import com.clicktravel.common.mapper.CollectionMapper;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.IndexDefinition;
+import com.clicktravel.common.mapper.CollectionMapper;
 import com.clicktravel.infrastructure.integration.aws.AwsIntegration;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.CloudSearchEngine;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.StubDocument;
@@ -51,7 +50,6 @@ public class CloudSearchInfrastructureManagerIntegrationTest {
 
     private final CloudSearchClient cloudSearchClient = new CloudSearchClient(new BasicAWSCredentials(
             AwsIntegration.getAccessKeyId(), AwsIntegration.getSecretKeyId()));
-    private final String awsAccountId = AwsIntegration.getAccountId();
     private String domainName;
 
     @After
@@ -89,7 +87,7 @@ public class CloudSearchInfrastructureManagerIntegrationTest {
         cloudSearchClient.initialize();
         final CollectionMapper<IndexDefinition, IndexField> indexDefinitionToIndexFieldCollectionMaper = new IndexDefinitionToIndexFieldCollectionMapper();
         final CloudSearchInfrastructureManager cloudSearchInfrastructureManager = new CloudSearchInfrastructureManager(
-                cloudSearchClient, indexDefinitionToIndexFieldCollectionMaper, awsAccountId);
+                cloudSearchClient, indexDefinitionToIndexFieldCollectionMaper);
         final Collection<CloudSearchEngine> cloudSearchEngineCollection = Sets.newHashSet(cloudSearchEngine);
         cloudSearchInfrastructureManager.setCloudSearchEngines(cloudSearchEngineCollection);
         domainName = schemaName + "-" + nameSpace;
@@ -100,7 +98,6 @@ public class CloudSearchInfrastructureManagerIntegrationTest {
         // Then
         assertTrue(domainExists(domainName));
         assertTrue(indexDefinitionsExist(domainName, indexDefinitionCollection));
-        assertTrue(accessPolicyIsCorrect(awsAccountId, domainName));
     }
 
     private boolean domainExists(final String domainName) {
@@ -136,21 +133,6 @@ public class CloudSearchInfrastructureManagerIntegrationTest {
             final OptionState fieldIndexOptionSate = OptionState.valueOf(indexFieldStatus.getStatus().getState());
             assertThat(fieldIndexOptionSate, is(OptionState.Processing));
         }
-        return true;
-    }
-
-    private boolean accessPolicyIsCorrect(final String awsAccountId, final String domainName) {
-        final String expectedPolicyOptions = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"search_only\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":\"cloudsearch:*\",\"Resource\":\"arn:aws:cloudsearch:eu-west-1:"
-                + awsAccountId
-                + ":domain/"
-                + domainName
-                + "\",\"Condition\":{\"IpAddress\":{\"aws:SourceIp\":\"0.0.0.0/0\"}}}]}";
-        final DescribeServiceAccessPoliciesRequest describeServiceAccessPoliciesRequest = new DescribeServiceAccessPoliciesRequest()
-                .withDomainName(domainName);
-        final DescribeServiceAccessPoliciesResult result = cloudSearchClient
-                .describeServiceAccessPolicies(describeServiceAccessPoliciesRequest);
-        final String policyOptions = result.getAccessPolicies().getOptions();
-        assertEquals(expectedPolicyOptions, policyOptions);
         return true;
     }
 
