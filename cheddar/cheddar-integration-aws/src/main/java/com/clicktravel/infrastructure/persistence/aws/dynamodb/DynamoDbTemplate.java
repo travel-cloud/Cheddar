@@ -556,9 +556,6 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, queryResult.getItems()));
                 lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-                if (totalItems.size() >= BATCH_SIZE) {
-                    break;
-                }
             } while (lastEvaluatedKey != null && totalItems.size() <= BATCH_SIZE);
 
         } else {
@@ -576,9 +573,6 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, scanResult.getItems()));
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
-                if (totalItems.size() >= BATCH_SIZE) {
-                    break;
-                }
             } while (lastEvaluatedKey != null && totalItems.size() <= BATCH_SIZE);
         }
 
