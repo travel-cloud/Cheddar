@@ -582,14 +582,11 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
             } while (lastEvaluatedKey != null && totalItems.size() <= BATCH_SIZE);
         }
 
-        final Collection<T> items = new ArrayList<>();
         if (totalItems.size() > BATCH_SIZE) {
-            items.addAll(totalItems.subList(0, BATCH_SIZE));
-        } else {
-            items.addAll(totalItems);
+            return totalItems.subList(0, BATCH_SIZE);
         }
 
-        return items;
+        return totalItems;
     }
 
     public <T extends Item> Collection<T> executeQuery(final KeySetQuery query, final Class<T> itemClass) {
