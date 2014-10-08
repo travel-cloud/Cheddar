@@ -6,6 +6,8 @@
 
 Cheddar is a Java framework for enterprise applications on Amazon Web Services (AWS) using _domain-driven design_ (DDD). Bounded contexts are implemented as microservices, which are integrated using an _event-driven architecture_ and expose a REST API. Cheddar has full AWS integration using native services such as [SQS](http://aws.amazon.com/sqs/), [SNS](http://aws.amazon.com/sns/), [DynamoDB](http://aws.amazon.com/dynamodb/) and [CloudSearch](http://aws.amazon.com/cloudsearch/).
 
+It's worth subscribing to our [blog](http://www.clicktravel.com/engineering-blog) for handy tips on how to get the best out of Cheddar, and for all the latest news.
+
 ## Domain-Driven Design
 Domain-Driven Design (DDD) is an approach for developing software that closely aligns the implementation to evolving business concepts.
 
