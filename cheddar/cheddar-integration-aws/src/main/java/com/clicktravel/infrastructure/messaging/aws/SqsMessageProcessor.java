@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.AmazonServiceException.ErrorType;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
@@ -82,6 +84,11 @@ public class SqsMessageProcessor implements Runnable {
      * Maximum time (in seconds) to wait for executor to complete termination
      */
     private static final int TERMINATION_TIMEOUT_SECONDS = 300;
+
+    /**
+     * Time to pause SQS request has service error (5xx) response, in milliseconds
+     */
+    private static final long SQS_SERVICE_ERROR_PAUSE_MILLIS = 500;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String queueName;
@@ -140,6 +147,14 @@ public class SqsMessageProcessor implements Runnable {
                     if (shutdownWhenQueueDrainedRequested) {
                         noReceivedMessagesCount = sqsMessages.isEmpty() ? (noReceivedMessagesCount + 1) : 0;
                     }
+                }
+            } catch (final AmazonServiceException amazonServiceException) {
+                logger.error("Error receiving SQS messages on queue:[" + queueName + "]", amazonServiceException);
+                // Ignore service errors (5xx) and hope SQS recovers
+                if (amazonServiceException.getErrorType().equals(ErrorType.Service)) {
+                    Thread.sleep(SQS_SERVICE_ERROR_PAUSE_MILLIS);
+                } else {
+                    throw amazonServiceException;
                 }
             } finally {
                 semaphore.release(MAX_RECEIVED_MESSAGES - sqsMessages.size());
