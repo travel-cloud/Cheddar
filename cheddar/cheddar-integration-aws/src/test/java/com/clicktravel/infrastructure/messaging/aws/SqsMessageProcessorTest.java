@@ -37,6 +37,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.AmazonServiceException.ErrorType;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
@@ -58,11 +60,14 @@ public class SqsMessageProcessorTest {
     private SqsMessageProcessorExecutor mockSqsMessageProcessorExecutor;
     private RateLimiter mockRateLimiter;
     private com.amazonaws.services.sqs.model.Message mockSqsMessage;
+    private GetQueueUrlResult mockGetQueueUrlResult;
 
     @Before
     public void setup() throws Exception {
         queueName = randomString();
         queueUrl = randomString();
+        mockGetQueueUrlResult = mock(GetQueueUrlResult.class);
+        when(mockGetQueueUrlResult.getQueueUrl()).thenReturn(queueUrl);
         mockAmazonSQSClient = mock(AmazonSQS.class);
         handledMessageType = randomString();
         handledMessagePayload = randomString();
@@ -81,8 +86,6 @@ public class SqsMessageProcessorTest {
     @Test
     public void shouldCreateSqsMessageProcessor() throws Exception {
         // Given
-        final GetQueueUrlResult mockGetQueueUrlResult = mock(GetQueueUrlResult.class);
-        when(mockGetQueueUrlResult.getQueueUrl()).thenReturn(queueUrl);
         final ArgumentCaptor<GetQueueUrlRequest> getQueueUrlRequestCaptor = ArgumentCaptor
                 .forClass(GetQueueUrlRequest.class);
         when(mockAmazonSQSClient.getQueueUrl(getQueueUrlRequestCaptor.capture())).thenReturn(mockGetQueueUrlResult);
@@ -99,8 +102,6 @@ public class SqsMessageProcessorTest {
     @Test(timeout = 2000)
     public void shouldExecuteMessageHandlingWorkerThenShutdown_withMessageAndShutdownRequest() throws Exception {
         // Given
-        final GetQueueUrlResult mockGetQueueUrlResult = mock(GetQueueUrlResult.class);
-        when(mockGetQueueUrlResult.getQueueUrl()).thenReturn(queueUrl);
         when(mockAmazonSQSClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(mockGetQueueUrlResult);
         final List<com.amazonaws.services.sqs.model.Message> receivedSqsMessages = new ArrayList<>();
         receivedSqsMessages.add(mockSqsMessage);
@@ -148,4 +149,43 @@ public class SqsMessageProcessorTest {
         assertTrue(sqsMessageProcessorThread.getState().equals(State.TERMINATED));
     }
 
+    @Test(timeout = 2000)
+    public void shouldContinueProcessingMessages_withServiceException() throws Exception {
+        // Given
+        when(mockAmazonSQSClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(mockGetQueueUrlResult);
+        final AmazonServiceException mockAmazonServiceException = mock(AmazonServiceException.class);
+        when(mockAmazonServiceException.getErrorType()).thenReturn(ErrorType.Service);
+        final ReceiveMessageResult mockReceiveMessageResultWithoutMessage = mock(ReceiveMessageResult.class);
+        when(mockReceiveMessageResultWithoutMessage.getMessages()).thenReturn(
+                new ArrayList<com.amazonaws.services.sqs.model.Message>());
+        final boolean[] secondInvocation = { false };
+        when(mockAmazonSQSClient.receiveMessage(any(ReceiveMessageRequest.class))).then(
+                new Answer<ReceiveMessageResult>() {
+                    private boolean firstInvocation = true;
+
+                    @Override
+                    public ReceiveMessageResult answer(final InvocationOnMock invocation) throws Throwable {
+                        if (firstInvocation) {
+                            firstInvocation = false;
+                            throw mockAmazonServiceException;
+                        } else {
+                            secondInvocation[0] = true;
+                            Thread.sleep(100);
+                            return mockReceiveMessageResultWithoutMessage;
+                        }
+                    }
+                });
+        final SqsMessageProcessor sqsMessageProcessor = new SqsMessageProcessor(mockAmazonSQSClient, queueName,
+                messageHandlers, mockRateLimiter, mockSqsMessageProcessorExecutor);
+
+        // When
+        final Thread sqsMessageProcessorThread = new Thread(sqsMessageProcessor);
+        sqsMessageProcessorThread.start();
+        Thread.sleep(700);
+        sqsMessageProcessor.shutdown();
+        Thread.sleep(300);
+
+        // Then
+        assertTrue(secondInvocation[0]);
+    }
 }
