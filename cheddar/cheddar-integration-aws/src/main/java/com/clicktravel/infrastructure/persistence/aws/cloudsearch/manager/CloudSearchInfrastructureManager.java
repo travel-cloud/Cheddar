@@ -22,29 +22,32 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
 import com.amazonaws.services.cloudsearchv2.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.IndexDefinition;
 import com.clicktravel.common.mapper.CollectionMapper;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.CloudSearchEngine;
-import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.CloudSearchClient;
 
 /**
  * Amazon Web Services CloudSearch Infrastructure Manager
  * 
- * The responsibility of implementing classes is to create tables
  */
 public class CloudSearchInfrastructureManager {
 
-    private final CloudSearchClient cloudSearchClient;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final AmazonCloudSearch cloudSearchClient;
+    private final AWSCredentials awsCredentials;
     private final Collection<CloudSearchEngine> cloudSearchEngines;
     private final CollectionMapper<IndexDefinition, IndexField> indexDefinitionToIndexFieldCollectionMapper;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public CloudSearchInfrastructureManager(final CloudSearchClient cloudSearchClient,
+    public CloudSearchInfrastructureManager(final AmazonCloudSearch cloudSearchClient,
+            final AWSCredentials awsCredentials,
             final CollectionMapper<IndexDefinition, IndexField> indexDefinitionToIndexFieldCollectionMapper) {
         this.cloudSearchClient = cloudSearchClient;
+        this.awsCredentials = awsCredentials;
         cloudSearchEngines = new ArrayList<>();
         this.indexDefinitionToIndexFieldCollectionMapper = indexDefinitionToIndexFieldCollectionMapper;
     }
@@ -68,44 +71,52 @@ public class CloudSearchInfrastructureManager {
             }
         }
 
+        final Collection<String> existingDomains = new ArrayList<>();
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest()
+                .withDomainNames(domainsToBeCreated.keySet());
+        final DescribeDomainsResult describeDomainsResult = cloudSearchClient.describeDomains(describeDomainsRequest);
+        for (final DomainStatus domainStatus : describeDomainsResult.getDomainStatusList()) {
+            if (domainStatus.isCreated() && !domainStatus.isDeleted()) {
+                existingDomains.add(domainStatus.getDomainName());
+            }
+        }
         for (final Entry<String, Collection<IndexDefinition>> entry : domainsToBeCreated.entrySet()) {
-            createCloudSearchDomain(entry.getKey(), entry.getValue());
+            final String domainName = entry.getKey();
+            if (existingDomains.contains(domainName)) {
+                logger.debug("CloudSearch domain already exists: " + domainName);
+            } else {
+                createCloudSearchDomain(domainName, entry.getValue());
+            }
         }
 
         for (final CloudSearchEngine cloudSearchEngine : cloudSearchEngines) {
-            cloudSearchEngine.initialize(cloudSearchClient);
+            cloudSearchEngine.initialize(cloudSearchClient, awsCredentials);
         }
 
     }
 
     private void createCloudSearchDomain(final String domainName, final Collection<IndexDefinition> indexDefinitions) {
-        if (cloudSearchClient.domains().contains(domainName)) {
-            logger.debug("CloudSearch domain already exists: " + domainName);
-        } else {
-            final CreateDomainRequest createDomainRequest = new CreateDomainRequest().withDomainName(domainName);
-            final CreateDomainResult createDomainResult = cloudSearchClient.createDomain(createDomainRequest);
-            if (!createDomainResult.getDomainStatus().getCreated()) {
-                throw new IllegalStateException(String.format("Domain with name %s failed to be created", domainName));
-            }
-            logger.debug("CloudSearch domain created: " + domainName);
-            final Collection<IndexField> indexFields = indexDefinitionToIndexFieldCollectionMapper
-                    .map(indexDefinitions);
-            for (final IndexField indexField : indexFields) {
-                final DefineIndexFieldRequest defineIndexFieldRequest = new DefineIndexFieldRequest().withDomainName(
-                        domainName).withIndexField(indexField);
-                final DefineIndexFieldResult defineIndexFieldResult = cloudSearchClient
-                        .defineIndexField(defineIndexFieldRequest);
-                if (OptionState.valueOf(defineIndexFieldResult.getIndexField().getStatus().getState()) != OptionState.RequiresIndexDocuments) {
-                    throw new IllegalStateException(String.format(
-                            "Index with name %s failed to be created in domain %s", indexField.getIndexFieldName(),
-                            domainName));
-                }
-                logger.debug("CloudSearch index created: " + domainName + "->" + indexField.getIndexFieldName());
-            }
-            final IndexDocumentsRequest indexDocumentsRequest = new IndexDocumentsRequest().withDomainName(domainName);
-            cloudSearchClient.indexDocuments(indexDocumentsRequest);
-            logger.debug("CloudSearch index rebuilding started for domain : " + domainName);
+        final CreateDomainRequest createDomainRequest = new CreateDomainRequest().withDomainName(domainName);
+        final CreateDomainResult createDomainResult = cloudSearchClient.createDomain(createDomainRequest);
+        if (!createDomainResult.getDomainStatus().getCreated()) {
+            throw new IllegalStateException(String.format("Domain with name %s failed to be created", domainName));
         }
+        logger.debug("CloudSearch domain created: " + domainName);
+        final Collection<IndexField> indexFields = indexDefinitionToIndexFieldCollectionMapper.map(indexDefinitions);
+        for (final IndexField indexField : indexFields) {
+            final DefineIndexFieldRequest defineIndexFieldRequest = new DefineIndexFieldRequest().withDomainName(
+                    domainName).withIndexField(indexField);
+            final DefineIndexFieldResult defineIndexFieldResult = cloudSearchClient
+                    .defineIndexField(defineIndexFieldRequest);
+            if (OptionState.valueOf(defineIndexFieldResult.getIndexField().getStatus().getState()) != OptionState.RequiresIndexDocuments) {
+                throw new IllegalStateException(String.format("Index with name %s failed to be created in domain %s",
+                        indexField.getIndexFieldName(), domainName));
+            }
+            logger.debug("CloudSearch index created: " + domainName + "->" + indexField.getIndexFieldName());
+        }
+        final IndexDocumentsRequest indexDocumentsRequest = new IndexDocumentsRequest().withDomainName(domainName);
+        cloudSearchClient.indexDocuments(indexDocumentsRequest);
+        logger.debug("CloudSearch index rebuilding started for domain : " + domainName);
     }
 
 }

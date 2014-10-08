@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.*;
 
 import org.joda.time.DateTime;
@@ -205,15 +204,15 @@ public class S3FileStoreTest {
         // Given
         final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
         s3FileStore.initialize(mockAmazonS3Client);
-        final int randommillis = Randoms.randomInt(1000);
-        DateTimeUtils.setCurrentMillisFixed(randommillis);
+        final int randomMillis = Randoms.randomInt(1000);
+        DateTimeUtils.setCurrentMillisFixed(randomMillis);
 
         // When
-        final URL url = s3FileStore.publicUrlForFilePath(filePath);
+        s3FileStore.publicUrlForFilePath(filePath);
 
         // Then
         verify(mockAmazonS3Client).generatePresignedUrl(bucketSchema + "-" + filePath.directory(), filePath.filename(),
-                new Date(3600000 + randommillis), HttpMethod.GET);
+                new Date(3600000 + randomMillis), HttpMethod.GET);
     }
 
     @Test

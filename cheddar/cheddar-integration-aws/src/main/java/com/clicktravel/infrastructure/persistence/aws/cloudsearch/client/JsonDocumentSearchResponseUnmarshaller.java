@@ -17,53 +17,38 @@
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch.client;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTime;
 
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class JsonDocumentSearchResponseUnmarshaller<T extends Document> {
+public class JsonDocumentSearchResponseUnmarshaller {
 
-    private final Class<T> documentClass;
     private final ObjectMapper mapper;
 
-    public JsonDocumentSearchResponseUnmarshaller(final Class<T> documentClass) {
-        this.documentClass = documentClass;
+    public JsonDocumentSearchResponseUnmarshaller() {
         mapper = new ObjectMapper();
         final SimpleModule module = new SimpleModule();
         module.addDeserializer(DateTime.class, new JodaDateTimeDeserializer());
         mapper.registerModule(module);
+        mapper.configure(SerializationFeature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED, true);
+        mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
     }
 
-    public DocumentSearchResponse<T> unmarshall(final String json) {
+    public <T extends Document> T unmarshall(final Map<String, List<String>> fields, final Class<T> documentClass) {
         try {
-            final ObjectNode root = mapper.readValue(json, ObjectNode.class);
-            final JsonNode hitsNode = root.get("hits");
-            if (hitsNode == null) {
-                throw new IllegalStateException("No hits found in search response");
-            }
-            final String cursor = hitsNode.path("cursor").asText();
-            final JsonNode hitNode = hitsNode.get("hit");
-            final List<T> documents = new ArrayList<>();
-            final int found = hitsNode.path("found").asInt();
-
-            for (final JsonNode hitElementNode : hitNode) {
-                final String docId = hitElementNode.get("id").textValue();
-                final JsonNode fieldsNode = hitElementNode.get("fields");
-                final String documentString = mapper.writeValueAsString(fieldsNode);
-                final T document = mapper.readValue(documentString, documentClass);
-                document.setId(docId);
-                documents.add(document);
-            }
-
-            return new DocumentSearchResponse<T>(found, cursor, documents);
+            final String fieldJson = mapper.writeValueAsString(fields);
+            final JsonNode fieldsNode = mapper.readValue(fieldJson, JsonNode.class);
+            final String documentString = mapper.writeValueAsString(fieldsNode);
+            final T document = mapper.readValue(documentString, documentClass);
+            return document;
         } catch (final IOException e) {
             throw new IllegalStateException(e);
         }

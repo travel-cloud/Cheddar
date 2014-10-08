@@ -19,6 +19,8 @@ package com.clicktravel.infrastructure.persistence.aws.cloudsearch;
 import java.util.Collection;
 import java.util.Map;
 
+import org.joda.time.DateTime;
+
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 
 public class StubDocument implements Document {
@@ -34,6 +36,7 @@ public class StubDocument implements Document {
     private Collection<String> collectionProperty;
     private Map<String, String> mapProperty;
     private MyEnum myEnum;
+    private DateTime dateTimeValue;
 
     @Override
     public String getId() {
@@ -75,6 +78,80 @@ public class StubDocument implements Document {
 
     public void setMyEnum(final MyEnum myEnum) {
         this.myEnum = myEnum;
+    }
+
+    public DateTime getDateTimeValue() {
+        return dateTimeValue;
+    }
+
+    public void setDateTimeValue(final DateTime dateTimeValue) {
+        this.dateTimeValue = dateTimeValue;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (collectionProperty == null ? 0 : collectionProperty.hashCode());
+        result = prime * result + (dateTimeValue == null ? 0 : dateTimeValue.hashCode());
+        result = prime * result + (id == null ? 0 : id.hashCode());
+        result = prime * result + (mapProperty == null ? 0 : mapProperty.hashCode());
+        result = prime * result + (myEnum == null ? 0 : myEnum.hashCode());
+        result = prime * result + (stringProperty == null ? 0 : stringProperty.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final StubDocument other = (StubDocument) obj;
+        if (collectionProperty == null) {
+            if (other.collectionProperty != null) {
+                return false;
+            }
+        } else if (!collectionProperty.equals(other.collectionProperty)) {
+            return false;
+        }
+        if (dateTimeValue == null) {
+            if (other.dateTimeValue != null) {
+                return false;
+            }
+        } else if (!dateTimeValue.equals(other.dateTimeValue)) {
+            return false;
+        }
+        if (id == null) {
+            if (other.id != null) {
+                return false;
+            }
+        } else if (!id.equals(other.id)) {
+            return false;
+        }
+        if (mapProperty == null) {
+            if (other.mapProperty != null) {
+                return false;
+            }
+        } else if (!mapProperty.equals(other.mapProperty)) {
+            return false;
+        }
+        if (myEnum != other.myEnum) {
+            return false;
+        }
+        if (stringProperty == null) {
+            if (other.stringProperty != null) {
+                return false;
+            }
+        } else if (!stringProperty.equals(other.stringProperty)) {
+            return false;
+        }
+        return true;
     }
 
 }

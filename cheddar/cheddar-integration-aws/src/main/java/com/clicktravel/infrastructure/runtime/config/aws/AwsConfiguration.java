@@ -24,6 +24,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomain;
+import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomainClient;
+import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
+import com.amazonaws.services.cloudsearchv2.AmazonCloudSearchClient;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.s3.AmazonS3;
@@ -35,7 +39,6 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.clicktravel.common.http.client.HttpClient;
 import com.clicktravel.infrastructure.host.aws.ec2.Ec2InstanceData;
 import com.clicktravel.infrastructure.host.aws.ec2.Ec2InstanceDataAccessor;
-import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.CloudSearchClient;
 
 @Configuration
 public class AwsConfiguration {
@@ -85,13 +88,19 @@ public class AwsConfiguration {
 
     @Bean
     @Autowired
-    public CloudSearchClient cloudSearchClient(final AWSCredentials awsCredentials,
+    public AmazonCloudSearch cloudSearchClient(final AWSCredentials awsCredentials,
             @Value("${aws.cloudsearch.client.endpoint}") final String endpoint) {
-        final CloudSearchClient cloudSearchClient = new CloudSearchClient(awsCredentials);
+        final AmazonCloudSearch cloudSearchClient = new AmazonCloudSearchClient(awsCredentials);
         logger.info("Setting AWS CloudSearch endpoint to: " + endpoint);
         cloudSearchClient.setEndpoint(endpoint);
-        cloudSearchClient.initialize();
         return cloudSearchClient;
+    }
+
+    @Bean
+    @Autowired
+    public AmazonCloudSearchDomain cloudSearchDomainClient(final AWSCredentials awsCredentials) {
+        final AmazonCloudSearchDomain cloudSearchDomainClient = new AmazonCloudSearchDomainClient(awsCredentials);
+        return cloudSearchDomainClient;
     }
 
     @Bean

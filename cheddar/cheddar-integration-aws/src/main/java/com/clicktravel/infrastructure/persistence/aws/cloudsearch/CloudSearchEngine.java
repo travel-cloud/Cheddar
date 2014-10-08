@@ -17,19 +17,29 @@
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch;
 
 import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.*;
+
+import javax.ws.rs.core.MediaType;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomain;
+import com.amazonaws.services.cloudsearchdomain.model.*;
+import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
+import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsRequest;
+import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsResult;
+import com.amazonaws.services.cloudsearchv2.model.DomainStatus;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchEngine;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.exception.UnsuccessfulSearchException;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.IndexDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.*;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate.Type;
 
@@ -37,8 +47,13 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     private final DocumentConfigurationHolder documentConfigurationHolder;
     private final Map<Class<? extends Document>, DocumentConfiguration> documentConfigurations;
-    private CloudSearchClient cloudSearchClient;
-    private boolean initialized;
+    private boolean initialized = false;
+    private final Map<String, AmazonCloudSearchDomain> documentServiceClients = new HashMap<>();
+    private final Map<String, AmazonCloudSearchDomain> searchServiceClients = new HashMap<>();
+    private AmazonCloudSearch cloudSearchClient;
+    private AWSCredentials awsCredentials;
+    private boolean domainEndpointsCached;
+    private final JsonDocumentSearchResponseUnmarshaller fieldParser;
 
     public CloudSearchEngine(final DocumentConfigurationHolder documentConfigurationHolder) {
         if (documentConfigurationHolder == null) {
@@ -46,15 +61,55 @@ public class CloudSearchEngine implements DocumentSearchEngine {
         }
         this.documentConfigurationHolder = documentConfigurationHolder;
         documentConfigurations = new HashMap<>();
-        for (final DocumentConfiguration documentConfiguration : this.documentConfigurationHolder
-                .documentConfigurations()) {
+        for (final DocumentConfiguration documentConfiguration : documentConfigurationHolder.documentConfigurations()) {
             documentConfigurations.put(documentConfiguration.documentClass(), documentConfiguration);
         }
+        fieldParser = new JsonDocumentSearchResponseUnmarshaller();
     }
 
-    public void initialize(final CloudSearchClient cloudSearchClient) {
+    public void initialize(final AmazonCloudSearch cloudSearchClient, final AWSCredentials awsCredentials) {
         this.cloudSearchClient = cloudSearchClient;
+        this.awsCredentials = awsCredentials;
         initialized = true;
+        cacheDomainEndpoints();
+    }
+
+    private void cacheDomainEndpoints() {
+        if (!initialized) {
+            throw new IllegalStateException("CloudSearchEngine not initialized");
+        }
+        if (!domainEndpointsCached) {
+            final Set<String> managedDomains = new HashSet<>();
+            for (final DocumentConfiguration documentConfiguration : documentConfigurations.values()) {
+                final String domainName = documentConfigurationHolder.schemaName() + "-"
+                        + documentConfiguration.namespace();
+                managedDomains.add(domainName);
+            }
+            final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest();
+            describeDomainsRequest.setDomainNames(managedDomains);
+            final DescribeDomainsResult describeDomainsResult = cloudSearchClient
+                    .describeDomains(describeDomainsRequest);
+            final List<DomainStatus> domainStatusList = describeDomainsResult.getDomainStatusList();
+            if (domainStatusList.size() == managedDomains.size()) {
+                for (final DomainStatus domainStatus : domainStatusList) {
+                    if (domainStatus.isCreated() && !domainStatus.isDeleted()) {
+                        final String documentServiceEndpoint = domainStatus.getDocService().getEndpoint();
+                        final String searchServiceEndpoint = domainStatus.getSearchService().getEndpoint();
+                        if (documentServiceEndpoint == null || searchServiceEndpoint == null) {
+                            domainEndpointsCached = false;
+                            return;
+                        }
+                        final AmazonCloudSearchDomain documentServiceClient = AmazonCloudSearchDomainClientBuilder
+                                .build(awsCredentials, documentServiceEndpoint);
+                        final AmazonCloudSearchDomain searchServiceClient = AmazonCloudSearchDomainClientBuilder.build(
+                                awsCredentials, searchServiceEndpoint);
+                        documentServiceClients.put(domainStatus.getDomainName(), documentServiceClient);
+                        searchServiceClients.put(domainStatus.getDomainName(), searchServiceClient);
+                    }
+                }
+                domainEndpointsCached = true;
+            }
+        }
     }
 
     public DocumentConfigurationHolder documentConfigurationHolder() {
@@ -62,8 +117,9 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     }
 
     private DocumentConfiguration getDocumentConfiguration(final Class<? extends Document> documentClass) {
-        if (!initialized) {
-            throw new IllegalStateException("CloudSearchEngine not initialized");
+        cacheDomainEndpoints();
+        if (!domainEndpointsCached) {
+            throw new IllegalStateException("CloudSearch endpoints not available");
         }
         final DocumentConfiguration documentConfiguration = documentConfigurations.get(documentClass);
         if (documentConfiguration == null) {
@@ -79,13 +135,41 @@ public class CloudSearchEngine implements DocumentSearchEngine {
         final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
         final DocumentUpdate csDocument = new DocumentUpdate(Type.ADD, document.getId());
         final Collection<Field> fields = new ArrayList<>();
-        for (final PropertyDescriptor propertyDescriptor : documentConfiguration.properties().values()) {
-            final Field field = new Field(propertyDescriptor.getName(), getPropertyValue(document, propertyDescriptor));
+        for (final IndexDefinition indexDefinition : documentConfiguration.indexDefinitions()) {
+            final String indexName = indexDefinition.getName();
+            final PropertyDescriptor propertyDescriptor = documentConfiguration.properties().get(indexName);
+            final Field field = new Field(indexName, getPropertyValue(document, propertyDescriptor));
             fields.add(field);
         }
         csDocument.withFields(fields);
         batchDocumentUpdateRequest.withDocument(csDocument);
-        cloudSearchClient.batchDocumentUpdate(batchDocumentUpdateRequest);
+        getDocumentServiceClients(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+    }
+
+    private AmazonCloudSearchDomain getDocumentServiceClients(final String domainName) {
+        if (documentServiceClients.get(domainName) == null) {
+            throw new IllegalStateException("Document Service client not present for: " + domainName);
+        }
+        return documentServiceClients.get(domainName);
+    }
+
+    private AmazonCloudSearchDomain getSearchServiceClient(final String domainName) {
+        if (searchServiceClients.get(domainName) == null) {
+            throw new IllegalStateException("Document Service client not present for: " + domainName);
+        }
+        return searchServiceClients.get(domainName);
+    }
+
+    private UploadDocumentsRequest uploadDocumentsRequest(final BatchDocumentUpdateRequest batchDocumentUpdateRequest) {
+        final UploadDocumentsRequest uploadDocumentsRequest = new UploadDocumentsRequest();
+        final byte[] documentUpdatesJsonBytes;
+        documentUpdatesJsonBytes = JsonDocumentUpdateMarshaller.marshall(
+                batchDocumentUpdateRequest.getDocumentUpdates()).getBytes(Charset.forName("UTF-8"));
+        final InputStream documents = new ByteArrayInputStream(documentUpdatesJsonBytes);
+        uploadDocumentsRequest.setDocuments(documents);
+        uploadDocumentsRequest.setContentLength((long) documentUpdatesJsonBytes.length);
+        uploadDocumentsRequest.setContentType(MediaType.APPLICATION_JSON);
+        return uploadDocumentsRequest;
     }
 
     private Object getPropertyValue(final Document document, final PropertyDescriptor propertyDescriptor) {
@@ -104,7 +188,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
         final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
         final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
         batchDocumentUpdateRequest.withDocument(csDocument);
-        cloudSearchClient.batchDocumentUpdate(batchDocumentUpdateRequest);
+        getDocumentServiceClients(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
     }
 
     /**
@@ -118,12 +202,52 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             final Integer size, final Class<T> documentClass) {
         try {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
+            final SearchRequest searchRequest = getSearchRequest(query);
+            searchRequest.setStart((long) start);
+            searchRequest.setSize((long) size);
             final String searchDomain = documentConfigurationHolder.schemaName() + "-"
                     + documentConfiguration.namespace();
-
-            return cloudSearchClient.searchDocuments(query, start, size, searchDomain, documentClass);
+            final SearchResult searchResult = getSearchServiceClient(searchDomain).search(searchRequest);
+            final List<T> documents = new ArrayList<>();
+            for (final Hit hit : searchResult.getHits().getHit()) {
+                try {
+                    documents.add(getDocument(hit, documentClass, documentConfiguration.properties()));
+                } catch (final Exception e) {
+                    throw new IllegalStateException("Could not create Document from CloudSearch response: " + hit, e);
+                }
+            }
+            final long totalResults = searchResult.getHits().getFound();
+            final String cursor = searchResult.getHits().getCursor();
+            return new DocumentSearchResponse<T>((int) totalResults, cursor, documents);
         } catch (final AmazonServiceException e) {
-            throw new UnsuccessfulSearchException(e.getMessage());
+            throw new PersistenceResourceFailureException("Unable to perform CloudSearch query", e);
         }
     }
+
+    private SearchRequest getSearchRequest(final Query query) {
+        final SearchRequest searchRequest = new SearchRequest();
+        final String queryString = new QueryBuilder().buildQuery(query);
+        searchRequest.setQuery(queryString);
+        switch (query.queryType()) {
+            case LUCENE:
+                searchRequest.setQueryParser(QueryParser.Lucene);
+                break;
+            case STRUCTURED:
+                searchRequest.setQueryParser(QueryParser.Structured);
+                break;
+            case SIMPLE:
+            default:
+                searchRequest.setQueryParser(QueryParser.Simple);
+                break;
+        }
+        return searchRequest;
+    }
+
+    private <T extends Document> T getDocument(final Hit hit, final Class<T> documentClass,
+            final Map<String, PropertyDescriptor> properties) throws Exception {
+        final T document = fieldParser.unmarshall(hit.getFields(), documentClass);
+        document.setId(hit.getId());
+        return document;
+    }
+
 }
