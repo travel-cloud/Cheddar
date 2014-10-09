@@ -24,6 +24,9 @@ import java.util.*;
 
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomain;
@@ -45,6 +48,7 @@ import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.Documen
 
 public class CloudSearchEngine implements DocumentSearchEngine {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DocumentConfigurationHolder documentConfigurationHolder;
     private final Map<Class<? extends Document>, DocumentConfiguration> documentConfigurations;
     private boolean initialized = false;
@@ -90,7 +94,9 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             final DescribeDomainsResult describeDomainsResult = cloudSearchClient
                     .describeDomains(describeDomainsRequest);
             final List<DomainStatus> domainStatusList = describeDomainsResult.getDomainStatusList();
-            if (domainStatusList.size() == managedDomains.size()) {
+            if (domainStatusList.size() != managedDomains.size()) {
+                logger.info("Unable to cache CloudSearch document/search endpoints for: " + managedDomains);
+            } else {
                 for (final DomainStatus domainStatus : domainStatusList) {
                     if (domainStatus.isCreated() && !domainStatus.isDeleted()) {
                         final String documentServiceEndpoint = domainStatus.getDocService().getEndpoint();
@@ -143,10 +149,10 @@ public class CloudSearchEngine implements DocumentSearchEngine {
         }
         csDocument.withFields(fields);
         batchDocumentUpdateRequest.withDocument(csDocument);
-        getDocumentServiceClients(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+        getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
     }
 
-    private AmazonCloudSearchDomain getDocumentServiceClients(final String domainName) {
+    private AmazonCloudSearchDomain getDocumentServiceClient(final String domainName) {
         if (documentServiceClients.get(domainName) == null) {
             throw new IllegalStateException("Document Service client not present for: " + domainName);
         }
@@ -188,7 +194,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
         final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
         final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
         batchDocumentUpdateRequest.withDocument(csDocument);
-        getDocumentServiceClients(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+        getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
     }
 
     /**
