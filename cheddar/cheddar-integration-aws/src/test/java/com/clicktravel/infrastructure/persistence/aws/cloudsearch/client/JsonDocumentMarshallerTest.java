@@ -19,7 +19,6 @@ package com.clicktravel.infrastructure.persistence.aws.cloudsearch.client;
 import static com.clicktravel.common.random.Randoms.randomDateTime;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,21 +32,8 @@ import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.Documen
 public class JsonDocumentMarshallerTest {
 
     @Test
-    public void shouldCreateJsonDocumentMarshaller() throws Exception {
-        // Given
-
-        // When
-        final JsonDocumentUpdateMarshaller marshaller = new JsonDocumentUpdateMarshaller();
-
-        // Then
-        assertNotNull(marshaller);
-    }
-
-    @Test
     public void shouldMarshallDocumentUpdateCollection_withDocumentUpdateCollection() throws Exception {
         // Given
-        final JsonDocumentUpdateMarshaller marshaller = new JsonDocumentUpdateMarshaller();
-
         final String documentId1 = randomString(10);
         final DocumentUpdate documentUpdate1 = new DocumentUpdate(Type.ADD, documentId1);
         final String fieldName1a = randomString(10);
@@ -81,7 +67,7 @@ public class JsonDocumentMarshallerTest {
                 + "\",\"type\":\"delete\"}]";
 
         // When
-        final String jsonString = marshaller.marshall(documentUpdates);
+        final String jsonString = JsonDocumentUpdateMarshaller.marshall(documentUpdates);
 
         // Then
         assertEquals(expectedJsonString, jsonString);
@@ -90,8 +76,6 @@ public class JsonDocumentMarshallerTest {
     @Test
     public void shouldMarshallDocumentUpdateCollection_withDocumentUpdateCollectionAndNullFields() throws Exception {
         // Given
-        final JsonDocumentUpdateMarshaller marshaller = new JsonDocumentUpdateMarshaller();
-
         final String documentId = randomString(10);
         final DocumentUpdate documentUpdate = new DocumentUpdate(Type.ADD, documentId);
         final String fieldName1 = randomString(10);
@@ -108,7 +92,7 @@ public class JsonDocumentMarshallerTest {
                 + fieldName1.toLowerCase() + "\":\"" + fieldValue1 + "\"}}]";
 
         // When
-        final String jsonString = marshaller.marshall(documentUpdates);
+        final String jsonString = JsonDocumentUpdateMarshaller.marshall(documentUpdates);
 
         // Then
         assertEquals(expectedJsonString, jsonString);

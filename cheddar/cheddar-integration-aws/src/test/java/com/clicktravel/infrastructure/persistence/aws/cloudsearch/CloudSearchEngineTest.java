@@ -16,40 +16,57 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch;
 
+import static com.clicktravel.common.random.Randoms.randomEnum;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.anyCollection;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.*;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.amazonaws.AmazonServiceException;
-import com.clicktravel.common.random.Randoms;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomain;
+import com.amazonaws.services.cloudsearchdomain.model.*;
+import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
+import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsRequest;
+import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsResult;
+import com.amazonaws.services.cloudsearchv2.model.DomainStatus;
+import com.amazonaws.services.cloudsearchv2.model.ServiceEndpoint;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.exception.UnsuccessfulSearchException;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
-import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.*;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.QueryType;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
+import com.clicktravel.common.random.Randoms;
+import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate.Type;
+import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.Field;
+import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.JsonDocumentUpdateMarshaller;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ AmazonCloudSearchDomainClientBuilder.class, JsonDocumentUpdateMarshaller.class })
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class CloudSearchEngineTest {
 
     @Test
@@ -83,16 +100,32 @@ public class CloudSearchEngineTest {
     }
 
     @Test
-    public void shouldInitializeCloudSearchEngine_withCloudSearchClient() throws Exception {
+    public void shouldInitializeCloudSearchEngine_withAmazonCloudSearchAndAwsCredentials() throws Exception {
         // Given
-        final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
-        final CloudSearchClient cloudSearchClient = mock(CloudSearchClient.class);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+
+        final String namespace = randomString(10);
+        final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
+        final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
+        final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
+        final String schemaName = randomString(10);
+        final DocumentConfigurationHolder documentConfigurationHolder = new DocumentConfigurationHolder(schemaName,
+                documentConfigurations);
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(schemaName + "-" + namespace));
+        final DescribeDomainsResult describeDomainsResult = new DescribeDomainsResult().withDomainStatusList();
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
 
         // When
         Exception actualException = null;
         try {
-            cloudSearchEngine.initialize(cloudSearchClient);
+            cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
         } catch (final Exception e) {
             actualException = e;
         }
@@ -105,81 +138,120 @@ public class CloudSearchEngineTest {
     public void shouldUpdate_withDocument() throws Exception {
         // Given
         final StubDocument document = randomStubDocument();
-        final String documentId = document.getId();
-        final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
-        final String namespace = documentId;
+        final String namespace = randomString(10);
         final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
-        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
-        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
         final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
-        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
         final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
         final String schemaName = randomString(10);
-        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
-        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
+        final DocumentConfigurationHolder documentConfigurationHolder = new DocumentConfigurationHolder(schemaName,
+                documentConfigurations);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final byte[] jsonBytes = randomString().getBytes(Charset.forName("UTF-8"));
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final String documentServiceEndpoint = randomString();
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName,
+                documentServiceEndpoint, randomString());
+        final AmazonCloudSearchDomain mockDocumentServiceClient = mock(AmazonCloudSearchDomain.class);
+        mockStatic(JsonDocumentUpdateMarshaller.class);
+        when(JsonDocumentUpdateMarshaller.marshall(anyCollection())).thenReturn(new String(jsonBytes));
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, documentServiceEndpoint)).thenReturn(
+                mockDocumentServiceClient);
+
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
-        final CloudSearchClient mockCloudSearchClient = mock(CloudSearchClient.class);
-        cloudSearchEngine.initialize(mockCloudSearchClient);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
 
         // When
         cloudSearchEngine.update(document);
 
         // Then
-        final ArgumentCaptor<BatchDocumentUpdateRequest> batchDocumentUpdateRequestArgumentCaptor = ArgumentCaptor
-                .forClass(BatchDocumentUpdateRequest.class);
-        verify(mockCloudSearchClient).batchDocumentUpdate(batchDocumentUpdateRequestArgumentCaptor.capture());
-        final BatchDocumentUpdateRequest uploadDocumentBatchRequest = batchDocumentUpdateRequestArgumentCaptor
-                .getValue();
-        assertEquals(schemaName + "-" + namespace, uploadDocumentBatchRequest.getSearchDomain());
-        assertEquals(1, uploadDocumentBatchRequest.getDocumentUpdates().size());
-        final DocumentUpdate documentRequest = uploadDocumentBatchRequest.getDocumentUpdates().iterator().next();
-        assertEquals(Type.ADD, documentRequest.getType());
-        assertEquals(documentId, documentRequest.getId());
-        assertEquals(properties.size(), documentRequest.getFields().size());
-        for (final Field field : documentRequest.getFields()) {
-            final PropertyDescriptor propertyDescriptor = properties.get(field.getName());
-            assertEquals(propertyDescriptor.getReadMethod().invoke(document), field.getValue());
+        final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
+        final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
+                .forClass(UploadDocumentsRequest.class);
+        PowerMockito.verifyStatic();
+        JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
+        verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
+        final DocumentUpdate documentUpdate = (DocumentUpdate) documentUpdateCollectionCaptor.getValue().iterator()
+                .next();
+        assertEquals(document.getId(), documentUpdate.getId());
+        assertEquals(Type.ADD, documentUpdate.getType());
+        for (final Field field : documentUpdate.getFields()) {
+            if (field.getName().equals("stringProperty")) {
+                assertEquals(document.getStringProperty(), field.getValue());
+            }
         }
+        final UploadDocumentsRequest uploadDocumentsRequest = uploadDocumentsRequestCaptor.getValue();
+        assertInputStreamEquals(jsonBytes, uploadDocumentsRequest.getDocuments());
+    }
+
+    private DescribeDomainsResult getDescribeDomainsResult(final String domainName,
+            final String documentServiceEndpoint, final String searchServiceEndpoint) {
+        return new DescribeDomainsResult().withDomainStatusList(new DomainStatus().withDomainName(domainName)
+                .withCreated(true).withDeleted(false)
+                .withDocService(new ServiceEndpoint().withEndpoint(documentServiceEndpoint))
+                .withSearchService(new ServiceEndpoint().withEndpoint(searchServiceEndpoint)));
     }
 
     @Test
     public void shouldDelete_withDocument() throws Exception {
         // Given
         final StubDocument document = randomStubDocument();
-        final String documentId = document.getId();
-        final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
-        final String namespace = documentId;
+        final String namespace = randomString(10);
         final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
-        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
-        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
         final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
-        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
         final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
         final String schemaName = randomString(10);
-        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
-        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
+        final DocumentConfigurationHolder documentConfigurationHolder = new DocumentConfigurationHolder(schemaName,
+                documentConfigurations);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final byte[] jsonBytes = randomString().getBytes(Charset.forName("UTF-8"));
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final String documentServiceEndpoint = randomString();
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName,
+                documentServiceEndpoint, randomString());
+        final AmazonCloudSearchDomain mockDocumentServiceClient = mock(AmazonCloudSearchDomain.class);
+        mockStatic(JsonDocumentUpdateMarshaller.class);
+        when(JsonDocumentUpdateMarshaller.marshall(anyCollection())).thenReturn(new String(jsonBytes));
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, documentServiceEndpoint)).thenReturn(
+                mockDocumentServiceClient);
+
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
-        final CloudSearchClient mockCloudSearchClient = mock(CloudSearchClient.class);
-        cloudSearchEngine.initialize(mockCloudSearchClient);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
 
         // When
         cloudSearchEngine.delete(document);
 
         // Then
-        final ArgumentCaptor<BatchDocumentUpdateRequest> batchDocumentUpdateRequestArgumentCaptor = ArgumentCaptor
-                .forClass(BatchDocumentUpdateRequest.class);
-        verify(mockCloudSearchClient).batchDocumentUpdate(batchDocumentUpdateRequestArgumentCaptor.capture());
-        final BatchDocumentUpdateRequest uploadDocumentBatchRequest = batchDocumentUpdateRequestArgumentCaptor
-                .getValue();
-        assertEquals(schemaName + "-" + namespace, uploadDocumentBatchRequest.getSearchDomain());
-        assertEquals(1, uploadDocumentBatchRequest.getDocumentUpdates().size());
-        final DocumentUpdate documentRequest = uploadDocumentBatchRequest.getDocumentUpdates().iterator().next();
-        assertEquals(Type.DELETE, documentRequest.getType());
-        assertEquals(documentId, documentRequest.getId());
+        final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
+        final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
+                .forClass(UploadDocumentsRequest.class);
+        PowerMockito.verifyStatic();
+        JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
+        verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
+        final DocumentUpdate documentUpdate = (DocumentUpdate) documentUpdateCollectionCaptor.getValue().iterator()
+                .next();
+        assertEquals(document.getId(), documentUpdate.getId());
+        assertEquals(Type.DELETE, documentUpdate.getType());
+        final UploadDocumentsRequest uploadDocumentsRequest = uploadDocumentsRequestCaptor.getValue();
+        assertInputStreamEquals(jsonBytes, uploadDocumentsRequest.getDocuments());
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void shouldSearch_withQuery() throws Exception {
         // Given
         final StubDocument document = randomStubDocument();
@@ -187,27 +259,40 @@ public class CloudSearchEngineTest {
         final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
         final String namespace = documentId;
         final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
-        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
-        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
         final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
-        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
         final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
         final String schemaName = randomString(10);
-        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
-        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
         final Query query = mock(Query.class);
-        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
-        final CloudSearchClient mockCloudSearchClient = mock(CloudSearchClient.class);
-
-        final DocumentSearchResponse<Document> documents = mock(DocumentSearchResponse.class);
-
+        final QueryType queryType = randomEnum(QueryType.class);
+        final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
         final Integer start = Randoms.randomInt(100);
         final Integer size = Randoms.randomInt(100);
+        final String searchServiceEndpoint = randomString();
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName, randomString(),
+                searchServiceEndpoint);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final SearchRequest searchRequest = buildSearchRequest(queryType, query);
+        final SearchResult searchResult = new SearchResult().withHits(getExpectedHits(document));
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, searchServiceEndpoint)).thenReturn(
+                mockCloudSearchClient);
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
+        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
+        when(query.queryType()).thenReturn(queryType);
+        searchRequest.withStart((long) start);
+        searchRequest.withSize((long) size);
+        when(mockCloudSearchClient.search(searchRequest)).thenReturn(searchResult);
 
-        when(
-                mockCloudSearchClient.searchDocuments(any(Query.class), eq(start), eq(size), anyString(),
-                        any(Class.class))).thenReturn(documents);
-        cloudSearchEngine.initialize(mockCloudSearchClient);
+        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
 
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
@@ -215,13 +300,33 @@ public class CloudSearchEngineTest {
 
         // Then
         assertNotNull(returnedDocuments);
-        assertEquals(documents, returnedDocuments);
-        verify(mockCloudSearchClient).searchDocuments(query, start, size, schemaName + "-" + namespace,
-                StubDocument.class);
+        assertEquals(document, returnedDocuments.getHits().get(0));
     }
 
-    @Test(expected = UnsuccessfulSearchException.class)
-    @SuppressWarnings("unchecked")
+    private Hits getExpectedHits(final StubDocument document) {
+        final Hits hits = new Hits();
+        final String cursor = randomString();
+        hits.withCursor(cursor);
+        final Hit hit = new Hit();
+        hit.withId(document.getId());
+        final Map<String, List<String>> fields = new HashMap<>();
+        fields.put("stringProperty", Arrays.asList(document.getStringProperty()));
+        hit.withFields(fields);
+        hits.withHit(hit);
+        hits.withFound(1l);
+        return hits;
+    }
+
+    private SearchRequest buildSearchRequest(final QueryType queryType, final Query query) {
+        final String queryString = new QueryBuilder().buildQuery(query);
+        final SearchRequest searchRequest = new SearchRequest();
+        final String queryParser = queryType.name().toLowerCase();
+        searchRequest.withQueryParser(queryParser);
+        searchRequest.withQuery(queryString);
+        return searchRequest;
+    }
+
+    @Test
     public void shoulNotSearch_withQuery() throws Exception {
         // Given
         final StubDocument document = randomStubDocument();
@@ -229,34 +334,57 @@ public class CloudSearchEngineTest {
         final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
         final String namespace = documentId;
         final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
-        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
-        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
         final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
-        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
         final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
         final String schemaName = randomString(10);
-        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
-        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
         final Query query = mock(Query.class);
-        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
-        final CloudSearchClient mockCloudSearchClient = mock(CloudSearchClient.class);
-
+        final QueryType queryType = randomEnum(QueryType.class);
+        final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
         final Integer start = Randoms.randomInt(100);
         final Integer size = Randoms.randomInt(100);
+        final String searchServiceEndpoint = randomString();
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName, randomString(),
+                searchServiceEndpoint);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final SearchRequest searchRequest = buildSearchRequest(queryType, query);
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, searchServiceEndpoint)).thenReturn(
+                mockCloudSearchClient);
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
+        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
+        when(query.queryType()).thenReturn(queryType);
+        searchRequest.withStart((long) start);
+        searchRequest.withSize((long) size);
+        when(mockCloudSearchClient.search(searchRequest)).thenThrow(AmazonServiceException.class);
 
-        when(
-                mockCloudSearchClient.searchDocuments(any(Query.class), eq(start), eq(size), anyString(),
-                        any(Class.class))).thenThrow(new AmazonServiceException(Randoms.randomString()));
-        cloudSearchEngine.initialize(mockCloudSearchClient);
+        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
 
         // When
-        cloudSearchEngine.search(query, start, size, StubDocument.class);
+        // When
+        PersistenceResourceFailureException actualException = null;
+        try {
+            cloudSearchEngine.search(query, start, size, StubDocument.class);
+        } catch (final PersistenceResourceFailureException e) {
+            actualException = e;
+        }
 
+        // Then
+        assertNotNull(actualException);
     }
 
     private StubDocument randomStubDocument() {
         final StubDocument stubDocument = new StubDocument();
         stubDocument.setId(randomString(10));
+        stubDocument.setStringProperty(randomString(10));
         return stubDocument;
     }
 
@@ -270,4 +398,16 @@ public class CloudSearchEngineTest {
         }
         return propertyDescriptors;
     }
+
+    private void assertInputStreamEquals(final byte[] bytes, final InputStream actual) throws Exception {
+        final String expectedString = new String(bytes);
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[1024];
+        int length = 0;
+        while ((length = actual.read(buffer)) != -1) {
+            baos.write(buffer, 0, length);
+        }
+        assertEquals(expectedString, new String(baos.toByteArray()));
+    }
+
 }

@@ -29,16 +29,22 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonDocumentUpdateMarshaller {
 
-    final ObjectMapper mapper;
+    private static final JsonDocumentUpdateMarshaller INSTANCE = new JsonDocumentUpdateMarshaller();
 
-    public JsonDocumentUpdateMarshaller() {
+    private final ObjectMapper mapper;
+
+    public static final String marshall(final Collection<DocumentUpdate> documentUpdates) {
+        return INSTANCE.marshallDocumentUpdates(documentUpdates);
+    }
+
+    private JsonDocumentUpdateMarshaller() {
         mapper = new ObjectMapper();
         final SimpleModule jodaDateTimeModule = new SimpleModule();
         jodaDateTimeModule.addSerializer(DateTime.class, new JodaDateTimeSerializer());
         mapper.registerModule(jodaDateTimeModule);
     }
 
-    public String marshall(final Collection<DocumentUpdate> documentUpdates) {
+    private String marshallDocumentUpdates(final Collection<DocumentUpdate> documentUpdates) {
         try {
             final ArrayNode documentUpdateCollectionNode = mapper.createArrayNode();
             for (final DocumentUpdate documentUpdate : documentUpdates) {
@@ -66,6 +72,6 @@ public class JsonDocumentUpdateMarshaller {
             documentUpdateNode.put("fields", fields);
         }
         return documentUpdateNode;
-
     }
+
 }

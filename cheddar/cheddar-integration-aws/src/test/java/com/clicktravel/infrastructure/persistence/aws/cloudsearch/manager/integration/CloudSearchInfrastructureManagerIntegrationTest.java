@@ -32,7 +32,10 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
+import com.amazonaws.services.cloudsearchv2.AmazonCloudSearchClient;
 import com.amazonaws.services.cloudsearchv2.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
@@ -41,15 +44,15 @@ import com.clicktravel.common.mapper.CollectionMapper;
 import com.clicktravel.infrastructure.integration.aws.AwsIntegration;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.CloudSearchEngine;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.StubDocument;
-import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.CloudSearchClient;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.manager.CloudSearchInfrastructureManager;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.manager.IndexDefinitionToIndexFieldCollectionMapper;
 
 @Category(AwsIntegration.class)
 public class CloudSearchInfrastructureManagerIntegrationTest {
 
-    private final CloudSearchClient cloudSearchClient = new CloudSearchClient(new BasicAWSCredentials(
-            AwsIntegration.getAccessKeyId(), AwsIntegration.getSecretKeyId()));
+    private final AWSCredentials awsCredentials = new BasicAWSCredentials(AwsIntegration.getAccessKeyId(),
+            AwsIntegration.getSecretKeyId());
+    private final AmazonCloudSearch cloudSearchClient = new AmazonCloudSearchClient(awsCredentials);
     private String domainName;
 
     @After
@@ -84,10 +87,9 @@ public class CloudSearchInfrastructureManagerIntegrationTest {
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
         final String awsCloudSearchEndpiont = AwsIntegration.getCloudSearchEndpoint();
         cloudSearchClient.setEndpoint(awsCloudSearchEndpiont);
-        cloudSearchClient.initialize();
         final CollectionMapper<IndexDefinition, IndexField> indexDefinitionToIndexFieldCollectionMaper = new IndexDefinitionToIndexFieldCollectionMapper();
         final CloudSearchInfrastructureManager cloudSearchInfrastructureManager = new CloudSearchInfrastructureManager(
-                cloudSearchClient, indexDefinitionToIndexFieldCollectionMaper);
+                cloudSearchClient, awsCredentials, indexDefinitionToIndexFieldCollectionMaper);
         final Collection<CloudSearchEngine> cloudSearchEngineCollection = Sets.newHashSet(cloudSearchEngine);
         cloudSearchInfrastructureManager.setCloudSearchEngines(cloudSearchEngineCollection);
         domainName = schemaName + "-" + nameSpace;
