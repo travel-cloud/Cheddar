@@ -23,6 +23,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -142,15 +143,15 @@ public class ItemConfiguration {
     }
 
     public Collection<PropertyDescriptor> propertyDescriptors() {
-        return properties.values();
+        return Collections.unmodifiableCollection(properties.values());
     }
 
     public Collection<IndexDefinition> indexDefinitions() {
-        return indexDefinitions.values();
+        return Collections.unmodifiableCollection(indexDefinitions.values());
     }
 
     public Collection<UniqueConstraint> uniqueConstraints() {
-        return uniqueConstraints.values();
+        return Collections.unmodifiableCollection(uniqueConstraints.values());
     }
 
 }

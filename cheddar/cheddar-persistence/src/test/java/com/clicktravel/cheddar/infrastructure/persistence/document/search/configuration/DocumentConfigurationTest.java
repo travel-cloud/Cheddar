@@ -20,6 +20,7 @@ import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -113,7 +114,7 @@ public class DocumentConfigurationTest {
         documentConfiguration.registerIndexes(indexDefinitions);
 
         // Then
-        assertEquals(indexDefinitions, documentConfiguration.indexDefinitions());
+        assertEquals(new ArrayList<>(indexDefinitions), new ArrayList<>(documentConfiguration.indexDefinitions()));
     }
 
     @Test

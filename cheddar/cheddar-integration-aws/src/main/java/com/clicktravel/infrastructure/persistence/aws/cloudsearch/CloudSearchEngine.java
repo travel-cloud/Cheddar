@@ -144,6 +144,9 @@ public class CloudSearchEngine implements DocumentSearchEngine {
         for (final IndexDefinition indexDefinition : documentConfiguration.indexDefinitions()) {
             final String indexName = indexDefinition.getName();
             final PropertyDescriptor propertyDescriptor = documentConfiguration.properties().get(indexName);
+            if (propertyDescriptor == null) {
+                throw new IllegalStateException("No property found for index: " + indexName);
+            }
             final Field field = new Field(indexName, getPropertyValue(document, propertyDescriptor));
             fields.add(field);
         }
