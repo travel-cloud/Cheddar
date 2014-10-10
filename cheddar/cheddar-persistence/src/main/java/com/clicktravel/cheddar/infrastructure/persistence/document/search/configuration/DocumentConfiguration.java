@@ -75,11 +75,11 @@ public class DocumentConfiguration {
     }
 
     public Map<String, PropertyDescriptor> properties() {
-        return properties;
+        return Collections.unmodifiableMap(properties);
     }
 
     public Collection<IndexDefinition> indexDefinitions() {
-        return indexDefinitions;
+        return Collections.unmodifiableCollection(indexDefinitions);
     }
 
 }

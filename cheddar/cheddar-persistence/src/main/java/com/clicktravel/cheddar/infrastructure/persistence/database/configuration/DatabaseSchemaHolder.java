@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,8 +40,8 @@ public class DatabaseSchemaHolder {
             throw new IllegalArgumentException("Item configurations name must not be null");
         }
         this.schemaName = schemaName;
-        this.itemConfigurations = new HashSet<>(itemConfigurations);
-        this.sequenceConfigurations = new HashSet<>(sequenceConfigurations);
+        this.itemConfigurations = Collections.unmodifiableSet(new HashSet<>(itemConfigurations));
+        this.sequenceConfigurations = Collections.unmodifiableSet(new HashSet<>(sequenceConfigurations));
     }
 
     public Collection<ItemConfiguration> itemConfigurations() {
