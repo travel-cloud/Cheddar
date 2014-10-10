@@ -124,6 +124,9 @@ public class SqsMessageProcessor implements Runnable {
             processMessagesUntilShutdownRequested();
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
+        } catch (final Throwable e) {
+            logger.error(e.getMessage(), e);
+            throw e;
         } finally {
             logger.debug("Stopped receiving messages from queue [" + queueName
                     + "]; Initiating shutdown of task executor");
@@ -132,7 +135,7 @@ public class SqsMessageProcessor implements Runnable {
     }
 
     private void processMessagesUntilShutdownRequested() throws InterruptedException {
-        while (!(shutdownRequested || (shutdownWhenQueueDrainedRequested && queueDrained()))) {
+        while (!(shutdownRequested || shutdownWhenQueueDrainedRequested && queueDrained())) {
             // Block until there is capacity to handle up to MAX_RECEIVED_MESSAGES
             semaphore.acquire(MAX_RECEIVED_MESSAGES);
             List<com.amazonaws.services.sqs.model.Message> sqsMessages = Collections.emptyList();
@@ -145,7 +148,7 @@ public class SqsMessageProcessor implements Runnable {
                             .withWaitTimeSeconds(pollSeconds).withMaxNumberOfMessages(MAX_RECEIVED_MESSAGES);
                     sqsMessages = amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
                     if (shutdownWhenQueueDrainedRequested) {
-                        noReceivedMessagesCount = sqsMessages.isEmpty() ? (noReceivedMessagesCount + 1) : 0;
+                        noReceivedMessagesCount = sqsMessages.isEmpty() ? noReceivedMessagesCount + 1 : 0;
                     }
                 }
             } catch (final AmazonServiceException amazonServiceException) {
