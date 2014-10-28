@@ -96,7 +96,7 @@ public class ItemConfiguration {
         }
     }
 
-    public void registerUniqueContraints(final Collection<UniqueConstraint> uniqueConstraints) {
+    public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
         for (final UniqueConstraint uniqueConstraint : uniqueConstraints) {
             final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
             final PropertyDescriptor propertyDescriptor = properties.get(uniqueConstraintPropertyName);
