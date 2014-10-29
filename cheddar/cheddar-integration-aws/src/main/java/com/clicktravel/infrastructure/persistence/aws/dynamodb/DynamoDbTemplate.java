@@ -218,26 +218,25 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         final PutItemRequest itemRequest = new PutItemRequest().withTableName(tableName).withItem(attributeMap)
                 .withExpected(expectedResults);
+        boolean itemRequestSucceeded = false;
         try {
             amazonDynamoDbClient.putItem(itemRequest);
+            itemRequestSucceeded = true;
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
-            try {
-                deleteUniqueConstraintIndexes(item, itemConfiguration, createdConstraintPropertyDescriptors);
-            } catch (final Exception deleteUniqueConstraintIndexesException) {
-                logger.error(deleteUniqueConstraintIndexesException.getMessage(),
-                        deleteUniqueConstraintIndexesException);
-            }
             throw new ItemConstraintViolationException(itemConfiguration.primaryKeyDefinition().propertyName(),
                     "Failure to create item as store already contains item with matching primary key");
         } catch (final AmazonServiceException amazonServiceException) {
-            try {
-                deleteUniqueConstraintIndexes(item, itemConfiguration, createdConstraintPropertyDescriptors);
-            } catch (final Exception deleteUniqueConstraintIndexesException) {
-                logger.error(deleteUniqueConstraintIndexesException.getMessage(),
-                        deleteUniqueConstraintIndexesException);
-            }
             throw new PersistenceResourceFailureException("Failure while attempting DynamoDb put (create)",
                     amazonServiceException);
+        } finally {
+            if (!itemRequestSucceeded) {
+                try {
+                    deleteUniqueConstraintIndexes(item, itemConfiguration, createdConstraintPropertyDescriptors);
+                } catch (final Exception deleteUniqueConstraintIndexesException) {
+                    logger.error(deleteUniqueConstraintIndexesException.getMessage(),
+                            deleteUniqueConstraintIndexesException);
+                }
+            }
         }
         item.setVersion(1l);
         return item;
@@ -316,6 +315,9 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
     private <T extends Item> void deleteUniqueConstraintIndexes(final T item,
             final ItemConfiguration itemConfiguration,
             final Collection<PropertyDescriptor> constraintPropertyDescriptors) {
+        if (constraintPropertyDescriptors.isEmpty()) {
+            return;
+        }
         for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
             final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
             final PropertyDescriptor uniqueConstraintPropertyDescriptor = uniqueConstraint.propertyDescriptor();
@@ -390,24 +392,26 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         final PutItemRequest itemRequest = new PutItemRequest().withTableName(tableName).withItem(attributeMap)
                 .withExpected(expectedResults);
+        boolean itemRequestSucceeded = false;
         try {
             amazonDynamoDbClient.putItem(itemRequest);
-            if (!updatedUniqueConstraintPropertyDescriptors.isEmpty()) {
-                deleteUniqueConstraintIndexes(previousItem, itemConfiguration,
-                        updatedUniqueConstraintPropertyDescriptors);
-            }
+            itemRequestSucceeded = true;
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
-            if (!updatedUniqueConstraintPropertyDescriptors.isEmpty()) {
-                deleteUniqueConstraintIndexes(item, itemConfiguration, updatedUniqueConstraintPropertyDescriptors);
-            }
             throw new OptimisticLockException("Conflicting write detected while updating item");
         } catch (final AmazonServiceException amazonServiceException) {
-            if (!updatedUniqueConstraintPropertyDescriptors.isEmpty()) {
-                deleteUniqueConstraintIndexes(item, itemConfiguration, updatedUniqueConstraintPropertyDescriptors);
-            }
             throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Put (update item)",
                     amazonServiceException);
+        } finally {
+            if (!itemRequestSucceeded) {
+                try {
+                    deleteUniqueConstraintIndexes(item, itemConfiguration, updatedUniqueConstraintPropertyDescriptors);
+                } catch (final Exception deleteUniqueConstraintIndexesException) {
+                    logger.error(deleteUniqueConstraintIndexesException.getMessage(),
+                            deleteUniqueConstraintIndexesException);
+                }
+            }
         }
+        deleteUniqueConstraintIndexes(previousItem, itemConfiguration, updatedUniqueConstraintPropertyDescriptors);
         item.setVersion(newVersion);
         return item;
     }
