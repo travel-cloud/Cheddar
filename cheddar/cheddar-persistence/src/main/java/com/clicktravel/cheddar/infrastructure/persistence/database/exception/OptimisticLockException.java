@@ -19,21 +19,14 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
 /**
- * Exception to be used in the persistence layer when an item-level constraint has been violated, such as a violation of
- * a unique valued attribute constraint.
+ * Exception to be used by the persistence layer to indicate a conflicting write to the database was detected by an
+ * optimistic lock failure.
  */
-public class ItemConstraintViolationException extends PersistenceException {
+public class OptimisticLockException extends PersistenceException {
 
-    private static final long serialVersionUID = 3975221821260678353L;
-    private final String propertyName;
+    private static final long serialVersionUID = 6898332222829097092L;
 
-    public ItemConstraintViolationException(final String propertyName, final String message) {
+    public OptimisticLockException(final String message) {
         super(message);
-        this.propertyName = propertyName;
     }
-
-    public String propertyName() {
-        return propertyName;
-    }
-
 }

@@ -40,6 +40,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
 import com.clicktravel.cheddar.infrastructure.persistence.database.SequenceKeyGenerator;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.ItemConstraintViolationException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Condition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
@@ -289,10 +290,38 @@ public class DynamoDbTemplateTest {
     }
 
     @Test
+    public void shouldNotCreateItem_withStubItemWithExistingPrimaryKey() throws Exception {
+        // Given
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+        final StubItem stubItem = new StubItem();
+        stubItem.setId(randomId());
+        final String stringPropertyValue = randomString(10);
+        stubItem.setStringProperty(stringPropertyValue);
+        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(
+                ConditionalCheckFailedException.class);
+
+        // When
+        ItemConstraintViolationException actualException = null;
+        try {
+            dynamoDbTemplate.create(stubItem);
+        } catch (final ItemConstraintViolationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+    }
+
+    @Test
     public void shouldCreateItem_withUniqueConstraint() throws Exception {
         // Given
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        itemConfiguration.registerUniqueContraints(Arrays.asList(new UniqueConstraint("stringProperty")));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(new UniqueConstraint("stringProperty")));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
@@ -332,7 +361,7 @@ public class DynamoDbTemplateTest {
         // Given
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
         final UniqueConstraint uniqueConstraint = new UniqueConstraint("stringProperty");
-        itemConfiguration.registerUniqueContraints(Arrays.asList(uniqueConstraint));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(uniqueConstraint));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
@@ -372,7 +401,7 @@ public class DynamoDbTemplateTest {
         // Given
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
         final UniqueConstraint uniqueConstraint = new UniqueConstraint("stringProperty");
-        itemConfiguration.registerUniqueContraints(Arrays.asList(uniqueConstraint));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(uniqueConstraint));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
@@ -457,6 +486,65 @@ public class DynamoDbTemplateTest {
     }
 
     @Test
+    public void shouldNotUpdateItem_withOptimisticLockException() throws Exception {
+        // Given
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+        final StubItem stubItem = new StubItem();
+        stubItem.setId(randomId());
+        final String stringPropertyValue = randomString(10);
+        stubItem.setStringProperty(stringPropertyValue);
+        final Long oldVersion = randomLong();
+        stubItem.setVersion(oldVersion);
+        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(
+                ConditionalCheckFailedException.class);
+
+        // When
+        OptimisticLockException actualException = null;
+        try {
+            dynamoDbTemplate.update(stubItem);
+        } catch (final OptimisticLockException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+    }
+
+    @Test
+    public void shouldNotUpdateItem_withAmazonServiceException() throws Exception {
+        // Given
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+        final StubItem stubItem = new StubItem();
+        stubItem.setId(randomId());
+        final String stringPropertyValue = randomString(10);
+        stubItem.setStringProperty(stringPropertyValue);
+        final Long oldVersion = randomLong();
+        stubItem.setVersion(oldVersion);
+        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(AmazonServiceException.class);
+
+        // When
+        PersistenceResourceFailureException actualException = null;
+        try {
+            dynamoDbTemplate.update(stubItem);
+        } catch (final PersistenceResourceFailureException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+    }
+
+    @Test
     public void shouldUpdateItem_withStubItemAndCompoundPk() throws Exception {
         // Given
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName,
@@ -499,7 +587,7 @@ public class DynamoDbTemplateTest {
         final long oldVersion = randomInt(100);
         stubItem.setVersion(oldVersion);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        itemConfiguration.registerUniqueContraints(Arrays.asList(new UniqueConstraint("stringProperty")));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(new UniqueConstraint("stringProperty")));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
@@ -564,7 +652,7 @@ public class DynamoDbTemplateTest {
         final long oldVersion = randomInt(100);
         stubItem.setVersion(oldVersion);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        itemConfiguration.registerUniqueContraints(Arrays.asList(new UniqueConstraint("stringProperty")));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(new UniqueConstraint("stringProperty")));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
@@ -637,7 +725,7 @@ public class DynamoDbTemplateTest {
         final long oldVersion = randomInt(100);
         stubItem.setVersion(oldVersion);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        itemConfiguration.registerUniqueContraints(Arrays.asList(new UniqueConstraint("stringProperty")));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(new UniqueConstraint("stringProperty")));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
@@ -774,7 +862,7 @@ public class DynamoDbTemplateTest {
         stubItem.setStringProperty(randomString(10));
         stubItem.setVersion(randomLong());
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        itemConfiguration.registerUniqueContraints(Arrays.asList(new UniqueConstraint("stringProperty")));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(new UniqueConstraint("stringProperty")));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
@@ -1043,7 +1131,7 @@ public class DynamoDbTemplateTest {
 
         final DatabaseSchemaHolder mockDatabaseSchemaHolder = mock(DatabaseSchemaHolder.class);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        itemConfiguration.registerUniqueContraints(Arrays.asList(new UniqueConstraint("stringProperty")));
+        itemConfiguration.registerUniqueConstraints(Arrays.asList(new UniqueConstraint("stringProperty")));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
 
         when(mockDatabaseSchemaHolder.schemaName()).thenReturn(schemaName);
