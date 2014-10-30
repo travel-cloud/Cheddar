@@ -47,7 +47,7 @@ public class VariantItemConfiguration extends ItemConfiguration {
     }
 
     @Override
-    public void registerUniqueContraints(final Collection<UniqueConstraint> uniqueConstraints) {
+    public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
         throw new UnsupportedOperationException("VariantItemConfiguration cannot register new unique constraints");
     }
 

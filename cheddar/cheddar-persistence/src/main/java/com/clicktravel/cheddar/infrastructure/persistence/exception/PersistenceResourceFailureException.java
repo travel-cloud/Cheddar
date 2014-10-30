@@ -16,9 +16,13 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.exception;
 
+/**
+ * Exception to be used by the persistence layer to indicate the underlying database server has reported an
+ * infrastructure problem.
+ */
 public class PersistenceResourceFailureException extends PersistenceException {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -9068572387801735463L;
 
     /**
      * Constructor for PersistenceResourceFailureException

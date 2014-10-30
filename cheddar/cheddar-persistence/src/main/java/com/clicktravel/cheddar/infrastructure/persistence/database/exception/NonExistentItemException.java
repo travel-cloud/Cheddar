@@ -18,17 +18,13 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
-
 /**
- * Exception to be used by the persistence layer to state that the request for an item with the specified id does not
- * existent in the persistence store.
- * 
- * 
+ * Exception to be used by the persistence layer to indicate the item with the requested id does not exist in the
+ * persistence store.
  */
-
 public class NonExistentItemException extends PersistenceException {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -6888247442568778379L;
 
     /**
      * Creates new NonExistentItemException with the given message

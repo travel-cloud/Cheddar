@@ -41,8 +41,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.*;
-import com.clicktravel.common.random.Randoms;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
+import com.clicktravel.common.random.Randoms;
 import com.clicktravel.infrastructure.integration.aws.AwsIntegration;
 import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDbTemplate;
 import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubItem;
@@ -340,7 +340,7 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
         final ItemConfiguration stubItemConfiguration = new ItemConfiguration(StubItem.class, tableName);
         final UniqueConstraint uniqueConstraint = new UniqueConstraint("stringProperty2");
         final Collection<UniqueConstraint> uniqueConstraints = new ArrayList<>(Arrays.asList(uniqueConstraint));
-        stubItemConfiguration.registerUniqueContraints(uniqueConstraints);
+        stubItemConfiguration.registerUniqueConstraints(uniqueConstraints);
         final Collection<ItemConfiguration> itemConfigurations = new ArrayList<>(Arrays.asList(stubItemConfiguration));
 
         final DatabaseSchemaHolder databaseSchemaHolder = new DatabaseSchemaHolder(schemaName, itemConfigurations);
