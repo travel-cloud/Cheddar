@@ -19,7 +19,7 @@ package com.clicktravel.cheddar.domain.feature.toggle;
 /**
  * Default FeaturePropertyAdapter which will use the format:
  * 
- * feature.toggle.services.{context}.{featureName}
+ * feature.toggle.services.{namespace}.{featureName}
  * 
  * Property will be lower-cased with underscores changed into dots.
  * 
@@ -28,7 +28,8 @@ public class DefaultFeaturePropertyAdapter implements FeaturePropertyAdapter {
 
     @Override
     public String toPropertyKey(final Feature feature) {
-        return ("feature.toggle.services." + feature.context() + "." + feature.name()).replace("_", ".").toLowerCase();
+        final String rawPropertyName = "feature.toggle.services." + feature.namespace() + "." + feature.name();
+        return rawPropertyName.replace("_", ".").toLowerCase();
     }
 
 }
