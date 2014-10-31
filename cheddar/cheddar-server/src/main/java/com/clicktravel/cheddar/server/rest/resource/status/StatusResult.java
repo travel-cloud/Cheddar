@@ -23,7 +23,7 @@ public class StatusResult {
     private String frameworkVersion;
     private String status;
     private boolean processingRestRequest;
-    private boolean processedRecentDeferrableEvent;
+    private boolean deferrableProcessing;
     private MaximumWorkRates maximumWorkRates;
 
     public String getName() {
@@ -66,12 +66,17 @@ public class StatusResult {
         this.processingRestRequest = processingRestRequest;
     }
 
+    // TODO Remove this redundant property (property has been renamed deferrableProcessing)
     public boolean isProcessedRecentDeferrableEvent() {
-        return processedRecentDeferrableEvent;
+        return deferrableProcessing;
     }
 
-    public void setProcessedRecentDeferrableEvent(final boolean processedRecentDeferrableEvent) {
-        this.processedRecentDeferrableEvent = processedRecentDeferrableEvent;
+    public boolean isDeferrableProcessing() {
+        return deferrableProcessing;
+    }
+
+    public void setDeferrableProcessing(final boolean deferrableProcessing) {
+        this.deferrableProcessing = deferrableProcessing;
     }
 
     public MaximumWorkRates getMaximumWorkRates() {

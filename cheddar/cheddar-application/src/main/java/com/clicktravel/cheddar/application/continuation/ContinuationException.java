@@ -14,21 +14,13 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.application.security;
+package com.clicktravel.cheddar.application.continuation;
 
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+public class ContinuationException extends RuntimeException {
 
-@Component
-@Aspect
-@Order(100)
-public class AuthenticatedAspect {
+    private static final long serialVersionUID = -202899174951885943L;
 
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAuthenticated();
+    public ContinuationException(final String message) {
+        super(message);
     }
-
 }

@@ -30,5 +30,7 @@ public interface MessageListener extends MessageQueueAccessor {
 
     void shutdownAfterQueueDrained();
 
+    boolean hasTerminated();
+
     void awaitTermination();
 }

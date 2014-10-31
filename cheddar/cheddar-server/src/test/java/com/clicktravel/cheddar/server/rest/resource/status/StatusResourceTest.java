@@ -29,10 +29,10 @@ import javax.ws.rs.core.Response.Status;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.clicktravel.cheddar.remote.TaggedRemoteCallStatusHolder;
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
 import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus;
 import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.application.status.DeferrableProcessingStatusHolder;
 import com.clicktravel.cheddar.server.application.status.RestAdapterStatusHolder;
 import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
@@ -42,7 +42,7 @@ public class StatusResourceTest {
     private ApplicationConfiguration mockApplicationConfiguration;
     private LifecycleStatusHolder mockLifecycleStatusHolder;
     private RestAdapterStatusHolder mockRestAdapterStatusHolder;
-    private TaggedRemoteCallStatusHolder mockTaggedRemoteCallStatusHolder;
+    private DeferrableProcessingStatusHolder mockDeferrableProcessingStatusHolder;
     private RateLimiterConfiguration mockRateLimiterConfiguration;
 
     @Before
@@ -50,7 +50,7 @@ public class StatusResourceTest {
         mockApplicationConfiguration = mock(ApplicationConfiguration.class);
         mockLifecycleStatusHolder = mock(LifecycleStatusHolder.class);
         mockRestAdapterStatusHolder = mock(RestAdapterStatusHolder.class);
-        mockTaggedRemoteCallStatusHolder = mock(TaggedRemoteCallStatusHolder.class);
+        mockDeferrableProcessingStatusHolder = mock(DeferrableProcessingStatusHolder.class);
         mockRateLimiterConfiguration = mock(RateLimiterConfiguration.class);
     }
 
@@ -59,12 +59,11 @@ public class StatusResourceTest {
         // Given
         final LifecycleStatus expectedLifecycleStatus = randomEnum(LifecycleStatus.class);
         final boolean expectedProcessingRestRequest = randomBoolean();
-        final boolean expectedProcessedRecentDeferrableEvent = randomBoolean();
+        final boolean expectedDeferrableProcessing = randomBoolean();
 
         when(mockLifecycleStatusHolder.getLifecycleStatus()).thenReturn(expectedLifecycleStatus);
         when(mockRestAdapterStatusHolder.restRequestsInProgress()).thenReturn(expectedProcessingRestRequest ? 2 : 1);
-        when(mockTaggedRemoteCallStatusHolder.processedRecentTaggedRemoteCall()).thenReturn(
-                expectedProcessedRecentDeferrableEvent);
+        when(mockDeferrableProcessingStatusHolder.isDeferrableProcessing()).thenReturn(expectedDeferrableProcessing);
         final String applicationName = randomString(10);
         final String applicationVersion = randomString(10);
         final String frameworkVersion = randomString(10);
@@ -88,7 +87,7 @@ public class StatusResourceTest {
         when(mockRateLimiterConfiguration.lowPriorityDomainEventHandlerRateLimiter()).thenReturn(
                 mockLowPriorityEventHandlerRateLimiter);
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
-                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
+                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockDeferrableProcessingStatusHolder,
                 mockRateLimiterConfiguration);
 
         // When
@@ -104,7 +103,8 @@ public class StatusResourceTest {
         assertEquals(frameworkVersion, statusResult.getFrameworkVersion());
         assertEquals(expectedLifecycleStatus.name(), statusResult.getStatus());
         assertEquals(expectedProcessingRestRequest, statusResult.isProcessingRestRequest());
-        assertEquals(expectedProcessedRecentDeferrableEvent, statusResult.isProcessedRecentDeferrableEvent());
+        assertEquals(expectedDeferrableProcessing, statusResult.isDeferrableProcessing());
+        assertEquals(expectedDeferrableProcessing, statusResult.isProcessedRecentDeferrableEvent());
         assertEquals(mockRestRequestRateLimiter.getBucketCapacity(), statusResult.getMaximumWorkRates()
                 .getRestRequest().getBucketCapacity());
         assertEquals(mockRestRequestRateLimiter.getTokenReplacementDelayMillis(), statusResult.getMaximumWorkRates()
@@ -124,7 +124,7 @@ public class StatusResourceTest {
         // Given
         when(mockRestAdapterStatusHolder.isAcceptingRequests()).thenReturn(false);
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
-                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
+                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockDeferrableProcessingStatusHolder,
                 mockRateLimiterConfiguration);
 
         // When
@@ -140,7 +140,7 @@ public class StatusResourceTest {
         // Given
         when(mockRestAdapterStatusHolder.isAcceptingRequests()).thenReturn(true);
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
-                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockTaggedRemoteCallStatusHolder,
+                mockLifecycleStatusHolder, mockRestAdapterStatusHolder, mockDeferrableProcessingStatusHolder,
                 mockRateLimiterConfiguration);
 
         // When

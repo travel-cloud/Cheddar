@@ -14,21 +14,28 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.application.security;
+package com.clicktravel.cheddar.application.continuation;
 
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-@Component
 @Aspect
-@Order(100)
-public class AuthenticatedAspect {
+@Order(400)
+@Component
+public class ContinueResultAspect {
 
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAuthenticated();
+    private final ContinuationHandler continuationHandler;
+
+    @Autowired
+    public ContinueResultAspect(final ContinuationHandler continuationHandler) {
+        this.continuationHandler = continuationHandler;
     }
 
+    @AfterReturning("@annotation(com.clicktravel.cheddar.application.continuation.ContinueResult)")
+    public void returnMethodResult() {
+        continuationHandler.offerMethodResult();
+    }
 }
