@@ -2,6 +2,7 @@ apply from: '../../test.gradle'
 
 dependencies {
     compile project(':cheddar:cheddar-rest')
+    compile project(':cheddar:cheddar-messaging')
     compile project(':cheddar:cheddar-system-events')
 
     compile "org.glassfish.jersey.ext:jersey-spring3:2.7"

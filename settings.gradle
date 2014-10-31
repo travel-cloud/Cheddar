@@ -17,8 +17,6 @@ include (
     "cheddar:cheddar-integration-aws",
     "cheddar:cheddar-events",
     "cheddar:cheddar-system-events",
-    "cheddar:cheddar-remote-api",
-    "cheddar:cheddar-remote",
     "cheddar:cheddar-context"
     
 )

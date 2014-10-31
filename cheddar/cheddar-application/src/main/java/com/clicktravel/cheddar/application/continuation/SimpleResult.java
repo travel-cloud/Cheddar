@@ -14,21 +14,23 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.application.security;
+package com.clicktravel.cheddar.application.continuation;
 
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+class SimpleResult implements MethodResult {
 
-@Component
-@Aspect
-@Order(100)
-public class AuthenticatedAspect {
+    private final Object result;
 
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAuthenticated();
+    public SimpleResult(final Object result) {
+        this.result = result;
     }
 
+    @Override
+    public Object getReturnValue() {
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleResult; result:[" + result + "]";
+    }
 }

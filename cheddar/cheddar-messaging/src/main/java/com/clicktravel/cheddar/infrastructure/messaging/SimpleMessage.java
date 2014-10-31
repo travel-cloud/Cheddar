@@ -16,7 +16,6 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
-
 public class SimpleMessage implements Message {
 
     private final String type;
@@ -35,6 +34,11 @@ public class SimpleMessage implements Message {
     @Override
     public String getPayload() {
         return payload;
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleMessage; type:[" + type + "] payload:[" + payload + "]";
     }
 
 }

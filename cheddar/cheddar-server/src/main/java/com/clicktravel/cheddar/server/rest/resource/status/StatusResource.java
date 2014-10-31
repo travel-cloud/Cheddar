@@ -27,9 +27,9 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.remote.TaggedRemoteCallStatusHolder;
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
 import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
+import com.clicktravel.cheddar.server.application.status.DeferrableProcessingStatusHolder;
 import com.clicktravel.cheddar.server.application.status.RestAdapterStatusHolder;
 import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
@@ -41,7 +41,7 @@ public class StatusResource {
     private final ApplicationConfiguration applicationConfiguration;
     private final LifecycleStatusHolder lifecycleStatusHolder;
     private final RestAdapterStatusHolder restAdapterStatusHolder;
-    private final TaggedRemoteCallStatusHolder taggedRemoteCallStatusHolder;
+    private final DeferrableProcessingStatusHolder deferrableProcessingStatusHolder;
     private final RateLimiter restRequestRateLimiter;
     private final RateLimiter highPriorityDomainEventHandlerRateLimiter;
     private final RateLimiter lowPriorityDomainEventHandlerRateLimiter;
@@ -49,12 +49,12 @@ public class StatusResource {
     @Inject
     public StatusResource(final ApplicationConfiguration applicationConfiguration,
             final LifecycleStatusHolder lifecycleStatusHolder, final RestAdapterStatusHolder restAdapterStatusHolder,
-            final TaggedRemoteCallStatusHolder taggedRemoteCallStatusHolder,
+            final DeferrableProcessingStatusHolder deferrableProcessingStatusHolder,
             final RateLimiterConfiguration rateLimiterConfiguration) throws IOException {
         this.applicationConfiguration = applicationConfiguration;
         this.lifecycleStatusHolder = lifecycleStatusHolder;
         this.restAdapterStatusHolder = restAdapterStatusHolder;
-        this.taggedRemoteCallStatusHolder = taggedRemoteCallStatusHolder;
+        this.deferrableProcessingStatusHolder = deferrableProcessingStatusHolder;
         restRequestRateLimiter = rateLimiterConfiguration.restRequestRateLimiter();
         highPriorityDomainEventHandlerRateLimiter = rateLimiterConfiguration
                 .highPriorityDomainEventHandlerRateLimiter();
@@ -68,17 +68,17 @@ public class StatusResource {
         final boolean processingRestRequest = restAdapterStatusHolder.restRequestsInProgress() > 1;
 
         final String lifecycleStatus = lifecycleStatusHolder.getLifecycleStatus().name();
-        final boolean processedRecentDeferrableEvent = taggedRemoteCallStatusHolder.processedRecentTaggedRemoteCall();
+        final boolean isDeferrableProcessing = deferrableProcessingStatusHolder.isDeferrableProcessing();
         logger.trace("Application instance status; version:[" + applicationConfiguration.version()
                 + "] lifecycleStatus:[" + lifecycleStatus + "] processingRestRequest:[" + processingRestRequest
-                + "] processedRecentDeferrableEvent:[" + processedRecentDeferrableEvent + "]");
+                + "] isDeferrableProcessing:[" + isDeferrableProcessing + "]");
         final StatusResult status = new StatusResult();
         status.setName(applicationConfiguration.name());
         status.setVersion(applicationConfiguration.version());
         status.setFrameworkVersion(applicationConfiguration.frameworkVersion());
         status.setStatus(lifecycleStatus);
         status.setProcessingRestRequest(processingRestRequest);
-        status.setProcessedRecentDeferrableEvent(processedRecentDeferrableEvent);
+        status.setDeferrableProcessing(isDeferrableProcessing);
         status.setMaximumWorkRates(getMaximumWorkRates());
         final Response response = Response.status(javax.ws.rs.core.Response.Status.OK).entity(status).build();
         return response;

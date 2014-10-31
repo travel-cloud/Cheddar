@@ -5,7 +5,6 @@ def springVersion = '3.2.3.RELEASE'
 dependencies {
     compile project(':commons:commons-lang')
     compile project(':cheddar:cheddar-tx')
-    compile project(':cheddar:cheddar-remote-api')
     compile project(':cheddar:cheddar-context')
 
     compile "org.springframework:spring-core:${springVersion}"

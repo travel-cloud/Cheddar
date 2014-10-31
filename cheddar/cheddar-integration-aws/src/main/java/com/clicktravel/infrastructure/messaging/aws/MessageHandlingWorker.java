@@ -49,7 +49,7 @@ public class MessageHandlingWorker implements Runnable {
         try {
             messageHandler.handle(message);
         } catch (final Exception e) {
-            logger.warn(e.getMessage(), e);
+            logger.error("Error handling message: " + message, e);
         } finally {
             amazonSqsClient.deleteMessage(deleteMessageRequest);
             semaphore.release();
