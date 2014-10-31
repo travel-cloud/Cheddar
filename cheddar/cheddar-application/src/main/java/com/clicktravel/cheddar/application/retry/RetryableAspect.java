@@ -79,7 +79,7 @@ public class RetryableAspect {
 
     private boolean shouldRetryMethod(final Class<? extends Throwable> thrownClass, final Retryable retryable,
             final int attempts) {
-        if (attempts == retryable.maxAttempts()) {
+        if (attempts >= retryable.maxAttempts()) {
             return false;
         }
         final HashSet<Class<? extends Throwable>> failClasses = new HashSet<>(Arrays.asList(retryable
@@ -139,9 +139,5 @@ public class RetryableAspect {
         types[0] = thrownExceptionClass;
         System.arraycopy(methodParameterTypes, 0, types, 1, methodParameterTypes.length);
         return types;
-    }
-
-    public void registerImmediateFailureExceptionClass(final Class<? extends Throwable> immediateFailureExceptionClass) {
-        alwaysImmediateFailureExceptionClasses.add(immediateFailureExceptionClass);
     }
 }

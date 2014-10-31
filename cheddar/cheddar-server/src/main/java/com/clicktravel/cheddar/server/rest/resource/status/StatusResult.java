@@ -66,7 +66,9 @@ public class StatusResult {
         this.processingRestRequest = processingRestRequest;
     }
 
-    // TODO Remove this redundant property (property has been renamed deferrableProcessing)
+    // TODO Remove this redundant property when deployment scripts have been updated (property has been renamed
+    // deferrableProcessing)
+    @Deprecated
     public boolean isProcessedRecentDeferrableEvent() {
         return deferrableProcessing;
     }
