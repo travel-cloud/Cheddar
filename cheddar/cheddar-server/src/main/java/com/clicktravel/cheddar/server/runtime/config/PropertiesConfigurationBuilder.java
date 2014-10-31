@@ -20,12 +20,16 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 
+import com.clicktravel.cheddar.domain.feature.toggle.FeatureRegistry;
+
 public abstract class PropertiesConfigurationBuilder {
 
     public static PropertySourcesPlaceholderConfigurer configurer(final String servicePropertiesName,
             final Environment environment) {
+        final String environmentPropertiesLocation = "com.clicktravel.services.env.properties";
+        FeatureRegistry.init(environmentPropertiesLocation);
         final PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-        final ClassPathResource envProperties = new ClassPathResource("com.clicktravel.services.env.properties");
+        final ClassPathResource envProperties = new ClassPathResource(environmentPropertiesLocation);
         final ClassPathResource serverProperties = new ClassPathResource("com.clicktravel.cheddar.server.properties");
         final ClassPathResource serviceProperties = new ClassPathResource(
                 (RuntimeConfiguration.isLocalEnvironment(environment) ? "local-" : "") + servicePropertiesName);
@@ -33,4 +37,5 @@ public abstract class PropertiesConfigurationBuilder {
         configurer.setLocations(new ClassPathResource[] { serviceProperties, serverProperties, envProperties });
         return configurer;
     }
+
 }
