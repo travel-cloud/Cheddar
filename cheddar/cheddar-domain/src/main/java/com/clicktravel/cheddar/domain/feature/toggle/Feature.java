@@ -24,16 +24,12 @@ package com.clicktravel.cheddar.domain.feature.toggle;
 public interface Feature {
 
     /**
-     * Returns the name of this feature.
-     * 
      * @return The name of this feature
      */
     String name();
 
     /**
-     * Returns the namespace used to group many features together FeaturePropertyAdapter
-     * 
-     * @return The namespace for this feature
+     * @return The namespace used to group many features together
      */
     String namespace();
 
