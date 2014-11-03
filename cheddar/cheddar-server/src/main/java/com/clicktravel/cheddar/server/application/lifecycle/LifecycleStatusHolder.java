@@ -19,6 +19,8 @@ package com.clicktravel.cheddar.server.application.lifecycle;
 import static com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus.INACTIVE;
 import static com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatus.RUNNING;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -26,11 +28,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class LifecycleStatusHolder {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private volatile LifecycleStatus lifecycleStatus;
 
     @Autowired
-    public LifecycleStatusHolder(@Value("${blue.green.mode}") final boolean blueGreenMode) {
-        lifecycleStatus = blueGreenMode ? INACTIVE : RUNNING;
+    public LifecycleStatusHolder(@Value("${blue.green.startup:false}") final boolean blueGreenStartup) {
+        logger.debug("Blue-green startup: " + blueGreenStartup);
+        lifecycleStatus = blueGreenStartup ? INACTIVE : RUNNING;
     }
 
     public LifecycleStatus getLifecycleStatus() {
