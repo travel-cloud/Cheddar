@@ -26,15 +26,15 @@ import net.spy.memcached.MemcachedClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.persistence.cache.ObjectCache;
+import com.clicktravel.cheddar.infrastructure.persistence.cache.ItemCache;
 
-public class MemcachedObjectCache implements ObjectCache {
+public class MemcachedItemCache implements ItemCache {
 
     private final MemcachedClient memcachedClient;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public MemcachedObjectCache(final MemcachedClient memcachedClient) {
+    public MemcachedItemCache(final MemcachedClient memcachedClient) {
         this.memcachedClient = memcachedClient;
     }
 

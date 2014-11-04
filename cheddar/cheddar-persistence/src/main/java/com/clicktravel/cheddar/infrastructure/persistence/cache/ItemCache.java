@@ -16,7 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.cache;
 
-public interface ObjectCache {
+public interface ItemCache {
 
     /**
      * Gets value from the cache but gives up after your given timeout in seconds
