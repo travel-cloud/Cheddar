@@ -39,26 +39,26 @@ public class MemcachedItemCache implements ItemCache {
     }
 
     @Override
-    public Object getObject(final String key, final long timeout) {
-        Object myObj = null;
+    public Object getItem(final String key, final long timeout) {
+        Object item = null;
         final Future<Object> f = memcachedClient.asyncGet(key);
         try {
-            myObj = f.get(timeout, TimeUnit.SECONDS);
+            item = f.get(timeout, TimeUnit.SECONDS);
         } catch (final TimeoutException e) {
             f.cancel(false);
-            logger.trace("Unable to get cache object within given time", e);
+            logger.trace("Unable to get cache item within given time", e);
             return null;
         } catch (final InterruptedException | ExecutionException e) {
-            logger.debug("Unable to get cache object", e);
+            logger.debug("Unable to get cache item", e);
         }
-        return myObj;
+        return item;
     }
 
     @Override
-    public void putObject(final String key, final Object object, final long expire) {
+    public void putItem(final String key, final Object item, final long expire) {
         if (expire < Integer.MIN_VALUE || expire > Integer.MAX_VALUE) {
             throw new IllegalArgumentException(expire + " cannot be cast to int without changing its value.");
         }
-        memcachedClient.set(key, (int) expire, object);
+        memcachedClient.set(key, (int) expire, item);
     }
 }

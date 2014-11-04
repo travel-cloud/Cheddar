@@ -23,16 +23,16 @@ public interface ItemCache {
      * 
      * @param key
      * @param timeout
-     * @return the object stored in the cache
+     * @return the item stored in the cache
      */
-    Object getObject(String key, long timeout);
+    Object getItem(String key, long timeout);
 
     /**
      * Saves object to the cache with a given value that will expire in a given number of seconds
      * @param key to store against the object
      * @param expire time in seconds
-     * @param object seriaziable object to store in the cache
+     * @param item seriaziable object to store in the cache
      */
-    void putObject(String key, Object object, long expire);
+    void putItem(String key, Object item, long expire);
 
 }

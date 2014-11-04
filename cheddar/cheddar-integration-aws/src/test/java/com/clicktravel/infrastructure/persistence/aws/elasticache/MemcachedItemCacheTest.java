@@ -45,47 +45,47 @@ public class MemcachedItemCacheTest {
     }
 
     @Test
-    public void shoudlGetObject() throws InterruptedException, TimeoutException, ExecutionException {
+    public void shoudlGetItem() throws InterruptedException, TimeoutException, ExecutionException {
 
         final String key = Randoms.randomString();
-        final String object = Randoms.randomString();
+        final String item = Randoms.randomString();
         final int timeout = Randoms.randomInt(5) + 1;
 
         final GetFuture<Object> f = mock(GetFuture.class);
         when(client.asyncGet(key)).thenReturn(f);
-        when(f.get(timeout, TimeUnit.SECONDS)).thenReturn(object);
-        final Object obj = memcachedCacheStore.getObject(key, timeout);
+        when(f.get(timeout, TimeUnit.SECONDS)).thenReturn(item);
+        final Object obj = memcachedCacheStore.getItem(key, timeout);
 
-        assertEquals(object, obj);
+        assertEquals(item, obj);
 
     }
 
     @Test
-    public void shoudlNotGetObject_throwsTimout() throws InterruptedException, ExecutionException, TimeoutException {
+    public void shoudlNotGetItem_throwsTimout() throws InterruptedException, ExecutionException, TimeoutException {
 
         final String key = Randoms.randomString();
         final int timeout = Randoms.randomInt(5) + 1;
         final GetFuture<Object> f = mock(GetFuture.class);
         when(client.asyncGet(key)).thenReturn(f);
         when(f.get(timeout, TimeUnit.SECONDS)).thenThrow(TimeoutException.class);
-        final Object obj = memcachedCacheStore.getObject(key, timeout);
-        assertNull(obj);
+        final Object item = memcachedCacheStore.getItem(key, timeout);
+        assertNull(item);
     }
 
     @Test
-    public void shouldSetObject() {
+    public void shouldPutItem() {
         final String key = Randoms.randomString();
-        final String object = Randoms.randomString();
+        final String item = Randoms.randomString();
         final long expire = (long) Randoms.randomInt(5) + 1;
-        memcachedCacheStore.putObject(key, object, expire);
-        verify(client).set(key, (int) expire, object);
+        memcachedCacheStore.putItem(key, item, expire);
+        verify(client).set(key, (int) expire, item);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void shouldSetObject_failExpireToLarge() {
+    public void shouldNotPutItem_failExpireToLarge() {
         final String key = Randoms.randomString();
-        final String object = Randoms.randomString();
+        final String item = Randoms.randomString();
         final long expire = (long) Integer.MAX_VALUE + 1;
-        memcachedCacheStore.putObject(key, object, expire);
+        memcachedCacheStore.putItem(key, item, expire);
     }
 }
