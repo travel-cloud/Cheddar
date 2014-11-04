@@ -19,12 +19,12 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
 /**
- * Exception to be used in the persistence layer when an item-level constraint has been violated for example unique
- * constraints.
+ * Exception to be used in the persistence layer when an item-level constraint has been violated, such as a violation of
+ * a unique valued attribute constraint.
  */
 public class ItemConstraintViolationException extends PersistenceException {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 3975221821260678353L;
     private final String propertyName;
 
     public ItemConstraintViolationException(final String propertyName, final String message) {

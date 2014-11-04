@@ -14,21 +14,19 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.application.security;
+package com.clicktravel.cheddar.infrastructure.persistence.database.exception;
 
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 
-@Component
-@Aspect
-@Order(100)
-public class AuthenticatedAspect {
+/**
+ * Exception to be used by the persistence layer to indicate a conflicting write to the database was detected by an
+ * optimistic lock failure.
+ */
+public class OptimisticLockException extends PersistenceException {
 
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAuthenticated();
+    private static final long serialVersionUID = 6898332222829097092L;
+
+    public OptimisticLockException(final String message) {
+        super(message);
     }
-
 }

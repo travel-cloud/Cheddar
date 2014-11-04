@@ -35,6 +35,7 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     private final Map<String, MessageHandler> messageHandlers = new ConcurrentHashMap<>();
     private final RateLimiter rateLimiter;
     private SqsMessageProcessor queueProcessor;
+    private SqsMessageProcessorExecutor executor;
 
     public SqsMessageListener(final String queueName, final RateLimiter rateLimiter) {
         super(queueName);
@@ -52,7 +53,7 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
         } else {
             logger.info("Starting to listen for messages on queue [" + queueName() + "] for these message types :["
                     + messageTypeSummary() + "]");
-            final SqsMessageProcessorExecutor executor = new SqsMessageProcessorExecutor(queueName(), NUM_THREADS);
+            executor = new SqsMessageProcessorExecutor(queueName(), NUM_THREADS);
             queueProcessor = new SqsMessageProcessor(amazonSqsClient(), queueName(), messageHandlers, rateLimiter,
                     executor);
             new Thread(queueProcessor).start();
@@ -94,6 +95,11 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
         logger.debug("Terminated processing for queue [" + queueName() + "]");
     }
 
+    @Override
+    public boolean hasTerminated() {
+        return (executor != null) && executor.isTerminated();
+    }
+
     private String messageTypeSummary() {
         final StringBuilder sb = new StringBuilder();
         for (final String messageType : messageHandlers.keySet()) {
@@ -104,5 +110,4 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
         }
         return sb.toString();
     }
-
 }

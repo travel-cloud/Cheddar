@@ -44,8 +44,6 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
 
     private final MessageListener eventMessageListener;
     private final MessageListener highPriorityEventMessageListener;
-    private final MessageListener remoteCallMessageListener;
-    private final MessageListener remoteResponseMessageListener;
     private final MessageListener systemEventMessageListener;
     private final Collection<MessageListener> messageListeners;
     private final CountDownLatch restAdapterStartLatch;
@@ -55,14 +53,11 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
 
     @Autowired
     public LifecycleController(final MessageListener eventMessageListener,
-            final MessageListener highPriorityEventMessageListener, final MessageListener remoteCallMessageListener,
-            final MessageListener remoteResponseMessageListener, final MessageListener systemEventMessageListener,
+            final MessageListener highPriorityEventMessageListener, final MessageListener systemEventMessageListener,
             final Collection<MessageListener> messageListeners, final CountDownLatch restAdapterStartLatch,
             final LifecycleStatusHolder lifecycleStatusHolder) {
         this.eventMessageListener = eventMessageListener;
         this.highPriorityEventMessageListener = highPriorityEventMessageListener;
-        this.remoteCallMessageListener = remoteCallMessageListener;
-        this.remoteResponseMessageListener = remoteResponseMessageListener;
         this.systemEventMessageListener = systemEventMessageListener;
         this.messageListeners = messageListeners;
         this.restAdapterStartLatch = restAdapterStartLatch;
@@ -111,7 +106,7 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
         prepareAllMessageListenersForShutdown();
         logger.debug("Halting low-priority domain event handling and general application work queue handling.");
         shutdownAll(messageListenersExcept(eventMessageListener, highPriorityEventMessageListener,
-                remoteCallMessageListener, remoteResponseMessageListener, systemEventMessageListener));
+                systemEventMessageListener));
     }
 
     public void enterDrainingRequestsState() {
@@ -143,12 +138,6 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
 
     private void processTerminatingState() {
         setLifecycleStatus(TERMINATING);
-        logger.debug("Draining command queue");
-        remoteCallMessageListener.shutdownAfterQueueDrained();
-        remoteCallMessageListener.awaitTermination();
-        logger.debug("Draining command response queue");
-        remoteResponseMessageListener.shutdownAfterQueueDrained();
-        remoteResponseMessageListener.awaitTermination();
         logger.debug("Halting system queue processing");
         systemEventMessageListener.shutdown();
         systemEventMessageListener.awaitTermination();

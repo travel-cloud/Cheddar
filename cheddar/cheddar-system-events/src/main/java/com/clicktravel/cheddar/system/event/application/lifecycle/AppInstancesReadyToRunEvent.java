@@ -21,8 +21,8 @@ import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
 /**
  * System event indicating that this application instance (and others in its group) should immediately proceed to
  * {@code RUNNING} state without following a standard blue-green deployment procedure. This will happen when
- * applications started with {@code blue.green.mode = true} are required to run because there are no 'old' application
- * instances present.
+ * applications started with {@code blue.green.startup = true} are required to run because there are no 'old'
+ * application instances present.
  */
 public class AppInstancesReadyToRunEvent extends AbstractSystemEvent {
 

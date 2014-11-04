@@ -18,7 +18,7 @@ package com.clicktravel.cheddar.infrastructure.persistence.exception;
 
 public abstract class PersistenceException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -5133228134213792299L;
 
     public PersistenceException(final String message) {
         super(message);

@@ -14,21 +14,23 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.application.security;
+package com.clicktravel.cheddar.domain.feature.toggle;
 
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+/**
+ * Interface to define a Feature.
+ * 
+ * A Feature represents business logic which may be toggled.
+ */
+public interface Feature {
 
-@Component
-@Aspect
-@Order(100)
-public class AuthenticatedAspect {
+    /**
+     * @return The name of this feature
+     */
+    String name();
 
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAuthenticated();
-    }
+    /**
+     * @return The namespace used to group many features together
+     */
+    String namespace();
 
 }

@@ -27,7 +27,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceE
  */
 public class NonUniqueResultException extends PersistenceException {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1444830852428155318L;
     private final String message;
     private final boolean hasResults;
 

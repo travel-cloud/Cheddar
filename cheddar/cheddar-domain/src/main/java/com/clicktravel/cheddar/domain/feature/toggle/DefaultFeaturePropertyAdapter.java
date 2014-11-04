@@ -14,21 +14,22 @@
  * limitations under the License.
  * 
  */
-package com.clicktravel.cheddar.application.security;
+package com.clicktravel.cheddar.domain.feature.toggle;
 
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+/**
+ * Default FeaturePropertyAdapter which will use the format:
+ * 
+ * feature.toggle.services.{namespace}.{featureName}
+ * 
+ * Property will be lower-cased with underscores changed into dots.
+ * 
+ */
+public class DefaultFeaturePropertyAdapter implements FeaturePropertyAdapter {
 
-@Component
-@Aspect
-@Order(100)
-public class AuthenticatedAspect {
-
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAuthenticated();
+    @Override
+    public String toPropertyKey(final Feature feature) {
+        final String rawPropertyName = "feature.toggle.services." + feature.namespace() + "." + feature.name();
+        return rawPropertyName.replace("_", ".").toLowerCase();
     }
 
 }
