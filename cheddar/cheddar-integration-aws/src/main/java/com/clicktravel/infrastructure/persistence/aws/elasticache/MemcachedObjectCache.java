@@ -28,13 +28,13 @@ import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.infrastructure.persistence.cache.ObjectCache;
 
-public class MemcachedCacheStore implements ObjectCache {
+public class MemcachedObjectCache implements ObjectCache {
 
     private final MemcachedClient memcachedClient;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public MemcachedCacheStore(final MemcachedClient memcachedClient) {
+    public MemcachedObjectCache(final MemcachedClient memcachedClient) {
         this.memcachedClient = memcachedClient;
     }
 

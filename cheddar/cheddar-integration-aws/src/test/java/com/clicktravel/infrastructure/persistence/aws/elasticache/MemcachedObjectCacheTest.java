@@ -34,14 +34,14 @@ import org.junit.Test;
 
 import com.clicktravel.common.random.Randoms;
 
-public class MemcachedCacheStoreTest {
+public class MemcachedObjectCacheTest {
 
     private final MemcachedClient client = mock(MemcachedClient.class);
-    private MemcachedCacheStore memcachedCacheStore;
+    private MemcachedObjectCache memcachedCacheStore;
 
     @Before
     public void before() {
-        memcachedCacheStore = new MemcachedCacheStore(client);
+        memcachedCacheStore = new MemcachedObjectCache(client);
     }
 
     @Test
