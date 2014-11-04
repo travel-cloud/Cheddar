@@ -16,7 +16,6 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.elasticache;
 
-import java.io.Serializable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -27,9 +26,9 @@ import net.spy.memcached.MemcachedClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.persistence.cache.CacheStore;
+import com.clicktravel.cheddar.infrastructure.persistence.cache.ObjectCache;
 
-public class MemcachedCacheStore implements CacheStore {
+public class MemcachedCacheStore implements ObjectCache {
 
     private final MemcachedClient memcachedClient;
 
@@ -40,11 +39,11 @@ public class MemcachedCacheStore implements CacheStore {
     }
 
     @Override
-    public Serializable getObject(final String key, final int timeout) {
-        Serializable myObj = null;
+    public Object getObject(final String key, final long timeout) {
+        Object myObj = null;
         final Future<Object> f = memcachedClient.asyncGet(key);
         try {
-            myObj = (Serializable) f.get(timeout, TimeUnit.SECONDS);
+            myObj = f.get(timeout, TimeUnit.SECONDS);
         } catch (final TimeoutException e) {
             f.cancel(false);
             logger.trace("Unable to get cache object within given time", e);
@@ -56,8 +55,10 @@ public class MemcachedCacheStore implements CacheStore {
     }
 
     @Override
-    public void setObject(final String key, final int expire, final Serializable object) {
-        memcachedClient.set(key, expire, object);
+    public void putObject(final String key, final Object object, final long expire) {
+        if (expire < Integer.MIN_VALUE || expire > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(expire + " cannot be cast to int without changing its value.");
+        }
+        memcachedClient.set(key, (int) expire, object);
     }
-
 }

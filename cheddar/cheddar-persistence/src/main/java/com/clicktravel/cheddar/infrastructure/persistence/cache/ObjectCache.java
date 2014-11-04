@@ -16,9 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.cache;
 
-import java.io.Serializable;
-
-public interface CacheStore {
+public interface ObjectCache {
 
     /**
      * Gets value from the cache but gives up after your given timeout in seconds
@@ -27,14 +25,14 @@ public interface CacheStore {
      * @param timeout
      * @return the object stored in the cache
      */
-    Serializable getObject(String key, int timeout);
+    Object getObject(String key, long timeout);
 
     /**
-     * Saves serializable object to the cache with a given value that will expire in a given number of seconds
+     * Saves object to the cache with a given value that will expire in a given number of seconds
      * @param key to store against the object
      * @param expire time in seconds
      * @param object seriaziable object to store in the cache
      */
-    void setObject(String key, int expire, Serializable object);
+    void putObject(String key, Object object, long expire);
 
 }

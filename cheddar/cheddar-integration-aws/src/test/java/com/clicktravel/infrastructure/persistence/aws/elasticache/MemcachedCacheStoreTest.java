@@ -76,8 +76,16 @@ public class MemcachedCacheStoreTest {
     public void shouldSetObject() {
         final String key = Randoms.randomString();
         final String object = Randoms.randomString();
-        final int expire = Randoms.randomInt(5) + 1;
-        memcachedCacheStore.setObject(key, expire, object);
-        verify(client).set(key, expire, object);
+        final long expire = (long) Randoms.randomInt(5) + 1;
+        memcachedCacheStore.putObject(key, object, expire);
+        verify(client).set(key, (int) expire, object);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldSetObject_failExpireToLarge() {
+        final String key = Randoms.randomString();
+        final String object = Randoms.randomString();
+        final long expire = (long) Integer.MAX_VALUE + 1;
+        memcachedCacheStore.putObject(key, object, expire);
     }
 }
