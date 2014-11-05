@@ -45,7 +45,6 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
     private static final String SEQUENCE_TABLE_NAME = "sequences";
     private static final String SEQUENCE_NAME_ATTRIBUTE = "name";
     private static final String SEQUENCE_CURRENT_VALUE_ATTRIBUTE = "currentValue";
-    public static final int BATCH_SIZE = 500;
 
     private boolean initialized;
     private AmazonDynamoDB amazonDynamoDbClient;
@@ -563,7 +562,6 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 final boolean isPrimaryKeyQuery = queryAttributeName.equals(primaryKeyPropertyName);
                 final QueryRequest queryRequest = new QueryRequest().withTableName(tableName)
                         .withKeyConditions(conditions).withExclusiveStartKey(lastEvaluatedKey);
-                queryRequest.setLimit(BATCH_SIZE);
                 if (!isPrimaryKeyQuery) {
                     queryRequest.withIndexName(queryAttributeName + "_idx");
                 }
@@ -576,15 +574,13 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, queryResult.getItems()));
                 lastEvaluatedKey = queryResult.getLastEvaluatedKey();
-            } while (lastEvaluatedKey != null && totalItems.size() <= BATCH_SIZE);
+            } while (lastEvaluatedKey != null);
 
         } else {
             logger.warn("Performing table scan with query:" + query);
             do {
                 final ScanRequest scanRequest = new ScanRequest().withTableName(tableName).withScanFilter(conditions)
                         .withExclusiveStartKey(lastEvaluatedKey);
-                scanRequest.setLimit(BATCH_SIZE);
-
                 final ScanResult scanResult;
                 try {
                     scanResult = amazonDynamoDbClient.scan(scanRequest);
@@ -593,11 +589,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, scanResult.getItems()));
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
-            } while (lastEvaluatedKey != null && totalItems.size() <= BATCH_SIZE);
-        }
-
-        if (totalItems.size() > BATCH_SIZE) {
-            return totalItems.subList(0, BATCH_SIZE);
+            } while (lastEvaluatedKey != null);
         }
 
         return totalItems;
