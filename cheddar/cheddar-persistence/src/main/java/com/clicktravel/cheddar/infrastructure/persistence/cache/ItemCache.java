@@ -19,7 +19,7 @@ package com.clicktravel.cheddar.infrastructure.persistence.cache;
 public interface ItemCache {
 
     /**
-     * Gets value from the cache but gives up after your given timeout in seconds
+     * Gets item from the cache but gives up after your given timeout in seconds
      * 
      * @param key
      * @param timeout
@@ -28,7 +28,7 @@ public interface ItemCache {
     Object getItem(String key, long timeout);
 
     /**
-     * Saves object to the cache with a given value that will expire in a given number of seconds
+     * Saves an item to the cache with a given value that will expire in a given number of seconds
      * @param key to store against the object
      * @param expire time in seconds
      * @param item seriaziable object to store in the cache
