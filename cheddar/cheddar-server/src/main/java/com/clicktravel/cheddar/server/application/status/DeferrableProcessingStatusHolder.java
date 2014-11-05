@@ -35,9 +35,9 @@ public class DeferrableProcessingStatusHolder {
             final MessageListener eventMessageListener, final MessageListener highPriorityEventMessageListener,
             final MessageListener systemEventMessageListener) {
         messageListenersForDeferrableProcessing = new HashSet<>(messageListeners);
-        messageListeners.remove(eventMessageListener);
-        messageListeners.remove(highPriorityEventMessageListener);
-        messageListeners.remove(systemEventMessageListener);
+        messageListenersForDeferrableProcessing.remove(eventMessageListener);
+        messageListenersForDeferrableProcessing.remove(highPriorityEventMessageListener);
+        messageListenersForDeferrableProcessing.remove(systemEventMessageListener);
     }
 
     public boolean isDeferrableProcessing() {
