@@ -1,6 +1,6 @@
 apply from: '../../test.gradle'
 
-def springVersion = '3.2.3.RELEASE'
+def springVersion = '4.1.1.RELEASE'
 
 dependencies {
     compile project(':commons:commons-lang')
