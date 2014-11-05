@@ -37,27 +37,27 @@ import com.clicktravel.common.random.Randoms;
 
 public class MemcachedItemCacheTest {
 
-    private final MemcachedClient client = mock(MemcachedClient.class);
-    private MemcachedItemCache memcachedCacheStore;
+    private final MemcachedClient memcachedClient = mock(MemcachedClient.class);
+    private MemcachedItemCache memcachedItemCache;
 
     @Before
     public void before() {
-        memcachedCacheStore = new MemcachedItemCache(client);
+        memcachedItemCache = new MemcachedItemCache(memcachedClient);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void shoudlGetItem() throws InterruptedException, TimeoutException, ExecutionException {
+    public void shouldGetItem() throws InterruptedException, TimeoutException, ExecutionException {
         // Given
         final String key = Randoms.randomString();
         final String item = Randoms.randomString();
         final int timeout = Randoms.randomInt(5) + 1;
         final GetFuture<Object> f = mock(GetFuture.class);
-        when(client.asyncGet(key)).thenReturn(f);
+        when(memcachedClient.asyncGet(key)).thenReturn(f);
         when(f.get(timeout, TimeUnit.SECONDS)).thenReturn(item);
 
         // When
-        final Object obj = memcachedCacheStore.getItem(key, timeout);
+        final Object obj = memcachedItemCache.getItem(key, timeout);
 
         // Then
         assertEquals(item, obj);
@@ -65,16 +65,16 @@ public class MemcachedItemCacheTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void shoudlNotGetItem_throwsTimeout() throws InterruptedException, ExecutionException, TimeoutException {
+    public void shouldNotGetItem_throwsTimeout() throws InterruptedException, ExecutionException, TimeoutException {
         // Given
         final String key = Randoms.randomString();
         final int timeout = Randoms.randomInt(5) + 1;
         final GetFuture<Object> f = mock(GetFuture.class);
-        when(client.asyncGet(key)).thenReturn(f);
+        when(memcachedClient.asyncGet(key)).thenReturn(f);
         when(f.get(timeout, TimeUnit.SECONDS)).thenThrow(TimeoutException.class);
 
         // When
-        final Object item = memcachedCacheStore.getItem(key, timeout);
+        final Object item = memcachedItemCache.getItem(key, timeout);
 
         // Then
         assertNull(item);
@@ -85,13 +85,13 @@ public class MemcachedItemCacheTest {
         // Given
         final String key = Randoms.randomString();
         final String item = Randoms.randomString();
-        final long expire = (long) Randoms.randomInt(5) + 1;
+        final long expire = Randoms.randomInt(5) + 1;
 
         // When
-        memcachedCacheStore.putItem(key, item, expire);
+        memcachedItemCache.putItem(key, item, expire);
 
         // Then
-        verify(client).set(key, (int) expire, item);
+        verify(memcachedClient).set(key, (int) expire, item);
     }
 
     @Test
@@ -104,7 +104,7 @@ public class MemcachedItemCacheTest {
         // When
         IllegalArgumentException actualException = null;
         try {
-            memcachedCacheStore.putItem(key, item, expire);
+            memcachedItemCache.putItem(key, item, expire);
         } catch (final IllegalArgumentException e) {
             actualException = e;
         }
