@@ -21,7 +21,10 @@ import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomLong;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.CoreMatchers.hasItems;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -1205,96 +1208,6 @@ public class DynamoDbTemplateTest {
 
         assertNotNull(expected);
 
-    }
-
-    @Test
-    public void shouldFetch_MaxBatchSizeResultsForAttributeQueryWithanIndex() throws Exception {
-        // Given
-        final AttributeQuery query = mock(AttributeQuery.class);
-        final Condition mockCondition = mock(Condition.class);
-        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
-
-        final String stringProperty = randomString(10);
-        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
-        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(query.getAttributeName()).thenReturn("stringProperty");
-        when(query.getCondition()).thenReturn(mockCondition);
-        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        itemConfiguration.registerIndexes(Arrays.asList(new IndexDefinition("stringProperty")));
-        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
-        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
-        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
-        final QueryResult mockQueryResult = mock(QueryResult.class);
-
-        final Map<String, AttributeValue> mockItem = new HashMap<>();
-        final List<Map<String, AttributeValue>> mockItems = new ArrayList<>();
-        for (int count = 0; count < Randoms.randomInt(800); count++) {
-            final String itemId = randomId();
-            final String randomStringProperty = randomString(10);
-            mockItem.put("id", new AttributeValue(itemId));
-            mockItem.put("stringProperty", new AttributeValue(randomStringProperty));
-            mockItems.add(mockItem);
-        }
-        when(mockQueryResult.getItems()).thenReturn(mockItems);
-        when(mockQueryResult.getLastEvaluatedKey()).thenReturn(mockItem);
-        when(mockAmazonDynamoDbClient.query(any(QueryRequest.class))).thenReturn(mockQueryResult);
-        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
-
-        // When
-        final Collection<StubItem> returnedItems = dynamoDbTemplate.fetch(query, StubItem.class);
-
-        // Then
-        final ArgumentCaptor<QueryRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(QueryRequest.class);
-        verify(mockAmazonDynamoDbClient, atLeastOnce()).query(queryRequestArgumentCaptor.capture());
-        final QueryRequest queryRequest = queryRequestArgumentCaptor.getValue();
-        assertEquals(schemaName + "." + tableName, queryRequest.getTableName());
-        assertTrue(queryRequest.getLimit() == DynamoDbTemplate.BATCH_SIZE);
-        assertNotNull(returnedItems);
-        assertTrue(returnedItems.size() <= DynamoDbTemplate.BATCH_SIZE);
-    }
-
-    @Test
-    public void shouldFetch_MaxBatchSizeResultsForAttributeQueryWithoutanIndex() throws Exception {
-        // Given
-        final AttributeQuery query = mock(AttributeQuery.class);
-        final Condition mockCondition = mock(Condition.class);
-        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
-        final String stringProperty = randomString(10);
-        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
-        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(query.getAttributeName()).thenReturn("stringProperty");
-        when(query.getCondition()).thenReturn(mockCondition);
-        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
-        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
-        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
-        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
-        final ScanResult mockScanResult = mock(ScanResult.class);
-        final Map<String, AttributeValue> mockItem = new HashMap<>();
-        final List<Map<String, AttributeValue>> mockItems = new ArrayList<>();
-        for (int count = 0; count < Randoms.randomInt(800); count++) {
-            final String itemId = randomId();
-            final String randomStringProperty = randomString(10);
-            mockItem.put("id", new AttributeValue(itemId));
-            mockItem.put("stringProperty", new AttributeValue(randomStringProperty));
-            mockItems.add(mockItem);
-        }
-        when(mockScanResult.getItems()).thenReturn(mockItems);
-        when(mockScanResult.getLastEvaluatedKey()).thenReturn(mockItem);
-        when(mockAmazonDynamoDbClient.scan(any(ScanRequest.class))).thenReturn(mockScanResult);
-        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
-
-        // When
-        final Collection<StubItem> returnedItems = dynamoDbTemplate.fetch(query, StubItem.class);
-
-        // Then
-        final ArgumentCaptor<ScanRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(ScanRequest.class);
-        verify(mockAmazonDynamoDbClient, atLeastOnce()).scan(queryRequestArgumentCaptor.capture());
-        final ScanRequest scanRequest = queryRequestArgumentCaptor.getValue();
-        assertEquals(schemaName + "." + tableName, scanRequest.getTableName());
-
-        assertTrue(scanRequest.getLimit() == DynamoDbTemplate.BATCH_SIZE);
-        assertNotNull(returnedItems);
-        assertTrue(returnedItems.size() <= DynamoDbTemplate.BATCH_SIZE);
     }
 
 }
