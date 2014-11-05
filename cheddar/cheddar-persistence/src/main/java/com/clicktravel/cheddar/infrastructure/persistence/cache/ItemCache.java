@@ -29,7 +29,7 @@ public interface ItemCache {
 
     /**
      * Saves an item to the cache with a given value that will expire in a given number of seconds
-     * @param key to store against the object
+     * @param key to store against the item
      * @param expire time in seconds
      * @param item seriaziable object to store in the cache
      */
