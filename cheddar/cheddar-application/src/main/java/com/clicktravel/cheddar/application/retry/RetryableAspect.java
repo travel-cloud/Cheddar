@@ -100,7 +100,7 @@ public class RetryableAspect {
         if (handlerMethod != null) {
             logger.trace("Selected handlerMethod : " + handlerMethod.getName());
             try {
-                return handlerMethod.invoke(proceedingJoinPoint.getTarget(),
+                return handlerMethod.invoke(proceedingJoinPoint.getThis(),
                         getExceptionHandlerArgs(thrownException, proceedingJoinPoint.getArgs()));
             } catch (final InvocationTargetException invocationTargetException) {
                 throw invocationTargetException.getCause(); // exception thrown by handler method
@@ -112,7 +112,7 @@ public class RetryableAspect {
 
     private Method getHandlerMethod(final ProceedingJoinPoint proceedingJoinPoint,
             final Class<? extends Throwable> thrownExceptionClass, final String[] handlerMethodNames) {
-        final Class<?> targetClass = proceedingJoinPoint.getTarget().getClass();
+        final Class<?> targetClass = proceedingJoinPoint.getThis().getClass();
         final MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
         final Class<?>[] handlerParameterTypes = getExceptionHandlerParameterTypes(thrownExceptionClass,
                 methodSignature.getParameterTypes());
