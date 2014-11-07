@@ -20,7 +20,19 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.
 
 public interface DocumentSearchEngine {
 
+    /**
+     * Update a document that has been previously added to the store
+     * 
+     * @param document - the document with the values to be updated
+     */
+
     void update(Document document);
+
+    /**
+     * Delete a document that has been previously added to the store
+     * 
+     * @param document - the document to be deleted
+     */
 
     void delete(Document document);
 
