@@ -191,6 +191,69 @@ public class CloudSearchEngineTest {
         assertInputStreamEquals(jsonBytes, uploadDocumentsRequest.getDocuments());
     }
 
+    @Test
+    public void shouldUpdate_withDocumentThatHasAttributesWithWhitespace() throws Exception {
+        // Given
+        final StubDocument document = new StubDocument();
+        final String whitespaceCharset = " \t\n\f\r";
+        final String propertyValue = randomString(10);
+        final String namespace = randomString(10);
+        final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
+        final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
+        final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
+        final String schemaName = randomString(10);
+        final DocumentConfigurationHolder documentConfigurationHolder = new DocumentConfigurationHolder(schemaName,
+                documentConfigurations);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final byte[] jsonBytes = randomString().getBytes(Charset.forName("UTF-8"));
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final String documentServiceEndpoint = randomString();
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName,
+                documentServiceEndpoint, randomString());
+        final AmazonCloudSearchDomain mockDocumentServiceClient = mock(AmazonCloudSearchDomain.class);
+        mockStatic(JsonDocumentUpdateMarshaller.class);
+        when(JsonDocumentUpdateMarshaller.marshall(anyCollection())).thenReturn(new String(jsonBytes));
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, documentServiceEndpoint)).thenReturn(
+                mockDocumentServiceClient);
+
+        document.setId(randomString(10));
+        document.setStringProperty(whitespaceCharset.charAt(Randoms.randomInt(whitespaceCharset.length()))
+                + propertyValue + Randoms.randomInt(whitespaceCharset.length()));
+
+        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
+
+        // When
+        cloudSearchEngine.update(document);
+
+        // Then
+        final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
+        final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
+                .forClass(UploadDocumentsRequest.class);
+        PowerMockito.verifyStatic();
+        JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
+        verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
+        final DocumentUpdate documentUpdate = (DocumentUpdate) documentUpdateCollectionCaptor.getValue().iterator()
+                .next();
+        assertEquals(document.getId(), documentUpdate.getId());
+        assertEquals(Type.ADD, documentUpdate.getType());
+        for (final Field field : documentUpdate.getFields()) {
+            if (field.getName().equals("stringProperty")) {
+                assertEquals(propertyValue, field.getValue());
+            }
+        }
+        final UploadDocumentsRequest uploadDocumentsRequest = uploadDocumentsRequestCaptor.getValue();
+        assertInputStreamEquals(jsonBytes, uploadDocumentsRequest.getDocuments());
+    }
+
     private DescribeDomainsResult getDescribeDomainsResult(final String domainName,
             final String documentServiceEndpoint, final String searchServiceEndpoint) {
         return new DescribeDomainsResult().withDomainStatusList(new DomainStatus().withDomainName(domainName)

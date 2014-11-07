@@ -183,7 +183,14 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     private Object getPropertyValue(final Document document, final PropertyDescriptor propertyDescriptor) {
         try {
-            return propertyDescriptor.getReadMethod().invoke(document);
+            final Object value = propertyDescriptor.getReadMethod().invoke(document);
+            if (value != null && value instanceof String) {
+                final String valueStr = ((String) value).trim();
+                if (valueStr.isEmpty()) {
+                    return null;
+                }
+            }
+            return value;
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
