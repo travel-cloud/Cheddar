@@ -28,10 +28,7 @@ import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.RedirectionException;
 import javax.ws.rs.client.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
@@ -252,6 +249,33 @@ public class HttpClient {
     }
 
     /**
+     * Convenience method to make HTTP GET request to a given URL without specifying any query parameters in a given
+     * language
+     * 
+     * @see #get(String, Map)
+     * 
+     * @param path The path to which the GET request needs to be made
+     * @param acceptLanguage The language that you the request should be made with
+     * @return The HTTP response which is returned as a result of the GET request
+     */
+    public Response get(final String path, final String acceptLanguage) {
+        final Response response = get(path, new MultivaluedHashMap<String, String>(), acceptLanguage);
+        return response;
+    }
+
+    /**
+     * Makes a HTTP GET request to a given URL in a given language
+     * 
+     * @param path The path to which the GET request needs to be made
+     * @param acceptLanguage The language that you the request should be made with
+     * @return The HTTP response which is returned as a result of the GET request
+     */
+    public Response get(final String path, final MultivaluedHashMap<String, String> params, final String acceptLanguage) {
+        final Response response = requestBuilder(path, params).accept(accept).acceptLanguage(acceptLanguage).get();
+        return response;
+    }
+
+    /**
      * Convenience method to make HTTP DELETE request to a given URL without specifying any query parameters.
      * 
      * @see #get(String, Map)
@@ -307,6 +331,42 @@ public class HttpClient {
     }
 
     /**
+     * Makes HTTP POST request with a specified entity in the given language and with the given content type
+     * 
+     * @see #put(String, Object, MediaType)
+     * 
+     * @param path The path to which the request should be made
+     * @param entity The entity which is to be POSTed
+     * @param contentType The content type of the entity to be POSTed
+     * @param contentLanguage The content language of the entity to be POSTed
+     * @param contentEncoding The content encoding of the entity to be POSTed
+     * @return The HTTP response which is returned as a result of the POST request
+     */
+    public Response post(final String path, final Object entity, final MediaType contentType,
+            final String contentLanguage, final String contentEncoding) {
+        return post(path, new MultivaluedHashMap<String, String>(), entity, contentType, contentLanguage,
+                contentEncoding);
+    }
+
+    /**
+     * Makes HTTP POST request with a specified entity in the given language and with the given content type
+     * 
+     * @param path The path to which the request should be made
+     * @param params The query parameters appended to the path
+     * @param entity The entity which is to be POSTed
+     * @param contentType The content type of the entity to be POSTed
+     * @param contentLanguage The content language of the entity to be POSTed
+     * @param contentEncoding The content encoding of the entity to be POSTed
+     * @return The HTTP response which is returned as a result of the POST request
+     */
+    public Response post(final String path, final MultivaluedHashMap<String, String> params, final Object entity,
+            final MediaType contentType, final String contentLanguage, final String contentEncoding) {
+        final Response response = requestBuilder(path, params).post(
+                Entity.entity(entity, new Variant(contentType, contentLanguage, contentEncoding)));
+        return response;
+    }
+
+    /**
      * Makes HTTP PUT request with a specified entity
      * 
      * @see post(String, Object, MediaType)
@@ -319,6 +379,25 @@ public class HttpClient {
     public Response put(final String path, final Object entity, final MediaType contentType) {
         final Response response = requestBuilder(path, new MultivaluedHashMap<String, String>()).put(
                 Entity.entity(entity, contentType));
+        return response;
+    }
+
+    /**
+     * Makes HTTP PUT request with a specified entity in the given language and with the given content type
+     * 
+     * @see post(String, Object, MediaType)
+     * 
+     * @param path The path to which the request should be made
+     * @param entity The entity which is to be PUT
+     * @param contentType The content type of the entity to be PUT
+     * @param contentLanguage The content language of the entity to be PUT
+     * @param contentEncoding The content encoding of the entity to be PUT
+     * @return The HTTP response which is returned as a result of the PUT request
+     */
+    public Response put(final String path, final Object entity, final MediaType contentType,
+            final String contentLanguage, final String contentEncoding) {
+        final Response response = requestBuilder(path, new MultivaluedHashMap<String, String>()).put(
+                Entity.entity(entity, new Variant(contentType, contentLanguage, contentEncoding)));
         return response;
     }
 
