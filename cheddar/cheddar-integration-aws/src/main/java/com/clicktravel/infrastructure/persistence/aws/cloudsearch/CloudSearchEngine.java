@@ -216,11 +216,20 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
             final Integer size, final Class<T> documentClass) {
+        return search(query, start, size, documentClass, null);
+    }
+
+    @Override
+    public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
+            final Integer size, final Class<T> documentClass, final String sort) {
         try {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
             final SearchRequest searchRequest = getSearchRequest(query);
             searchRequest.setStart((long) start);
             searchRequest.setSize((long) size);
+            if (sort != null && !sort.isEmpty()) {
+                searchRequest.setSort(sort);
+            }
             final String searchDomain = documentConfigurationHolder.schemaName() + "-"
                     + documentConfiguration.namespace();
             final SearchResult searchResult = getSearchServiceClient(searchDomain).search(searchRequest);

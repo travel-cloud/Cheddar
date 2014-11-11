@@ -51,4 +51,23 @@ public interface DocumentSearchEngine {
     <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start, final Integer size,
             Class<T> documentClass);
 
+    /**
+     * Search for document based on given query and returns results in the given sort order
+     * 
+     * @param query describing the documents you wish to return
+     * @param start the index of the first document you want to return <code>null</code> will default to the index of
+     *            the first document in the results
+     * @param size the size of the page of documents you want returned; leave <code>null</code> to return up the
+     *            implementation defined default size
+     * @param documentClass the type of document being queried
+     * @param sort the field(s) to be used to sort the search results. Multiple fields can be specified as a
+     *            comma-separated list. You must specify the sort direction (asc or desc) for each field; for example,
+     *            year desc, title asc. To use a field to sort results, the field must be sort-enabled in the domain
+     *            configuration.
+     * @return a DocumentSearchResponse containing a page of documents matching the supplied query in the desired sort
+     *         order along with results metadata
+     */
+    <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start, final Integer size,
+            Class<T> documentClass, final String sort);
+
 }
