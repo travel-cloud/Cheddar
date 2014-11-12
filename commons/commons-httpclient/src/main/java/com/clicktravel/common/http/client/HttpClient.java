@@ -228,6 +228,18 @@ public class HttpClient {
     }
 
     /**
+     * Convenience method to get hold of the client directly allowing you to call more complex methods on the client
+     * such as a post entity with variant language headers
+     * 
+     * @param path The path to which the request needs to be made, required
+     * @param params The query parameters appended to the path, required but can be empty
+     * @return
+     */
+    public Invocation.Builder getHttpClientBuilder(final String path, final MultivaluedHashMap<String, String> params) {
+        return requestBuilder(path, params);
+    }
+
+    /**
      * Convenience method to make HTTP GET request to a given URL without specifying any query parameters.
      * 
      * @see #get(String, Map)
