@@ -16,6 +16,8 @@
  */
 package com.clicktravel.common.http.client.authentication.oauth2;
 
+import java.net.URI;
+
 import com.clicktravel.common.http.client.authentication.AuthenticationException;
 
 /**
@@ -40,6 +42,6 @@ public interface OAuthUserAgent {
      *         credentials.
      * @throws AuthenticationException
      */
-    String authenticate() throws AuthenticationException;
+    String authenticate(URI authenticationServerUri) throws AuthenticationException;
 
 }
