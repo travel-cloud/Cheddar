@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search;
 
+import java.util.Map;
+
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
 
 public interface DocumentSearchEngine {
@@ -68,6 +70,6 @@ public interface DocumentSearchEngine {
      *         order along with results metadata
      */
     <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start, final Integer size,
-            Class<T> documentClass, final String sort);
+            Class<T> documentClass, final Map<String, String> sortOrder);
 
 }

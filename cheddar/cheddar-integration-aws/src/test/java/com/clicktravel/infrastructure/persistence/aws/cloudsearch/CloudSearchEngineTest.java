@@ -16,6 +16,7 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch;
 
+import static com.clicktravel.common.random.Randoms.randomEnum;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -325,7 +326,7 @@ public class CloudSearchEngineTest {
         final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
         final String schemaName = randomString(10);
         final Query query = mock(Query.class);
-        final QueryType queryType = Randoms.randomEnum(QueryType.class);
+        final QueryType queryType = randomEnum(QueryType.class);
         final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
         final Integer start = Randoms.randomInt(100);
         final Integer size = Randoms.randomInt(100);
@@ -402,9 +403,11 @@ public class CloudSearchEngineTest {
         when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
         when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
         when(query.queryType()).thenReturn(queryType);
+        final Map<String, String> sortOrder = new LinkedHashMap<>();
+        sortOrder.put(sort, "asc");
         searchRequest.withStart((long) start);
         searchRequest.withSize((long) size);
-        searchRequest.setSort(sort);
+        searchRequest.setSort(sort + " " + sortOrder.get(sort));
         when(mockCloudSearchClient.search(searchRequest)).thenReturn(searchResult);
 
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
@@ -412,7 +415,7 @@ public class CloudSearchEngineTest {
 
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
-                StubDocument.class, sort);
+                StubDocument.class, sortOrder);
 
         // Then
         assertNotNull(returnedDocuments);
@@ -454,7 +457,7 @@ public class CloudSearchEngineTest {
         final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
         final String schemaName = randomString(10);
         final Query query = mock(Query.class);
-        final QueryType queryType = Randoms.randomEnum(QueryType.class);
+        final QueryType queryType = randomEnum(QueryType.class);
         final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
         final Integer start = Randoms.randomInt(100);
         final Integer size = Randoms.randomInt(100);
