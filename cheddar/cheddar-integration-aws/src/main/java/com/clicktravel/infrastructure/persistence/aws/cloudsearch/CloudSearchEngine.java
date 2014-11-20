@@ -231,19 +231,25 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             searchRequest.setSize((long) size);
             if (sortOrder != null && !sortOrder.isEmpty()) {
                 final StringBuffer sort = new StringBuffer();
-                String csDirection = null;
-                for (final Entry<String, Direction> entrySet : sortOrder.entrySet()) {
-                    final String index = entrySet.getKey();
-                    final Direction direction = entrySet.getValue();
+                String direction = null;
+                final Iterator<Entry<String, Direction>> i = sortOrder.entrySet().iterator();
+                while (i.hasNext()) {
+                    final Entry<String, Direction> entry = i.next();
+                    final String index = entry.getKey();
                     sort.append(index + " ");
-                    if (direction == Direction.ASCENDING) {
-                        csDirection = "asc";
-                    } else if (direction == Direction.DESCENDING) {
-                        csDirection = "desc";
+                    switch (entry.getValue()) {
+                        case ASCENDING:
+                            direction = "asc";
+                            break;
+                        case DESCENDING:
+                            direction = "desc";
+                            break;
+                        default:
+                            direction = "_score";
+                            break;
                     }
-                    sort.append(csDirection);
-                    sortOrder.remove(index);
-                    if (!sortOrder.isEmpty()) {
+                    sort.append(direction);
+                    if (i.hasNext()) {
                         sort.append(", ");
                     }
                 }
