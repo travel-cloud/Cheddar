@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.Map.Entry;
 
 import javax.ws.rs.core.MediaType;
 
@@ -42,7 +43,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.config
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.IndexDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOption.SortDirection;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOption.Direction;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.*;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate.Type;
@@ -222,7 +223,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
-            final Integer size, final Class<T> documentClass, final LinkedHashMap<String, SortDirection> sortOrder) {
+            final Integer size, final Class<T> documentClass, final LinkedHashMap<String, Direction> sortOrder) {
         try {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
             final SearchRequest searchRequest = getSearchRequest(query);
@@ -230,14 +231,20 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             searchRequest.setSize((long) size);
             if (sortOrder != null && !sortOrder.isEmpty()) {
                 final StringBuffer sort = new StringBuffer();
-                final Iterator<String> indexes = sortOrder.keySet().iterator();
-                while (indexes.hasNext()) {
-                    final String index = indexes.next();
-                    sort.append(index + " " + sortOrder.get(index).getValue());
-                    if (indexes.hasNext()) {
+                String csDirection = null;
+                for (final Entry<String, Direction> entrySet : sortOrder.entrySet()) {
+                    final String index = entrySet.getKey();
+                    final Direction direction = entrySet.getValue();
+                    sort.append(index + " ");
+                    if (direction == Direction.ASCENDING) {
+                        csDirection = "asc";
+                    } else if (direction == Direction.DESCENDING) {
+                        csDirection = "desc";
+                    }
+                    sort.append(csDirection);
+                    sortOrder.remove(index);
+                    if (!sortOrder.isEmpty()) {
                         sort.append(", ");
-                    } else {
-                        break;
                     }
                 }
                 searchRequest.setSort(sort.toString());

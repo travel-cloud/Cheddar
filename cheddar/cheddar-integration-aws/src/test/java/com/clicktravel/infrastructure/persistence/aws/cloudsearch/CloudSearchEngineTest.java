@@ -404,11 +404,11 @@ public class CloudSearchEngineTest {
         when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
         when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
         when(query.queryType()).thenReturn(queryType);
-        final LinkedHashMap<String, SortOption.SortDirection> sortOrder = new LinkedHashMap<>();
-        sortOrder.put(sort, SortOption.SortDirection.ASCENDING);
+        final LinkedHashMap<String, SortOption.Direction> sortOrder = new LinkedHashMap<>();
+        sortOrder.put(sort, SortOption.Direction.ASCENDING);
         searchRequest.withStart((long) start);
         searchRequest.withSize((long) size);
-        searchRequest.setSort(sort + " " + sortOrder.get(sort).getValue());
+        searchRequest.setSort(sort + " " + "asc");
         when(mockCloudSearchClient.search(searchRequest)).thenReturn(searchResult);
 
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);

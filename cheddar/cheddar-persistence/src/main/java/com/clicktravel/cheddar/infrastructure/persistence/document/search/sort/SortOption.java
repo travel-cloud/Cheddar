@@ -18,18 +18,8 @@ package com.clicktravel.cheddar.infrastructure.persistence.document.search.sort;
 
 public class SortOption {
 
-    public enum SortDirection {
-        ASCENDING("asc"),
-        DESCENDING("desc");
-
-        private final String direction;
-
-        SortDirection(final String direction) {
-            this.direction = direction;
-        }
-
-        public String getValue() {
-            return direction;
-        }
+    public enum Direction {
+        ASCENDING,
+        DESCENDING;
     }
 }
