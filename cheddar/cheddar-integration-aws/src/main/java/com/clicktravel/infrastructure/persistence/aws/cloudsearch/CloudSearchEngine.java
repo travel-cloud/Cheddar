@@ -42,6 +42,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.config
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.IndexDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOption.SortDirection;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.*;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate.Type;
@@ -221,7 +222,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
-            final Integer size, final Class<T> documentClass, final Map<String, String> sortOrder) {
+            final Integer size, final Class<T> documentClass, final LinkedHashMap<String, SortDirection> sortOrder) {
         try {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
             final SearchRequest searchRequest = getSearchRequest(query);
@@ -232,7 +233,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
                 final Iterator<String> indexes = sortOrder.keySet().iterator();
                 while (indexes.hasNext()) {
                     final String index = indexes.next();
-                    sort.append(index + " " + sortOrder.get(index));
+                    sort.append(index + " " + sortOrder.get(index).getValue());
                     if (indexes.hasNext()) {
                         sort.append(", ");
                     } else {

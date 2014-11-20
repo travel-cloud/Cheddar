@@ -57,6 +57,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.config
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.QueryType;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOption;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.common.random.Randoms;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate;
@@ -403,11 +404,11 @@ public class CloudSearchEngineTest {
         when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
         when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
         when(query.queryType()).thenReturn(queryType);
-        final Map<String, String> sortOrder = new LinkedHashMap<>();
-        sortOrder.put(sort, "asc");
+        final LinkedHashMap<String, SortOption.SortDirection> sortOrder = new LinkedHashMap<>();
+        sortOrder.put(sort, SortOption.SortDirection.ASCENDING);
         searchRequest.withStart((long) start);
         searchRequest.withSize((long) size);
-        searchRequest.setSort(sort + " " + sortOrder.get(sort));
+        searchRequest.setSort(sort + " " + sortOrder.get(sort).getValue());
         when(mockCloudSearchClient.search(searchRequest)).thenReturn(searchResult);
 
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
