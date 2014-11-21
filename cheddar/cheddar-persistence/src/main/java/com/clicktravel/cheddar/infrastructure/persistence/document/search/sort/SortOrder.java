@@ -21,16 +21,24 @@ import java.util.List;
 
 public class SortOrder {
 
-    private List<SortingOption> sortingOptions = null;
+    private final List<SortingOption> sortingOptions = new ArrayList<SortingOption>();
+
+    public static final SortOrder DEFAULT = new SortOrder(SortingOption.Key.DEFAULT);
+
+    public SortOrder() {
+    }
+
+    private SortOrder(final SortingOption.Key key) {
+        final SortingOption sortingOption = new SortingOption(key);
+        addSortingOption(sortingOption);
+    }
 
     public void addSortingOption(final SortingOption sortingOption) {
-        if (sortingOptions == null) {
-            sortingOptions = new ArrayList<SortingOption>();
-        }
         sortingOptions.add(sortingOption);
     }
 
-    public List<SortingOption> getSortingOptions() {
+    public List<SortingOption> sortingOptions() {
         return sortingOptions;
     }
+
 }

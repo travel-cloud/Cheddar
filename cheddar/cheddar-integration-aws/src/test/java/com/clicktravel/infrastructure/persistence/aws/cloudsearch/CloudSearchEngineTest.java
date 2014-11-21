@@ -395,11 +395,9 @@ public class CloudSearchEngineTest {
                 .asList(domainName));
         final SearchRequest searchRequest = buildSearchRequest(queryType, query);
         final SearchResult searchResult = new SearchResult().withHits(getExpectedHits(document));
-        final SortingOption sortingOption = new SortingOption(Randoms.randomString(), Direction.ASCENDING);
-        final SortingOption sortingOption2 = new SortingOption(Randoms.randomString(), Direction.DESCENDING);
         final SortOrder sortOrder = new SortOrder();
-        sortOrder.addSortingOption(sortingOption);
-        sortOrder.addSortingOption(sortingOption2);
+        sortOrder.addSortingOption(new SortingOption(Randoms.randomString(), Direction.ASCENDING));
+        sortOrder.addSortingOption(new SortingOption(Randoms.randomString(), Direction.DESCENDING));
 
         mockStatic(AmazonCloudSearchDomainClientBuilder.class);
         when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, searchServiceEndpoint)).thenReturn(
@@ -416,11 +414,11 @@ public class CloudSearchEngineTest {
         searchRequest.withSize((long) size);
         final StringBuffer sortCriteria = new StringBuffer();
         String direction = null;
-        final Iterator<SortingOption> i = sortOrder.getSortingOptions().iterator();
+        final Iterator<SortingOption> i = sortOrder.sortingOptions().iterator();
         while (i.hasNext()) {
             final SortingOption option = i.next();
-            sortCriteria.append(option.getKey() + " ");
-            switch (option.getDirection()) {
+            sortCriteria.append(option.key() + " ");
+            switch (option.direction()) {
                 case ASCENDING:
                     direction = "asc";
                     break;
@@ -428,6 +426,7 @@ public class CloudSearchEngineTest {
                     direction = "desc";
                     break;
                 default:
+                    direction = "asc";
                     break;
             }
             sortCriteria.append(direction);
@@ -444,6 +443,61 @@ public class CloudSearchEngineTest {
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
                 StubDocument.class, sortOrder);
+
+        // Then
+        assertNotNull(returnedDocuments);
+        assertEquals(document, returnedDocuments.getHits().get(0));
+    }
+
+    @Test
+    public void shouldSearch_withDefaultSortInQuery() throws Exception {
+        // Given
+        final StubDocument document = randomStubDocument();
+        final String documentId = document.getId();
+        final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
+        final String namespace = documentId;
+        final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
+        final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
+        final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
+        final String schemaName = randomString(10);
+        final Query query = mock(Query.class);
+        final QueryType queryType = Randoms.randomEnum(QueryType.class);
+        final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
+        final Integer start = Randoms.randomInt(100);
+        final Integer size = Randoms.randomInt(100);
+        final String searchServiceEndpoint = randomString();
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName, randomString(),
+                searchServiceEndpoint);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final SearchRequest searchRequest = buildSearchRequest(queryType, query);
+        final SearchResult searchResult = new SearchResult().withHits(getExpectedHits(document));
+
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, searchServiceEndpoint)).thenReturn(
+                mockCloudSearchClient);
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
+        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
+        when(query.queryType()).thenReturn(queryType);
+
+        searchRequest.withStart((long) start);
+        searchRequest.withSize((long) size);
+
+        when(mockCloudSearchClient.search(searchRequest)).thenReturn(searchResult);
+
+        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
+
+        // When
+        final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
+                StubDocument.class, SortOrder.DEFAULT);
 
         // Then
         assertNotNull(returnedDocuments);

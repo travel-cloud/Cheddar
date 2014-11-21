@@ -218,7 +218,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
             final Integer size, final Class<T> documentClass) {
-        return search(query, start, size, documentClass, null);
+        return search(query, start, size, documentClass, SortOrder.DEFAULT);
     }
 
     @Override
@@ -232,26 +232,30 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             if (sortOrder != null) {
                 final StringBuffer sort = new StringBuffer();
                 String direction = null;
-                final Iterator<SortingOption> i = sortOrder.getSortingOptions().iterator();
+                final Iterator<SortingOption> i = sortOrder.sortingOptions().iterator();
                 while (i.hasNext()) {
                     final SortingOption sortingOption = i.next();
-                    sort.append(sortingOption.getKey() + " ");
-                    switch (sortingOption.getDirection()) {
-                        case ASCENDING:
-                            direction = "asc";
-                            break;
-                        case DESCENDING:
-                            direction = "desc";
-                            break;
-                        default:
-                            break;
-                    }
-                    sort.append(direction);
-                    if (i.hasNext()) {
-                        sort.append(", ");
+                    if (!SortingOption.Key.DEFAULT.name().equals((sortingOption.key()))) {
+                        sort.append(sortingOption.key() + " ");
+                        switch (sortingOption.direction()) {
+                            case ASCENDING:
+                                direction = "asc";
+                                break;
+                            case DESCENDING:
+                                direction = "desc";
+                                break;
+                            default:
+                                direction = "asc";
+                                break;
+                        }
+                        sort.append(direction);
+                        if (i.hasNext()) {
+                            sort.append(", ");
+                        } else {
+                            searchRequest.setSort(sort.toString());
+                        }
                     }
                 }
-                searchRequest.setSort(sort.toString());
             }
 
             final String searchDomain = documentConfigurationHolder.schemaName() + "-"
