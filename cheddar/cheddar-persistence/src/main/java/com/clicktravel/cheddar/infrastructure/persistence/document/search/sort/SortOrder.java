@@ -16,10 +16,21 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search.sort;
 
-public class SortOption {
+import java.util.ArrayList;
+import java.util.List;
 
-    public enum Direction {
-        ASCENDING,
-        DESCENDING;
+public class SortOrder {
+
+    private List<SortingOption> sortingOptions = null;
+
+    public void addSortingOption(final SortingOption sortingOption) {
+        if (sortingOptions == null) {
+            sortingOptions = new ArrayList<SortingOption>();
+        }
+        sortingOptions.add(sortingOption);
+    }
+
+    public List<SortingOption> getSortingOptions() {
+        return sortingOptions;
     }
 }

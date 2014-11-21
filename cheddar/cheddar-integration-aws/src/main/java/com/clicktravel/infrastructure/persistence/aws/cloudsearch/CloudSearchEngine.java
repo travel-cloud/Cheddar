@@ -21,7 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.Map.Entry;
 
 import javax.ws.rs.core.MediaType;
 
@@ -43,7 +42,8 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.config
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.IndexDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOption.Direction;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOrder;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortingOption;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.*;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate.Type;
@@ -223,21 +223,20 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
-            final Integer size, final Class<T> documentClass, final LinkedHashMap<String, Direction> sortOrder) {
+            final Integer size, final Class<T> documentClass, final SortOrder sortOrder) {
         try {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
             final SearchRequest searchRequest = getSearchRequest(query);
             searchRequest.setStart((long) start);
             searchRequest.setSize((long) size);
-            if (sortOrder != null && !sortOrder.isEmpty()) {
+            if (sortOrder != null) {
                 final StringBuffer sort = new StringBuffer();
                 String direction = null;
-                final Iterator<Entry<String, Direction>> i = sortOrder.entrySet().iterator();
+                final Iterator<SortingOption> i = sortOrder.getSortingOptions().iterator();
                 while (i.hasNext()) {
-                    final Entry<String, Direction> entry = i.next();
-                    final String index = entry.getKey();
-                    sort.append(index + " ");
-                    switch (entry.getValue()) {
+                    final SortingOption sortingOption = i.next();
+                    sort.append(sortingOption.getKey() + " ");
+                    switch (sortingOption.getDirection()) {
                         case ASCENDING:
                             direction = "asc";
                             break;
@@ -245,7 +244,6 @@ public class CloudSearchEngine implements DocumentSearchEngine {
                             direction = "desc";
                             break;
                         default:
-                            direction = "_score";
                             break;
                     }
                     sort.append(direction);
@@ -255,6 +253,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
                 }
                 searchRequest.setSort(sort.toString());
             }
+
             final String searchDomain = documentConfigurationHolder.schemaName() + "-"
                     + documentConfiguration.namespace();
             final SearchResult searchResult = getSearchServiceClient(searchDomain).search(searchRequest);

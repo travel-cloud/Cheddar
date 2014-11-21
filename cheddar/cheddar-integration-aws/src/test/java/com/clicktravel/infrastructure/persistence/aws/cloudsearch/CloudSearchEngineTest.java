@@ -57,7 +57,9 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.config
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.QueryType;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOption;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOrder;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortingOption;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortingOption.Direction;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.common.random.Randoms;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate;
@@ -383,7 +385,6 @@ public class CloudSearchEngineTest {
         final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
         final Integer start = Randoms.randomInt(100);
         final Integer size = Randoms.randomInt(100);
-        final String sort = Randoms.randomString();
         final String searchServiceEndpoint = randomString();
         final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
         final String domainName = schemaName + "-" + namespace;
@@ -394,6 +395,12 @@ public class CloudSearchEngineTest {
                 .asList(domainName));
         final SearchRequest searchRequest = buildSearchRequest(queryType, query);
         final SearchResult searchResult = new SearchResult().withHits(getExpectedHits(document));
+        final SortingOption sortingOption = new SortingOption(Randoms.randomString(), Direction.ASCENDING);
+        final SortingOption sortingOption2 = new SortingOption(Randoms.randomString(), Direction.DESCENDING);
+        final SortOrder sortOrder = new SortOrder();
+        sortOrder.addSortingOption(sortingOption);
+        sortOrder.addSortingOption(sortingOption2);
+
         mockStatic(AmazonCloudSearchDomainClientBuilder.class);
         when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, searchServiceEndpoint)).thenReturn(
                 mockCloudSearchClient);
@@ -404,11 +411,31 @@ public class CloudSearchEngineTest {
         when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
         when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
         when(query.queryType()).thenReturn(queryType);
-        final LinkedHashMap<String, SortOption.Direction> sortOrder = new LinkedHashMap<>();
-        sortOrder.put(sort, SortOption.Direction.ASCENDING);
+
         searchRequest.withStart((long) start);
         searchRequest.withSize((long) size);
-        searchRequest.setSort(sort + " " + "asc");
+        final StringBuffer sortCriteria = new StringBuffer();
+        String direction = null;
+        final Iterator<SortingOption> i = sortOrder.getSortingOptions().iterator();
+        while (i.hasNext()) {
+            final SortingOption option = i.next();
+            sortCriteria.append(option.getKey() + " ");
+            switch (option.getDirection()) {
+                case ASCENDING:
+                    direction = "asc";
+                    break;
+                case DESCENDING:
+                    direction = "desc";
+                    break;
+                default:
+                    break;
+            }
+            sortCriteria.append(direction);
+            if (i.hasNext()) {
+                sortCriteria.append(", ");
+            }
+        }
+        searchRequest.setSort(sortCriteria.toString());
         when(mockCloudSearchClient.search(searchRequest)).thenReturn(searchResult);
 
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
