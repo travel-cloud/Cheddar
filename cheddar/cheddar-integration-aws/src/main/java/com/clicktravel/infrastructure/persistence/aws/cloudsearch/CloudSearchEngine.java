@@ -224,38 +224,36 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
             final Integer size, final Class<T> documentClass, final SortOrder sortOrder) {
+        if (sortOrder == null) {
+            throw new IllegalArgumentException("Sort order cannot be null");
+        }
         try {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
             final SearchRequest searchRequest = getSearchRequest(query);
             searchRequest.setStart((long) start);
             searchRequest.setSize((long) size);
-            if (sortOrder != null) {
-                final StringBuffer sort = new StringBuffer();
+            if (sortOrder != SortOrder.DEFAULT) {
+                final StringBuilder sort = new StringBuilder();
                 String direction = null;
-                final Iterator<SortingOption> i = sortOrder.sortingOptions().iterator();
-                while (i.hasNext()) {
-                    final SortingOption sortingOption = i.next();
-                    if (!SortingOption.Key.DEFAULT.name().equals((sortingOption.key()))) {
-                        sort.append(sortingOption.key() + " ");
-                        switch (sortingOption.direction()) {
-                            case ASCENDING:
-                                direction = "asc";
-                                break;
-                            case DESCENDING:
-                                direction = "desc";
-                                break;
-                            default:
-                                direction = "asc";
-                                break;
-                        }
-                        sort.append(direction);
-                        if (i.hasNext()) {
-                            sort.append(", ");
-                        } else {
-                            searchRequest.setSort(sort.toString());
-                        }
+                int count = 0;
+                for (final SortingOption sortingOption : sortOrder.sortingOptions()) {
+                    count++;
+                    sort.append(sortingOption.key() + " ");
+                    switch (sortingOption.direction()) {
+                        case ASCENDING:
+                        default:
+                            direction = "asc";
+                            break;
+                        case DESCENDING:
+                            direction = "desc";
+                            break;
+                    }
+                    sort.append(direction);
+                    if (count < sortOrder.sortingOptions().size()) {
+                        sort.append(", ");
                     }
                 }
+                searchRequest.setSort(sort.toString());
             }
 
             final String searchDomain = documentConfigurationHolder.schemaName() + "-"

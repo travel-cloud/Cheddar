@@ -23,15 +23,7 @@ public class SortOrder {
 
     private final List<SortingOption> sortingOptions = new ArrayList<SortingOption>();
 
-    public static final SortOrder DEFAULT = new SortOrder(SortingOption.Key.DEFAULT);
-
-    public SortOrder() {
-    }
-
-    private SortOrder(final SortingOption.Key key) {
-        final SortingOption sortingOption = new SortingOption(key);
-        addSortingOption(sortingOption);
-    }
+    public static final SortOrder DEFAULT = new SortOrder();
 
     public void addSortingOption(final SortingOption sortingOption) {
         sortingOptions.add(sortingOption);
@@ -40,5 +32,4 @@ public class SortOrder {
     public List<SortingOption> sortingOptions() {
         return sortingOptions;
     }
-
 }

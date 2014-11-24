@@ -23,15 +23,11 @@ public class SortingOption {
         DESCENDING;
     }
 
-    public enum Key {
-        DEFAULT;
-    }
-
     private final String key;
     private final Direction direction;
 
-    public SortingOption(final Key key) {
-        this.key = key.name();
+    public SortingOption(final String key) {
+        this.key = key;
         direction = Direction.ASCENDING;
     }
 
