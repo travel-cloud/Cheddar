@@ -18,17 +18,16 @@ package com.clicktravel.common.mapper;
 
 public class CollectionElementMapperException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = 7176394562549599234L;
     private final Object element;
 
     /**
-     * 
-     * @param message Message describing the problem with mapping the element
-     * @param element The element that caused the exception
+     * Exception describing a collection element that cannot be mapped and the cause
+     * @param cause Cause for element mapping failure
+     * @param element Element that could not be mapped
      */
-    public CollectionElementMapperException(final String message, final Object element) {
-        super(message);
+    public CollectionElementMapperException(final Throwable cause, final Object element) {
+        super(cause);
         this.element = element;
     }
 

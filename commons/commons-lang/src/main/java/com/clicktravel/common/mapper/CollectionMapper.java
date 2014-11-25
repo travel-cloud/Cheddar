@@ -44,18 +44,27 @@ public abstract class CollectionMapper<T1, T2> {
      * @throws MapperException - if collection cannot be mapped successfully
      */
     public Collection<T2> map(final Collection<T1> inputCollection) throws CollectionElementMapperException {
-        if (inputCollection == null) {
-            return new ArrayList<T2>();
-        }
         final Collection<T2> outputCollection = new ArrayList<>();
-        for (final T1 inputItem : inputCollection) {
-            try {
-                outputCollection.add(mapper.map(inputItem));
-            } catch (final MapperException e) {
-                throw new CollectionElementMapperException(e.getMessage(), inputItem);
+        if (inputCollection != null) {
+            for (final T1 inputItem : inputCollection) {
+                try {
+                    outputCollection.add(mapper.map(inputItem));
+                } catch (final MapperException mapperException) {
+                    handle(mapperException, inputItem);
+                }
             }
         }
         return outputCollection;
+    }
+
+    /**
+     * Handle an input item that could not be mapped. This default implementation simply throws a
+     * {@link CollectionElementMapperException}
+     * @param cause Exception thrown by underlying mapper
+     * @param inputItem Input item that could not be mapped
+     */
+    protected void handle(final MapperException cause, final T1 inputItem) {
+        throw new CollectionElementMapperException(cause, inputItem);
     }
 
     public Mapper<T1, T2> mapper() {
