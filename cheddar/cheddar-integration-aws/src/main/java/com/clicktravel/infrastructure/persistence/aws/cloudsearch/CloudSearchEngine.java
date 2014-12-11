@@ -35,6 +35,7 @@ import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
 import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsRequest;
 import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsResult;
 import com.amazonaws.services.cloudsearchv2.model.DomainStatus;
+import com.amazonaws.util.json.JSONObject;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchEngine;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
@@ -218,12 +219,14 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
             final Integer size, final Class<T> documentClass) {
-        return search(query, start, size, documentClass, SortOrder.DEFAULT);
+        return search(query, start, size, documentClass, SortOrder.DEFAULT, null);
     }
 
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
-            final Integer size, final Class<T> documentClass, final SortOrder sortOrder) {
+            final Integer size, final Class<T> documentClass, final SortOrder sortOrder,
+            final Map<String, String> expressions) {
+
         if (sortOrder == null) {
             throw new IllegalArgumentException("Sort order cannot be null");
         }
@@ -232,6 +235,11 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             final SearchRequest searchRequest = getSearchRequest(query);
             searchRequest.setStart((long) start);
             searchRequest.setSize((long) size);
+
+            if (expressions != null) {
+                searchRequest.setExpr(new JSONObject(expressions).toString());
+            }
+
             if (sortOrder != SortOrder.DEFAULT) {
                 final StringBuilder sort = new StringBuilder();
                 String direction = null;

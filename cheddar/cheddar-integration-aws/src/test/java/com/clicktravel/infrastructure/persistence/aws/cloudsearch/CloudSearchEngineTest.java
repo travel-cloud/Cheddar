@@ -21,6 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -370,6 +371,60 @@ public class CloudSearchEngineTest {
     }
 
     @Test
+    public void shouldSearch_withExpression() throws Exception {
+        // Given
+        final StubDocument document = randomStubDocument();
+        final String documentId = document.getId();
+        final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
+        final String namespace = documentId;
+        final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
+        final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
+        final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
+        final String schemaName = randomString(10);
+        final Query query = mock(Query.class);
+        final QueryType queryType = randomEnum(QueryType.class);
+        final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
+        final Integer start = Randoms.randomInt(100);
+        final Integer size = Randoms.randomInt(100);
+        final String searchServiceEndpoint = randomString();
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName, randomString(),
+                searchServiceEndpoint);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final SearchResult searchResult = new SearchResult().withHits(getExpectedHits(document));
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, searchServiceEndpoint)).thenReturn(
+                mockCloudSearchClient);
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
+        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
+        when(query.queryType()).thenReturn(queryType);
+        when(mockCloudSearchClient.search(any(SearchRequest.class))).thenReturn(searchResult);
+
+        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
+
+        final Map<String, String> expressions = new HashMap<String, String>();
+        expressions.put("key", "expression");
+
+        // When
+        cloudSearchEngine.search(query, start, size, StubDocument.class, SortOrder.DEFAULT, expressions);
+
+        final ArgumentCaptor<SearchRequest> searchRequestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
+
+        verify(mockCloudSearchClient).search(searchRequestCaptor.capture());
+
+        final SearchRequest request = searchRequestCaptor.getValue();
+        assertEquals(request.getExpr(), "{\"key\":\"expression\"}");
+    }
+
+    @Test
     public void shouldSearch_withSortInQuery() throws Exception {
         // Given
         final StubDocument document = randomStubDocument();
@@ -441,7 +496,7 @@ public class CloudSearchEngineTest {
 
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
-                StubDocument.class, sortOrder);
+                StubDocument.class, sortOrder, null);
 
         // Then
         assertNotNull(returnedDocuments);
@@ -496,7 +551,7 @@ public class CloudSearchEngineTest {
 
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
-                StubDocument.class, SortOrder.DEFAULT);
+                StubDocument.class, SortOrder.DEFAULT, null);
 
         // Then
         assertNotNull(returnedDocuments);
@@ -546,7 +601,7 @@ public class CloudSearchEngineTest {
         // When
         IllegalArgumentException actualException = null;
         try {
-            cloudSearchEngine.search(query, start, size, StubDocument.class, sortOrder);
+            cloudSearchEngine.search(query, start, size, StubDocument.class, sortOrder, null);
         } catch (final IllegalArgumentException e) {
             actualException = e;
         }

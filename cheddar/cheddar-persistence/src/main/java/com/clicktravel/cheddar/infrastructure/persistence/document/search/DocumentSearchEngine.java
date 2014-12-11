@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search;
 
+import java.util.Map;
+
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOrder;
 
@@ -65,10 +67,11 @@ public interface DocumentSearchEngine {
      *            comma-separated list. You must specify the sort direction (asc or desc) for each field; for example,
      *            year desc, title asc. To use a field to sort results, the field must be sort-enabled in the domain
      *            configuration.
+     * @param expressions map of expressions that you wish the search engine to evaluate as part of the request
      * @return a DocumentSearchResponse containing a page of documents matching the supplied query in the desired sort
      *         order along with results metadata
      */
     <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start, final Integer size,
-            final Class<T> documentClass, SortOrder sortOrder);
+            final Class<T> documentClass, SortOrder sortOrder, final Map<String, String> expressions);
 
 }
