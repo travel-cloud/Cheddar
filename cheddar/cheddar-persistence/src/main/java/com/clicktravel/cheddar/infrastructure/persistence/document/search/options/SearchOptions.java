@@ -26,6 +26,8 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.S
  */
 public class SearchOptions {
 
+    public static final SearchOptions DEFAULT = new SearchOptions();
+
     /**
      * Sorting option applied to the query defaults to the default value and cannot be null
      */

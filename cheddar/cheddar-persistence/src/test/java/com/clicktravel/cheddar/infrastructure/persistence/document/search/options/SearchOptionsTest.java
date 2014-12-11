@@ -31,7 +31,7 @@ public class SearchOptionsTest {
 
     @Test
     public void shouldCreateDefaultSearchOptions() {
-        final SearchOptions options = new SearchOptions();
+        final SearchOptions options = SearchOptions.DEFAULT;
         assertEquals(SortOrder.DEFAULT, options.getSortOrder());
         assertTrue(options.getExpressions().isEmpty());
     }

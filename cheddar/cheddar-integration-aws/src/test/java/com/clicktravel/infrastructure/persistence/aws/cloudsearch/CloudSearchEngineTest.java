@@ -553,7 +553,7 @@ public class CloudSearchEngineTest {
 
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
-                StubDocument.class, new SearchOptions());
+                StubDocument.class, SearchOptions.DEFAULT);
 
         // Then
         assertNotNull(returnedDocuments);

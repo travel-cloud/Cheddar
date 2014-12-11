@@ -220,7 +220,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
             final Integer size, final Class<T> documentClass) {
-        return search(query, start, size, documentClass, new SearchOptions());
+        return search(query, start, size, documentClass, SearchOptions.DEFAULT);
     }
 
     @Override
