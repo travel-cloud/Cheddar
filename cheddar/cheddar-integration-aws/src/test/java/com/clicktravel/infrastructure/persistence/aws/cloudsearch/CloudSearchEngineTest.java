@@ -418,6 +418,7 @@ public class CloudSearchEngineTest {
         // When
         cloudSearchEngine.search(query, start, size, StubDocument.class, options);
 
+        // Then
         final ArgumentCaptor<SearchRequest> searchRequestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
 
         verify(mockCloudSearchClient).search(searchRequestCaptor.capture());
