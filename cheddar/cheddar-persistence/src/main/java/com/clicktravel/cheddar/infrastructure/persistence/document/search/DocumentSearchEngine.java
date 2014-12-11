@@ -16,8 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search;
 
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.options.SearchOptions;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOrder;
 
 public interface DocumentSearchEngine {
 
@@ -61,14 +61,11 @@ public interface DocumentSearchEngine {
      * @param size the size of the page of documents you want returned; leave <code>null</code> to return up the
      *            implementation defined default size
      * @param documentClass the type of document being queried
-     * @param sort the field(s) to be used to sort the search results. Multiple fields can be specified as a
-     *            comma-separated list. You must specify the sort direction (asc or desc) for each field; for example,
-     *            year desc, title asc. To use a field to sort results, the field must be sort-enabled in the domain
-     *            configuration.
+     * @param options the extra values you wish to pass to the search see {@link SearchOptions.class}
      * @return a DocumentSearchResponse containing a page of documents matching the supplied query in the desired sort
      *         order along with results metadata
      */
     <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start, final Integer size,
-            final Class<T> documentClass, SortOrder sortOrder);
+            final Class<T> documentClass, final SearchOptions options);
 
 }
