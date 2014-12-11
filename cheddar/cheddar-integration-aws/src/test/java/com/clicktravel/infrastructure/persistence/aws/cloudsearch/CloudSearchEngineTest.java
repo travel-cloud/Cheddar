@@ -56,6 +56,7 @@ import com.amazonaws.services.cloudsearchv2.model.ServiceEndpoint;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.options.SearchOptions;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.QueryType;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOrder;
@@ -413,8 +414,9 @@ public class CloudSearchEngineTest {
         final Map<String, String> expressions = new HashMap<String, String>();
         expressions.put("key", "expression");
 
+        final SearchOptions options = new SearchOptions().withExpressions(expressions);
         // When
-        cloudSearchEngine.search(query, start, size, StubDocument.class, SortOrder.DEFAULT, expressions);
+        cloudSearchEngine.search(query, start, size, StubDocument.class, options);
 
         final ArgumentCaptor<SearchRequest> searchRequestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
 
@@ -496,7 +498,7 @@ public class CloudSearchEngineTest {
 
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
-                StubDocument.class, sortOrder, null);
+                StubDocument.class, new SearchOptions().withSortOrder(sortOrder));
 
         // Then
         assertNotNull(returnedDocuments);
@@ -551,7 +553,7 @@ public class CloudSearchEngineTest {
 
         // When
         final DocumentSearchResponse<StubDocument> returnedDocuments = cloudSearchEngine.search(query, start, size,
-                StubDocument.class, SortOrder.DEFAULT, null);
+                StubDocument.class, new SearchOptions());
 
         // Then
         assertNotNull(returnedDocuments);
@@ -559,55 +561,24 @@ public class CloudSearchEngineTest {
     }
 
     @Test
-    public void shouldNotSearch_withNullSortOrderInQuery() throws Exception {
+    public void shouldNotSearch_withNullSearchOptions() throws Exception {
         // Given
-        final StubDocument document = randomStubDocument();
-        final String documentId = document.getId();
         final DocumentConfigurationHolder documentConfigurationHolder = mock(DocumentConfigurationHolder.class);
-        final String namespace = documentId;
-        final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
-        final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
-        final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
-        final String schemaName = randomString(10);
-        final Query query = mock(Query.class);
-        final QueryType queryType = Randoms.randomEnum(QueryType.class);
-        final AmazonCloudSearchDomain mockCloudSearchClient = mock(AmazonCloudSearchDomain.class);
-        final Integer start = Randoms.randomInt(100);
-        final Integer size = Randoms.randomInt(100);
-        final String searchServiceEndpoint = randomString();
-        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
-        final String domainName = schemaName + "-" + namespace;
-        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName, randomString(),
-                searchServiceEndpoint);
-        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
-        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
-                .asList(domainName));
-
-        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
-        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, searchServiceEndpoint)).thenReturn(
-                mockCloudSearchClient);
-        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
-        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
-        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
-        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
-        when(documentConfigurationHolder.schemaName()).thenReturn(schemaName);
-        when(documentConfigurationHolder.documentConfigurations()).thenReturn(documentConfigurations);
-        when(query.queryType()).thenReturn(queryType);
-        final SortOrder sortOrder = null;
 
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
-        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
 
         // When
         IllegalArgumentException actualException = null;
         try {
-            cloudSearchEngine.search(query, start, size, StubDocument.class, sortOrder, null);
+            cloudSearchEngine.search(mock(Query.class), Randoms.randomInt(100), Randoms.randomInt(100),
+                    StubDocument.class, null);
         } catch (final IllegalArgumentException e) {
             actualException = e;
         }
 
         // Then
         assertNotNull(actualException);
+        assertEquals("SearchOptions cannot be null", actualException.getMessage());
     }
 
     private Hits getExpectedHits(final StubDocument document) {
