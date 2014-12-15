@@ -20,10 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -42,7 +40,8 @@ import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFile
 
 public class S3FileStore implements InternetFileStore {
 
-    private static final String USER_METADATA_FILENAME = "filename";
+    private static final String USER_METADATA_HEADER_PREFIX = "x-amz-meta-";
+    private static final String USER_METADATA_FILENAME = "filename-meta";
     private static final String USER_METADATA_LAST_UPDATED_TIME = "last-updated-time";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -78,9 +77,9 @@ public class S3FileStore implements InternetFileStore {
                 filePath.filename());
         try {
             final S3Object s3Object = amazonS3Client.getObject(getObjectRequest);
-            final String filename = s3Object.getObjectMetadata().getUserMetadata().get(USER_METADATA_FILENAME);
-            final String lastUpdatedTimeStr = s3Object.getObjectMetadata().getUserMetadata()
-                    .get(USER_METADATA_LAST_UPDATED_TIME);
+            final Map<String, String> userMetaData = getUserMetaData(s3Object.getObjectMetadata());
+            final String filename = userMetaData.get(USER_METADATA_FILENAME);
+            final String lastUpdatedTimeStr = userMetaData.get(USER_METADATA_LAST_UPDATED_TIME);
             DateTime lastUpdatedTime = null;
             if (lastUpdatedTimeStr != null) {
                 try {
@@ -103,6 +102,20 @@ public class S3FileStore implements InternetFileStore {
             }
             throw e;
         }
+    }
+
+    private Map<String, String> getUserMetaData(final ObjectMetadata objectMetaData) {
+        final Map<String, String> userMetaData = objectMetaData.getUserMetadata();
+        if (userMetaData.isEmpty()) {
+            for (final Entry<String, Object> entry : objectMetaData.getRawMetadata().entrySet()) {
+                final String normalisedKey = entry.getKey().toLowerCase();
+                if (normalisedKey.startsWith(USER_METADATA_HEADER_PREFIX)) {
+                    final String value = String.valueOf(entry.getValue());
+                    userMetaData.put(normalisedKey.substring(USER_METADATA_HEADER_PREFIX.length()), value);
+                }
+            }
+        }
+        return userMetaData;
     }
 
     @Override
