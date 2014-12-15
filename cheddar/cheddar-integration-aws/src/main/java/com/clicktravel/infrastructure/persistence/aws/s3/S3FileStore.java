@@ -104,6 +104,16 @@ public class S3FileStore implements InternetFileStore {
         }
     }
 
+    /**
+     * Returns a Map of the user meta-data associated with the given S3 Object's meta data.
+     * 
+     * This is a work-around for a bug in the AWS Java SDK which treats headers in a case-insensitive manner.
+     * 
+     * @see <a href="https://github.com/aws/aws-sdk-java/pull/326">https://github.com/aws/aws-sdk-java/pull/326</a>
+     * 
+     * @param objectMetaData THe Object meta-data associated with the S3Object
+     * @return key-value map for user meta-data
+     */
     private Map<String, String> getUserMetaData(final ObjectMetadata objectMetaData) {
         final Map<String, String> userMetaData = objectMetaData.getUserMetadata();
         if (userMetaData.isEmpty()) {
