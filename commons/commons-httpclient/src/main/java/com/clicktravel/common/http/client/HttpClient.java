@@ -16,6 +16,8 @@
  */
 package com.clicktravel.common.http.client;
 
+import static com.clicktravel.common.random.Randoms.randomId;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +32,6 @@ import javax.ws.rs.RedirectionException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -39,8 +40,9 @@ import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
+import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow.Phase;
+import org.glassfish.jersey.client.oauth2.OAuth2Parameters;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,21 +129,27 @@ public class HttpClient {
 
     private WebTarget getOAuthAuthenticatedTarget(final String baseUri, final OAuthConfiguration oauthConfiguration)
             throws AuthenticationException {
-        final Client client = ClientBuilder.newBuilder().withConfig(clientConfig()).build();
+        final Client client = buildIgnoreSslErrorClient(ClientBuilder.newBuilder().withConfig(clientConfig())).build();
+        final String state = randomId();
         final OAuth2CodeGrantFlow oauth2GrantFlow = OAuth2ClientSupport
                 .authorizationCodeGrantFlowBuilder(oauthConfiguration.clientIdentifier(),
                         oauthConfiguration.authorisationUri(), oauthConfiguration.accessTokenUri()).client(client)
-                .redirectUri(oauthConfiguration.redirectUri()).refreshTokenUri(oauthConfiguration.refreshTokenUri())
-                .build();
+                .redirectUri(oauthConfiguration.redirectUri()).scope("Default")
+                .refreshTokenUri(oauthConfiguration.refreshTokenUri())
+                .property(Phase.ALL, OAuth2Parameters.STATE, state).build();
 
         final String oauthRedirectUrl = oauth2GrantFlow.start();
-        final MultivaluedMap<String, String> receivedRedirectQueryParams = UriComponent.decodeQuery(oauthRedirectUrl,
-                true);
-        final String stateValue = receivedRedirectQueryParams.get("state").get(0);
 
-        final String authCode = oauthConfiguration.oauthUserAgent().authenticate();
+        logger.debug("The oauth redirect uri is: " + oauthRedirectUrl);
 
-        oauth2GrantFlow.finish(authCode, stateValue);
+        URI authenticationServerUri = null;
+        final Response response = client.target(oauthRedirectUrl).request().get();
+        logger.debug("The response for get was : " + response.getStatus());
+        authenticationServerUri = response.getLocation();
+
+        final String authCode = oauthConfiguration.oauthUserAgent().authenticate(authenticationServerUri);
+
+        oauth2GrantFlow.finish(authCode, state);
         return oauth2GrantFlow.getAuthorizedClient().target(baseUri);
     }
 
@@ -225,6 +233,18 @@ public class HttpClient {
             newTarget = newTarget.queryParam(entry.getKey(), entry.getValue().toArray());
         }
         return newTarget.request().headers(clientHeaders);
+    }
+
+    /**
+     * Convenience method to get hold of the client directly allowing you to call more complex methods on the client
+     * such as a post entity with variant language headers
+     * 
+     * @param path The path to which the request needs to be made, required
+     * @param params The query parameters appended to the path, required but can be empty
+     * @return
+     */
+    public Invocation.Builder getHttpClientBuilder(final String path, final MultivaluedHashMap<String, String> params) {
+        return requestBuilder(path, params);
     }
 
     /**

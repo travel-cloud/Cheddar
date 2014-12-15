@@ -35,13 +35,17 @@ import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
 import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsRequest;
 import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsResult;
 import com.amazonaws.services.cloudsearchv2.model.DomainStatus;
+import com.amazonaws.util.json.JSONObject;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchEngine;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.IndexDefinition;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.options.SearchOptions;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortOrder;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.SortingOption;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.*;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate.Type;
@@ -216,11 +220,51 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
             final Integer size, final Class<T> documentClass) {
+        return search(query, start, size, documentClass, SearchOptions.DEFAULT);
+    }
+
+    @Override
+    public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
+            final Integer size, final Class<T> documentClass, final SearchOptions options) {
+
+        if (options == null) {
+            throw new IllegalArgumentException("SearchOptions cannot be null");
+        }
+
         try {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
             final SearchRequest searchRequest = getSearchRequest(query);
             searchRequest.setStart((long) start);
             searchRequest.setSize((long) size);
+
+            if (!options.getExpressions().isEmpty()) {
+                searchRequest.setExpr(new JSONObject(options.getExpressions()).toString());
+            }
+
+            if (options.getSortOrder() != SortOrder.DEFAULT) {
+                final StringBuilder sort = new StringBuilder();
+                String direction = null;
+                int count = 0;
+                for (final SortingOption sortingOption : options.getSortOrder().sortingOptions()) {
+                    count++;
+                    sort.append(sortingOption.key() + " ");
+                    switch (sortingOption.direction()) {
+                        case ASCENDING:
+                        default:
+                            direction = "asc";
+                            break;
+                        case DESCENDING:
+                            direction = "desc";
+                            break;
+                    }
+                    sort.append(direction);
+                    if (count < options.getSortOrder().sortingOptions().size()) {
+                        sort.append(", ");
+                    }
+                }
+                searchRequest.setSort(sort.toString());
+            }
+
             final String searchDomain = documentConfigurationHolder.schemaName() + "-"
                     + documentConfiguration.namespace();
             final SearchResult searchResult = getSearchServiceClient(searchDomain).search(searchRequest);

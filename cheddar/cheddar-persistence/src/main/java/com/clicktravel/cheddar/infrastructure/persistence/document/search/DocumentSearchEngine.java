@@ -16,6 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search;
 
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.options.SearchOptions;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
 
 public interface DocumentSearchEngine {
@@ -50,5 +51,21 @@ public interface DocumentSearchEngine {
      */
     <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start, final Integer size,
             Class<T> documentClass);
+
+    /**
+     * Search for document based on given query and returns results in the given sort order
+     * 
+     * @param query describing the documents you wish to return
+     * @param start the index of the first document you want to return <code>null</code> will default to the index of
+     *            the first document in the results
+     * @param size the size of the page of documents you want returned; leave <code>null</code> to return up the
+     *            implementation defined default size
+     * @param documentClass the type of document being queried
+     * @param options the extra values you wish to pass to the search see {@link SearchOptions.class}
+     * @return a DocumentSearchResponse containing a page of documents matching the supplied query in the desired sort
+     *         order along with results metadata
+     */
+    <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start, final Integer size,
+            final Class<T> documentClass, final SearchOptions options);
 
 }

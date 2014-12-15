@@ -28,6 +28,7 @@ public class StatusResult {
 
     // TODO Remove the "processedRecentDeferrableEvent" property and getter/setter when deployment scripts have been
     // updated (property has been renamed deferrableProcessing)
+    @SuppressWarnings("unused")
     private boolean processedRecentDeferrableEvent;
 
     public boolean isProcessedRecentDeferrableEvent() {
