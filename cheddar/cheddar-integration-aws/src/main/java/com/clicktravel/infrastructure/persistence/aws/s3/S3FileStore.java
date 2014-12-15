@@ -41,7 +41,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFile
 public class S3FileStore implements InternetFileStore {
 
     private static final String USER_METADATA_HEADER_PREFIX = "x-amz-meta-";
-    private static final String USER_METADATA_FILENAME = "filename-meta";
+    private static final String USER_METADATA_FILENAME = "filename";
     private static final String USER_METADATA_LAST_UPDATED_TIME = "last-updated-time";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
