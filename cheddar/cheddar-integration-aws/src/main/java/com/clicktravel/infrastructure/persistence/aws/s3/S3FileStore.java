@@ -77,7 +77,7 @@ public class S3FileStore implements InternetFileStore {
                 filePath.filename());
         try {
             final S3Object s3Object = amazonS3Client.getObject(getObjectRequest);
-            final Map<String, String> userMetaData = getUserMetaData(s3Object.getObjectMetadata());
+            final Map<String, String> userMetaData = getUserMetaData(s3Object);
             final String filename = userMetaData.get(USER_METADATA_FILENAME);
             final String lastUpdatedTimeStr = userMetaData.get(USER_METADATA_LAST_UPDATED_TIME);
             DateTime lastUpdatedTime = null;
@@ -105,16 +105,17 @@ public class S3FileStore implements InternetFileStore {
     }
 
     /**
-     * Returns a Map of the user meta-data associated with the given S3 Object's meta data.
+     * Returns a Map of the user meta-data associated with the given S3 Object
      * 
-     * This is a work-around for a bug in the AWS Java SDK which treats headers in a case-insensitive manner.
+     * This is a work-around for a bug in the AWS Java SDK which treats HTTP headers in a case-insensitive manner.
      * 
      * @see <a href="https://github.com/aws/aws-sdk-java/pull/326">https://github.com/aws/aws-sdk-java/pull/326</a>
      * 
-     * @param objectMetaData THe Object meta-data associated with the S3Object
+     * @param s3Object The S3Object for which the user meta-data is to be obtained.
      * @return key-value map for user meta-data
      */
-    private Map<String, String> getUserMetaData(final ObjectMetadata objectMetaData) {
+    private Map<String, String> getUserMetaData(final S3Object s3Object) {
+        final ObjectMetadata objectMetaData = s3Object.getObjectMetadata();
         final Map<String, String> userMetaData = objectMetaData.getUserMetadata();
         if (userMetaData.isEmpty()) {
             for (final Entry<String, Object> entry : objectMetaData.getRawMetadata().entrySet()) {
