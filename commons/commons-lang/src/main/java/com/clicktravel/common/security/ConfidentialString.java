@@ -24,10 +24,6 @@ public class ConfidentialString {
 
     private final String string;
 
-    public ConfidentialString() {
-        this(null);
-    }
-
     public ConfidentialString(final String string) {
         this.string = string;
     }

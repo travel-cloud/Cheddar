@@ -24,16 +24,6 @@ import org.junit.Test;
 public class ConfidentialStringTest {
 
     @Test
-    public void shouldReturnNull_onNoArgConstructor() {
-        // When
-        final ConfidentialString s = new ConfidentialString();
-
-        // Then
-        assertNotNull(s);
-        assertNull(s.getString());
-    }
-
-    @Test
     public void shouldReturnNull_onConstructorWithNullStringArg() {
         // Given
         final String string = null;
