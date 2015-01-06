@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -29,9 +30,15 @@ public class FileItem {
 
     private final byte[] contents;
 
+    /**
+     * Create a file item from any given string, assumes UTF-encoding
+     * 
+     * @param filename the name of the file you want to create
+     * @param contents the string in UTF-8 encoding
+     */
     public FileItem(final String filename, final String contents) {
         this.filename = filename;
-        this.contents = contents.getBytes();
+        this.contents = contents.getBytes(StandardCharsets.UTF_8);
         lastUpdatedTime = DateTime.now();
     }
 
@@ -77,6 +84,13 @@ public class FileItem {
 
     public byte[] getBytes() {
         return contents;
+    }
+
+    /**
+     * @return the contents of the bytes[] as a string, assumes the bytes are UTF-8 encoded
+     */
+    public String getContentsAsString() {
+        return new String(getBytes(), StandardCharsets.UTF_8);
     }
 
 }
