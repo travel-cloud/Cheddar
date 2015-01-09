@@ -16,6 +16,7 @@
  */
 package com.clicktravel.common.hash;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -61,7 +62,7 @@ public class HashUtils {
     private static String generateHash(final String input, final HashType hashType) {
         try {
             final MessageDigest md = MessageDigest.getInstance(hashType.value());
-            md.update(input.getBytes());
+            md.update(input.getBytes(StandardCharsets.UTF_8));
             final byte byteData[] = md.digest();
             final StringBuilder sb = new StringBuilder();
             for (final byte element : byteData) {
