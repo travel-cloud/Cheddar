@@ -52,16 +52,16 @@ public class JsonDocumentSearchResponseUnmarshallerTest {
         // Given
         final Map<String, List<String>> fields = new HashMap<>();
         final String stringProperty = randomString(10);
-        fields.put("stringproperty", Arrays.asList(stringProperty));
+        fields.put("stringProperty", Arrays.asList(stringProperty));
         final String[] stringListValues = new String[3];
         stringListValues[0] = randomString(10);
         stringListValues[1] = randomString(10);
         stringListValues[2] = randomString(10);
-        fields.put("collectionproperty", Arrays.asList(stringListValues[0], stringListValues[1], stringListValues[2]));
+        fields.put("collectionProperty", Arrays.asList(stringListValues[0], stringListValues[1], stringListValues[2]));
         final MyEnum myEnum = randomEnum(MyEnum.class);
-        fields.put("myenum", Arrays.asList(myEnum.name()));
+        fields.put("myEnum", Arrays.asList(myEnum.name()));
         final DateTime dateTimeValue = randomDateTime();
-        fields.put("datetimevalue", Arrays.asList(ISODateTimeFormat.dateTime().withZoneUTC().print(dateTimeValue)));
+        fields.put("dateTimeValue", Arrays.asList(ISODateTimeFormat.dateTime().withZoneUTC().print(dateTimeValue)));
         final JsonDocumentSearchResponseUnmarshaller jsonDocumentSearchResponseUnmarshaller = new JsonDocumentSearchResponseUnmarshaller();
 
         // When

@@ -589,7 +589,7 @@ public class CloudSearchEngineTest {
         final Hit hit = new Hit();
         hit.withId(document.getId());
         final Map<String, List<String>> fields = new HashMap<>();
-        fields.put("stringproperty", Arrays.asList(document.getStringProperty()));
+        fields.put("stringProperty", Arrays.asList(document.getStringProperty()));
         hit.withFields(fields);
         hits.withHit(hit);
         hits.withFound(1l);
