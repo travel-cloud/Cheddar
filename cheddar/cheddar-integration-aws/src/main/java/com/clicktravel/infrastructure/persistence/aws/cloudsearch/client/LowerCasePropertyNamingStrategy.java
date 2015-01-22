@@ -30,29 +30,29 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
  * @author james b
  */
 
-public class DocumentPropertyNamingStrategy extends PropertyNamingStrategy {
+public class LowerCasePropertyNamingStrategy extends PropertyNamingStrategy {
 
     private static final long serialVersionUID = 1L;
 
     @Override
     public String nameForField(final MapperConfig<?> config, final AnnotatedField field, final String defaultName) {
-        return reformatFeildName(defaultName);
+        return formattedFieldName(defaultName);
 
     }
 
     @Override
     public String nameForGetterMethod(final MapperConfig<?> config, final AnnotatedMethod method,
             final String defaultName) {
-        return reformatFeildName(defaultName);
+        return formattedFieldName(defaultName);
     }
 
     @Override
     public String nameForSetterMethod(final MapperConfig<?> config, final AnnotatedMethod method,
             final String defaultName) {
-        return reformatFeildName(defaultName);
+        return formattedFieldName(defaultName);
     }
 
-    private String reformatFeildName(final String defaultFieldName) {
+    private String formattedFieldName(final String defaultFieldName) {
         return defaultFieldName.toLowerCase();
     }
 }

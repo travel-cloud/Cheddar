@@ -40,7 +40,7 @@ public class JsonDocumentSearchResponseUnmarshaller {
         mapper.registerModule(module);
         mapper.configure(SerializationFeature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED, true);
         mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        mapper.setPropertyNamingStrategy(new DocumentPropertyNamingStrategy());
+        mapper.setPropertyNamingStrategy(new LowerCasePropertyNamingStrategy());
     }
 
     public <T extends Document> T unmarshall(final Map<String, List<String>> fields, final Class<T> documentClass) {
