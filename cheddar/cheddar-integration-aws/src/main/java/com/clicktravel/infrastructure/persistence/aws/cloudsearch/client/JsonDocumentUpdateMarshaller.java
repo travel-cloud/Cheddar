@@ -42,6 +42,7 @@ public class JsonDocumentUpdateMarshaller {
         final SimpleModule jodaDateTimeModule = new SimpleModule();
         jodaDateTimeModule.addSerializer(DateTime.class, new JodaDateTimeSerializer());
         mapper.registerModule(jodaDateTimeModule);
+        mapper.setPropertyNamingStrategy(new DocumentPropertyNamingStrategy());
     }
 
     private String marshallDocumentUpdates(final Collection<DocumentUpdate> documentUpdates) {
