@@ -1,4 +1,4 @@
-def jerseyVersion = '2.7'
+def jerseyVersion = '2.15'
 
 dependencies {
     compile project(':commons:commons-lang')

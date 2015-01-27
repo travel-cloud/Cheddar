@@ -24,6 +24,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
+import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
@@ -40,7 +41,9 @@ import com.clicktravel.cheddar.server.rest.resource.config.RestResourceConfig;
 public class RestServer {
 
     private static final int SERVICE_WORKER_THREADS = 16;
+    private static final int SERVICE_KERNEL_THREADS = 8;
     private static final int STATUS_WORKER_THREADS = 2;
+    private static final int STATUS_KERNEL_THREADS = 2;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final int servicePort;
@@ -58,17 +61,28 @@ public class RestServer {
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
-        configureThreadPools(httpServer.getListener("grizzly"), SERVICE_POOL_NAME_PREFIX, SERVICE_WORKER_THREADS);
+        configureThreadPools(httpServer.getListener("grizzly"), SERVICE_POOL_NAME_PREFIX, SERVICE_WORKER_THREADS,
+                SERVICE_KERNEL_THREADS);
         logger.info("Configuring REST status resources on port " + statusPort);
         final NetworkListener statusPortListener = new NetworkListener("status", baseUri.getHost(), statusPort);
-        configureThreadPools(statusPortListener, STATUS_POOL_NAME_PREFIX, STATUS_WORKER_THREADS);
+        configureThreadPools(statusPortListener, STATUS_POOL_NAME_PREFIX, STATUS_WORKER_THREADS, STATUS_KERNEL_THREADS);
         httpServer.addListener(statusPortListener);
     }
 
     private void configureThreadPools(final NetworkListener networkListener, final String poolNamePrefix,
-            final int workerThreads) {
+            final int workerThreads, final int kernelThreads) {
         final TCPNIOTransport transport = networkListener.getTransport();
-        transport.getKernelThreadPoolConfig().setPoolName(poolNamePrefix + "-Kernel");
+
+        if (transport.getKernelThreadPoolConfig() == null) {
+            transport.setKernelThreadPoolConfig(ThreadPoolConfig.defaultConfig());
+        }
+        transport.getKernelThreadPoolConfig().setPoolName(poolNamePrefix + "-Kernel").setMaxPoolSize(kernelThreads)
+                .setCorePoolSize(kernelThreads);
+        transport.setSelectorRunnersCount(kernelThreads);
+
+        if (transport.getWorkerThreadPoolConfig() == null) {
+            transport.setWorkerThreadPoolConfig(ThreadPoolConfig.defaultConfig());
+        }
         transport.getWorkerThreadPoolConfig().setPoolName(poolNamePrefix + "-Worker").setMaxPoolSize(workerThreads)
                 .setCorePoolSize(workerThreads);
     }
@@ -81,7 +95,7 @@ public class RestServer {
     public void stop() {
         try {
             logger.info("Stopping REST server; servicePort:[" + servicePort + "] statusPort:[" + statusPort + "]");
-            httpServer.stop();
+            httpServer.shutdownNow();
             logger.info("REST server stopped");
         } catch (final Exception e) {
             throw new IllegalStateException(e);
