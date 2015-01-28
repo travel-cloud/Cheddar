@@ -20,11 +20,43 @@ import org.springframework.core.env.Environment;
 
 public class RuntimeConfiguration {
 
+    /**
+     * TODO : Migrate profile to {@link #DEV_PROFILE}
+     */
+    @Deprecated
     public static final String LOCAL_PROFILE = "local";
-    public static final String CI_PROFILE = "ci";
-    public static final String STABLE_PROFILE = "stable";
-    public static final String UAT_PROFILE = "uat";
+
+    /**
+     * TODO : Remove this profile
+     */
+    @Deprecated
     public static final String PLATFORM_FAILURE_PROFILE = "platform-failure";
+
+    /**
+     * Profile for using in-memory mocks of external services. No AWS infrastructure or services are accessed. This
+     * profile is intended for use by service tests.
+     */
+    public static final String TEST_PROFILE = "test";
+
+    /**
+     * Profile for using services available in AWS "Dev" infrastructure. Environment and service properties are set to
+     * enable multiple developers to execute services locally (a developer's machine, rather than an EC2 instance) using
+     * this profile. For example, URLs for DynamoDB access are set to refer to a DynamoDB Local instance. Another
+     * example, SQS queues are given names unique to a developer to enable exclusive use by the locally executing
+     * service(s) under development.
+     */
+    public static final String DEV_PROFILE = "dev";
+
+    /** Profile for using services available in AWS "CI" infrastructure */
+    public static final String CI_PROFILE = "ci";
+
+    /** Profile for using services available in AWS "Stable" infrastructure */
+    public static final String STABLE_PROFILE = "stable";
+
+    /** Profile for using services available in AWS "UAT" infrastructure */
+    public static final String UAT_PROFILE = "uat";
+
+    /** Profile for using services available in AWS "Production" infrastructure */
     public static final String PRODUCTION_PROFILE = "production";
 
     public static boolean isLocalEnvironment(final Environment environment) {
