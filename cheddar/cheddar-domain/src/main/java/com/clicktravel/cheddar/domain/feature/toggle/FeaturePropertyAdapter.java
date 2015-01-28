@@ -18,17 +18,16 @@ package com.clicktravel.cheddar.domain.feature.toggle;
 
 /**
  * Adapter to translate from a Feature to an associated Property key.
- * 
+ *
  */
 public interface FeaturePropertyAdapter {
 
     /**
      * Translates a Feature to a property which will be used to look up the value of the Feature toggle.
-     * 
-     * The value of the property will be looked up to determine if the Feature is turned off which is represented by
-     * "true" or off, which is represented by anything other than "true". NOTE: The value of the property is
-     * case-insensitive.
-     * 
+     *
+     * The value of the property will be looked up to determine if the Feature is enabled/disabled. If the value is
+     * "true" (case-insensitive) the feature will be enabled, otherwise the feature disabled.
+     *
      * @param feature The feature for which the property key is to be determined.
      * @return The property key associated with the Feature
      */

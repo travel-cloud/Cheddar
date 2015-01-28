@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Feature Registry to manage Features and report on their status: on or off.
+ * Feature Registry to manage Features and report on their status: enabled/disabled.
  *
  */
 public class FeatureRegistry {
@@ -67,10 +67,10 @@ public class FeatureRegistry {
     }
 
     /**
-     * Reports the current status (on/off) for the given Feature
+     * Reports the current status (enabled/disabled) for the given Feature
      *
      * @param feature The Feature for which the status is to be reported.
-     * @return The status of the Feature (true = on, false = off)
+     * @return The enabled/disabled status of the Feature (true = enabled, false = disabled)
      */
     public static boolean isEnabled(final Feature feature) {
         if (FEATURES.get(feature) == null) {
