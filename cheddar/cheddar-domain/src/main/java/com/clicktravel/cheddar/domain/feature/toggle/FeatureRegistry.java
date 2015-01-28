@@ -23,20 +23,19 @@ import java.util.Properties;
 
 /**
  * Feature Registry to manage Features and report on their status: on or off.
- * 
+ *
  */
 public class FeatureRegistry {
 
     private static Properties PROPERTIES = new Properties();
     private static FeaturePropertyAdapter FEATURE_PROPERTY_ADAPTER;
     private static final Map<Feature, Boolean> FEATURES = new HashMap<>();
-    private static boolean initialized;
 
     /**
      * Initialises the FeatureRegistry with a class path location from which to load properties for the feature toggles.
-     * 
+     *
      * The DefaultFeaturePropertyAdapter is used to translate from Feature to property key.
-     * 
+     *
      * @param featureTogglePropertiesLocation The class path location of the properties file from which to read feature
      *            toggle properties
      */
@@ -46,9 +45,9 @@ public class FeatureRegistry {
 
     /**
      * Initialises the FeatureRegistry with a classpath location from which to load properties for the feature toggles.
-     * 
+     *
      * The DefaultFeaturePropertyAdapter is used to translate from Feature to property key.
-     * 
+     *
      * @param featureTogglePropertiesLocation The class path location of the properties file from which to read feature
      *            toggle properties
      * @param featurePropertyAdapter The FeaturePropertyAdapter which is to be used to translate from Feature to
@@ -56,14 +55,11 @@ public class FeatureRegistry {
      */
     public static void init(final String featureTogglePropertiesLocation,
             final FeaturePropertyAdapter featurePropertyAdapter) {
-        if (initialized) {
-            throw new IllegalStateException("Feature Registry already initialized");
-        }
-        initialized = true;
         FEATURE_PROPERTY_ADAPTER = featurePropertyAdapter;
         try {
+            PROPERTIES.clear();
             PROPERTIES
-                    .load(FeatureRegistry.class.getClassLoader().getResourceAsStream(featureTogglePropertiesLocation));
+            .load(FeatureRegistry.class.getClassLoader().getResourceAsStream(featureTogglePropertiesLocation));
         } catch (final IOException e) {
             throw new IllegalStateException("Could not load feature toggle properties from location: "
                     + featureTogglePropertiesLocation, e);
@@ -72,7 +68,7 @@ public class FeatureRegistry {
 
     /**
      * Reports the current status (on/off) for the given Feature
-     * 
+     *
      * @param feature The Feature for which the status is to be reported.
      * @return The status of the Feature (true = on, false = off)
      */
