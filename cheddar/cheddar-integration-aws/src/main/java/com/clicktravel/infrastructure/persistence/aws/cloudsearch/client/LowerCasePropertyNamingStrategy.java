@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch.client;
 
@@ -24,9 +24,9 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 /**
  * A property naming strategy used by Object Mapper to correctly parse the JSON returned by Cloud Search into document
  * objects due to the lack of support for camel case. Only lower case index names are currently supported.
- * 
+ *
  * @see com.fasterxml.jackson.databind.ObjectMapper#setPropertyNamingStrategy(PropertyNamingStrategy)
- * 
+ *
  * @author james b
  */
 

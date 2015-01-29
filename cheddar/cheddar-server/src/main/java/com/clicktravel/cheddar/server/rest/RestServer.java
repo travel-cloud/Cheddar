@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.server.rest;
 
@@ -34,7 +34,7 @@ import com.clicktravel.cheddar.server.rest.resource.config.RestResourceConfig;
 
 /**
  * HTTP server which exposes JAX-RS resources
- * 
+ *
  * Deployment is done via GrizzlyHttpServer and scans various packages for candidates for JAX-RS Resources and
  * Providers. The Spring container is also initialised.
  */

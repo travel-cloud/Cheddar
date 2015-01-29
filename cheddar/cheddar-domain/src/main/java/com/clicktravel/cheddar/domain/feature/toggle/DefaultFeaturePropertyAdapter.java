@@ -12,17 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.domain.feature.toggle;
 
 /**
  * Default FeaturePropertyAdapter which will use the format:
- * 
+ *
  * feature.toggle.services.{namespace}.{featureName}
- * 
+ *
  * Property will be lower-cased with underscores changed into dots.
- * 
+ *
  */
 public class DefaultFeaturePropertyAdapter implements FeaturePropertyAdapter {
 

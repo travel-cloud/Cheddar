@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.infrastructure.messaging.aws.manager;
 
@@ -39,7 +39,7 @@ import com.clicktravel.infrastructure.messaging.aws.SqsMessageQueueAccessor;
 
 /**
  * Amazon Web Services Messaging Infrastructure Manager
- * 
+ *
  * The responsibility of implementing classes is to create queues and topics, fetch queue and topic-related information
  */
 public class AwsMessagingInfrastructureManager {
@@ -236,7 +236,7 @@ public class AwsMessagingInfrastructureManager {
 
     /**
      * Checks to see if the exchange exists in AWS.
-     * 
+     *
      * @param exchangeName
      * @return
      */

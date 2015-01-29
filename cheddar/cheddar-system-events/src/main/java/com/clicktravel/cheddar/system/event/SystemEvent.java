@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.system.event;
 
@@ -26,14 +26,14 @@ public interface SystemEvent extends Event {
 
     /**
      * Returns the name of the application at which this System Event is targetted
-     * 
+     *
      * @return The name of the application. NULL means all applications
      */
     String getTargetApplicationName();
 
     /**
      * Returns the version of the application at which this System Event is targetted
-     * 
+     *
      * @return The version of the application. NULL means all versions of the targetted application
      */
     String getTargetApplicationVersion();

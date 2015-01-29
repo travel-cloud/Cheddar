@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 
@@ -22,8 +22,8 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.Non
 
 /**
  * Interface for file store that exist on the web such as s3 where extra functionality is available such as public urls
- * 
- * 
+ *
+ *
  */
 public interface InternetFileStore extends FileStore {
 

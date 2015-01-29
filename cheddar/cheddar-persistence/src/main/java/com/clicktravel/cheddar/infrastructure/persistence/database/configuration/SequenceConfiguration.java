@@ -12,13 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
 /**
  * Holds the definition of a particular sequence.
- * 
+ *
  * Underlying database mechanisms may use this configuration to create sequences and seed them with a starting value.
  * The sequence name is typically unique within the context of the database schema.
  */

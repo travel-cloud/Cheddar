@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 
@@ -31,11 +31,11 @@ public interface FileStore {
 
     /**
      * Lists the contents of a FileStore.
-     * 
+     *
      * @param directory The directory to list the contents of.
      * @param prefix The prefix to limit the results by.
      * @return A list of the contents of the FileStore.
-     * 
+     *
      * @throws PersistenceResourceFailureException If an error occurred listing the directory.
      */
     List<FilePath> list(String directory, String prefix) throws PersistenceResourceFailureException;

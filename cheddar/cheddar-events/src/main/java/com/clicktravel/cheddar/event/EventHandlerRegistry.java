@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.event;
 
@@ -27,7 +27,7 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 
 /**
  * Registers message and event handlers associated with a given message listener
- * 
+ *
  * @param <E> Base class for all events associated with this message listener
  */
 public class EventHandlerRegistry<E extends Event> {

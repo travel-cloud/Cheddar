@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.common.utils;
 
@@ -25,21 +25,21 @@ public class FileUtils {
 
     /**
      * TAKEN FROM com.google.common.io.Files
-     * 
+     *
      * Atomically creates a new directory somewhere beneath the system's
      * temporary directory (as defined by the {@code java.io.tmpdir} system
      * property), and returns it as a java.io.File. The directory name will be part UUID and part attempt if it takes
      * more than one attempt.
-     * 
+     *
      * <p>
      * Use this method instead of {@link File#createTempFile(String, String)} when you wish to create a directory, not a
      * regular file. A common pitfall is to call {@code createTempFile}, delete the file and create a directory in its
      * place, but this leads a race condition which can be exploited to create security vulnerabilities, especially when
      * executable files are to be written into the directory.
-     * 
+     *
      * <p>
      * This method assumes that the temporary volume is writable, has free inodes and free blocks
-     * 
+     *
      * @return the newly-created directory
      * @throws IllegalStateException if the directory could not be created
      */

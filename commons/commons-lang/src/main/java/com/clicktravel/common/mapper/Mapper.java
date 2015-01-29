@@ -12,15 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.common.mapper;
 
 /**
  * Maps an object from one type of class to another.
- * 
+ *
  * Should return null if the input object is null to start with
- * 
+ *
  * @param <T1> The class for the input object
  * @param <T2> The class for the output object
  */

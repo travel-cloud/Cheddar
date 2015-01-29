@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.server.http.filter.application.gateway;
 
@@ -30,7 +30,7 @@ import javax.ws.rs.ext.Provider;
 /**
  * Class to reject requests made to end-points which do not have the required HTTP header which is injected by the
  * application gateway
- * 
+ *
  * The exception to this rule is for the status page which can be accessed without checking this header
  */
 @Provider

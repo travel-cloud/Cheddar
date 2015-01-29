@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.infrastructure.persistence.cache;
 
@@ -20,7 +20,7 @@ public interface ItemCache {
 
     /**
      * Gets item from the cache but gives up after your given timeout in seconds
-     * 
+     *
      * @param key
      * @param timeout
      * @return the item stored in the cache

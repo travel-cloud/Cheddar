@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.server.rest.application;
 
@@ -29,7 +29,7 @@ public class RestApplication {
 
     /**
      * Starts the RestServer to listen on the given port and address combination
-     * 
+     *
      * @param args String arguments, {@code [context [service-port [status-port [bind-address] ] ] ]} where
      *            <ul>
      *            <li>{@code context} - Name of application, defaults to {@code UNKNOWN}</li>
@@ -38,7 +38,7 @@ public class RestApplication {
      *            {@code /status/healthCheck}), defaults to {@code service-port + 100}</li>
      *            <li>{@code bind-address} - Local IP address to bind server to, defaults to {@code 0.0.0.0}</li>
      *            </ul>
-     * 
+     *
      * @throws Exception
      */
     public static void main(final String... args) throws Exception {

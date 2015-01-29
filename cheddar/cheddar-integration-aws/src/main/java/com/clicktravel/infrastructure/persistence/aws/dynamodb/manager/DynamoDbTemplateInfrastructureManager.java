@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.infrastructure.persistence.aws.dynamodb.manager;
 
@@ -35,7 +35,7 @@ import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDbTemplate;
 
 /**
  * Amazon Web Services Persistence Infrastructure Manager
- * 
+ *
  * The responsibility of implementing classes is to create tables
  */
 @Component

@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.common.test;
 
@@ -32,7 +32,7 @@ import com.clicktravel.common.random.Randoms;
 
 /**
  * Allows the testing of simple beans: no arg constructor and getter/setter pairs
- * 
+ *
  * Ensures that equals and hash code are implemented properly. Only works for sub-set of property types defined in
  * SUPPORTED_PROPERTY_TYPES
  */

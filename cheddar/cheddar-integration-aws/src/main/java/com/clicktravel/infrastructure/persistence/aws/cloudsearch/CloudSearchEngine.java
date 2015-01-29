@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch;
 
@@ -213,7 +213,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     /**
      * Passes the query to the correct cloud search domain
-     * 
+     *
      * AWS could throw an exception on search for example the query may be invalid, we re throw this as a
      * @link(UnsuccessfulSearchException)
      */
