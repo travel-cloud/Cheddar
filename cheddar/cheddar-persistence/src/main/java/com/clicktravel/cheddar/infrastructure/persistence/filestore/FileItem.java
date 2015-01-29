@@ -12,12 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.infrastructure.persistence.filestore;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -32,7 +33,7 @@ public class FileItem {
 
     /**
      * Create a file item from any given string, assumes UTF-encoding
-     * 
+     *
      * @param filename the name of the file you want to create
      * @param contents the string in UTF-8 encoding
      */
@@ -91,6 +92,48 @@ public class FileItem {
      */
     public String getContentsAsString() {
         return new String(getBytes(), StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(contents);
+        result = prime * result + ((filename == null) ? 0 : filename.hashCode());
+        result = prime * result + ((lastUpdatedTime == null) ? 0 : lastUpdatedTime.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final FileItem other = (FileItem) obj;
+        if (!Arrays.equals(contents, other.contents)) {
+            return false;
+        }
+        if (filename == null) {
+            if (other.filename != null) {
+                return false;
+            }
+        } else if (!filename.equals(other.filename)) {
+            return false;
+        }
+        if (lastUpdatedTime == null) {
+            if (other.lastUpdatedTime != null) {
+                return false;
+            }
+        } else if (!lastUpdatedTime.equals(other.lastUpdatedTime)) {
+            return false;
+        }
+        return true;
     }
 
 }

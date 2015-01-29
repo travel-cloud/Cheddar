@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.common.http.client;
 
@@ -63,7 +63,7 @@ public class HttpClient {
 
     /**
      * Private constructor to initiate a HttpClient with a base URL.
-     * 
+     *
      * @param baseUri The base URL to which all HTTP requests are to be made
      * @param ignoreSslErrors Flag can be set to true when any SSL-related errors should be ignored.
      * @param accept The media type which is acceptable for all request by this given HTTP client
@@ -96,7 +96,7 @@ public class HttpClient {
 
     /**
      * Private constructor to initiate HttpClient with base URL and HTTP basic authentication
-     * 
+     *
      * @param baseUri The base URL to which all HTTP requests are to be made
      * @param username The username part of HTTP basic authentication
      * @param password The password part of HTTP basic authentication
@@ -111,7 +111,7 @@ public class HttpClient {
 
     /**
      * Private constructor to initiate HttpClient with base URL and OAuth 2.0 authentication.
-     * 
+     *
      * @param baseUri The base URL to which all HTTP requests are to be made
      * @param accept The media type which is acceptable for all request by this given HTTP client
      * @param headers The header values found within the HTTP request
@@ -195,7 +195,7 @@ public class HttpClient {
 
     /**
      * Returns the redirect from a GET request, or <code>null</code> if no redirect is available.
-     * 
+     *
      * @param path The path which wil be requested via GET
      * @param params The URL params which will be passed in the request
      * @return The URI for the redirect or <code>null</code> if there is no redirect
@@ -214,9 +214,9 @@ public class HttpClient {
 
     /**
      * Convenience method to return redirect URL without specifying any query parameters.
-     * 
+     *
      * @see#getRedirectLocation(String, Map)
-     * 
+     *
      * @param path The path which will be requested via GET
      * @return The URI returned for the redirect. Returns null if there is no redirect
      */
@@ -238,7 +238,7 @@ public class HttpClient {
     /**
      * Convenience method to get hold of the client directly allowing you to call more complex methods on the client
      * such as a post entity with variant language headers
-     * 
+     *
      * @param path The path to which the request needs to be made, required
      * @param params The query parameters appended to the path, required but can be empty
      * @return
@@ -249,9 +249,9 @@ public class HttpClient {
 
     /**
      * Convenience method to make HTTP GET request to a given URL without specifying any query parameters.
-     * 
+     *
      * @see #get(String, Map)
-     * 
+     *
      * @param path The path to which the GET request needs to be made
      * @return The HTTP response which is returned as a result of the GET request
      */
@@ -262,7 +262,7 @@ public class HttpClient {
 
     /**
      * Makes a HTTP GET request to a given URL
-     * 
+     *
      * @param path The path to which the GET request needs to be made
      * @return The HTTP response which is returned as a result of the GET request
      */
@@ -273,9 +273,9 @@ public class HttpClient {
 
     /**
      * Convenience method to make HTTP DELETE request to a given URL without specifying any query parameters.
-     * 
+     *
      * @see #get(String, Map)
-     * 
+     *
      * @param path The path to which the DELETE request needs to be made
      * @return The HTTP response which is returned as a result of the DELETE request
      */
@@ -286,7 +286,7 @@ public class HttpClient {
 
     /**
      * Makes a HTTP DELETE request to a given URL
-     * 
+     *
      * @param path The path to which the DELETE request needs to be made
      * @return The HTTP response which is returned as a result of the DELETE request
      */
@@ -297,9 +297,9 @@ public class HttpClient {
 
     /**
      * Makes HTTP POST request with a specified entity
-     * 
+     *
      * @see #put(String, Object, MediaType)
-     * 
+     *
      * @param path The path to which the request should be made
      * @param entity The entity which is to be POSTed
      * @param contentType The content type of the entity to be POSTed
@@ -313,7 +313,7 @@ public class HttpClient {
 
     /**
      * Makes HTTP POST request with a specified entity
-     * 
+     *
      * @param path The path to which the request should be made
      * @param params The query parameters appended to the path
      * @param entity The entity which is to be POSTed
@@ -328,9 +328,9 @@ public class HttpClient {
 
     /**
      * Makes HTTP PUT request with a specified entity
-     * 
+     *
      * @see post(String, Object, MediaType)
-     * 
+     *
      * @param path The path to which the request should be made
      * @param entity The entity which is to be PUT
      * @param contentType The content type of the entity to be PUT

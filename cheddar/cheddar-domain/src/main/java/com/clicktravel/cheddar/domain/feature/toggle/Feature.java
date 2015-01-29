@@ -12,13 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.domain.feature.toggle;
 
 /**
  * Interface to define a Feature.
- * 
+ *
  * A Feature represents business logic which may be toggled.
  */
 public interface Feature {

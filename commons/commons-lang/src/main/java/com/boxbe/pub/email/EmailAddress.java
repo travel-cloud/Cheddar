@@ -112,7 +112,7 @@ import javax.mail.internet.InternetAddress;
  * <P>
  * <b>Some of the configuration booleans allow a bit of tweaking already. The source code can be compiled with these
  * booleans in various states. They are configured to what is probably the most commonly-useful state.</b>
- * 
+ *
  * @author Les Hazlewood, Casey Connor
  * @version 1.12
  */
@@ -120,19 +120,19 @@ public class EmailAddress {
     /**
      * This constant changes the behavior of the domain parsing. If true, the parser will allow 2822 domains, which
      * include single-level domains (e.g. bob@localhost) as well as domain literals, e.g.:
-     * 
+     *
      * <p>
      * <tt>someone@[192.168.1.100]</tt> or <br>
      * <tt>john.doe@[23:33:A2:22:16:1F]</tt> or <br>
      * <tt>me@[my computer]</tt>
      * </p>
-     * 
+     *
      * <p>
      * The RFC says these are valid email addresses, but most people don't like allowing them. If you don't want to
      * allow them, and only want to allow valid domain names (<a href="http://www.ietf.org/rfc/rfc1035.txt">RFC
      * 1035</a>, x.y.z.com, etc), and specifically only those with at least two levels ("example.com"), then change this
      * constant to <tt>false</tt>.
-     * 
+     *
      * <p>
      * Its default (compiled) value is <tt>false</tt>, thus it is not RFC 2822 compliant, but you should set it
      * depending on what you need for your application.
@@ -142,15 +142,15 @@ public class EmailAddress {
     /**
      * This constant states that quoted identifiers are allowed (using quotes and angle brackets around the raw address)
      * are allowed, e.g.:
-     * 
+     *
      * <p>
      * <tt>"John Smith" &lt;john.smith@somewhere.com&gt;</tt>
-     * 
+     *
      * <p>
      * The RFC says this is a valid mailbox. If you don't want to allow this, because for example, you only want users
      * to enter in a raw address (<tt>john.smith@somewhere.com</tt> - no quotes or angle brackets), then change this
      * constant to <tt>false</tt>.
-     * 
+     *
      * <p>
      * Its default (compiled) value is <tt>true</tt> to remain RFC 2822 compliant, but you should set it depending on
      * what you need for your application.
@@ -312,7 +312,7 @@ public class EmailAddress {
     /**
      * Pull out the cleaned-up return path address. May return an empty string. Will require two parsings due to an
      * inefficiency.
-     * 
+     *
      * @return null if there are any syntax issues or other weirdness, otherwise the valid, trimmed return path email
      *         address without CFWS, surrounding angle brackets, with quotes stripped where possible, etc. (may return
      *         an empty string).
@@ -985,7 +985,7 @@ public class EmailAddress {
 
     /**
      * See pullFromGroups
-     * 
+     *
      * @return will not return null
      */
     private static String[] getMatcherParts(final Matcher m) {

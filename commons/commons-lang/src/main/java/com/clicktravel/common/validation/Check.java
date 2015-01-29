@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.common.validation;
 
@@ -23,7 +23,7 @@ import com.boxbe.pub.email.EmailAddress;
 
 /**
  * Simple value validation methods, intended for basic checks on field values of requests on a service API.
- * 
+ *
  * Each check method will throw a ValidationException if the check fails.
  */
 public class Check {

@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.infrastructure.persistence.aws.s3;
 
@@ -106,11 +106,11 @@ public class S3FileStore implements InternetFileStore {
 
     /**
      * Returns a Map of the user meta-data associated with the given S3 Object
-     * 
+     *
      * This is a work-around for a bug in the AWS Java SDK which treats HTTP headers in a case-insensitive manner.
-     * 
+     *
      * @see <a href="https://github.com/aws/aws-sdk-java/pull/326">https://github.com/aws/aws-sdk-java/pull/326</a>
-     * 
+     *
      * @param s3Object The S3Object for which the user meta-data is to be obtained.
      * @return key-value map for user meta-data
      */
@@ -166,7 +166,7 @@ public class S3FileStore implements InternetFileStore {
 
     /**
      * Returns the correct bucket name for the supplied directory.
-     * 
+     *
      * @param directory The directory for which the bucket name is required.
      * @return The correct bucket name for the supplied directory.
      */

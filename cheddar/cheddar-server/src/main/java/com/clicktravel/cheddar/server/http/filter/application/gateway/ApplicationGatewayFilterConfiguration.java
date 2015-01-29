@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.server.http.filter.application.gateway;
 
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * A configuration bean for the ApplicationGatewayFilter
- * 
+ *
  * This single-property bean is required due to the lack of support for using @Inject in combination with @Value to wire
  * in system properties.
  */

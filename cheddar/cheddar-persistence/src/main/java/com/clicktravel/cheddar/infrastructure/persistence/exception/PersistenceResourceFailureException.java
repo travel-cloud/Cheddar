@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.infrastructure.persistence.exception;
 
@@ -26,7 +26,7 @@ public class PersistenceResourceFailureException extends PersistenceException {
 
     /**
      * Constructor for PersistenceResourceFailureException
-     * 
+     *
      * @param message The message associated with the exception
      * @param cause The cause of the exception
      */

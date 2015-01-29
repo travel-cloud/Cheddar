@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search;
 
@@ -23,7 +23,7 @@ public interface DocumentSearchEngine {
 
     /**
      * Update a document that has been previously added to the store
-     * 
+     *
      * @param document - the document with the values to be updated
      */
 
@@ -31,7 +31,7 @@ public interface DocumentSearchEngine {
 
     /**
      * Delete a document that has been previously added to the store
-     * 
+     *
      * @param document - the document to be deleted
      */
 
@@ -39,7 +39,7 @@ public interface DocumentSearchEngine {
 
     /**
      * Search for documents based on the given query
-     * 
+     *
      * @param query describing the documents you wish to return
      * @param start the index of the first document you want to return <code>null</code> will default to the index of
      *            the first document in the results
@@ -54,7 +54,7 @@ public interface DocumentSearchEngine {
 
     /**
      * Search for document based on given query and returns results in the given sort order
-     * 
+     *
      * @param query describing the documents you wish to return
      * @param start the index of the first document you want to return <code>null</code> will default to the index of
      *            the first document in the results

@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.common.http.client.authentication.oauth2;
 
@@ -28,7 +28,7 @@ public interface OAuthUserAgent {
 
     /**
      * Used to add the credentials needed to authenticate with the chosen service.
-     * 
+     *
      * @param username
      * @param password
      */
@@ -37,7 +37,7 @@ public interface OAuthUserAgent {
     /**
      * Used to authenticate against the chosen service. The result of this authentication should be the OAuth 2.0
      * authorisation code (Authcode) received by the participating service from the OAuth 2.0 server.
-     * 
+     *
      * @return Authcode: OAuth 2.0 Authorisation code from the successful authentication of the resource owner
      *         credentials.
      * @throws AuthenticationException

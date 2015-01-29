@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 package com.clicktravel.cheddar.application.continuation;
 
@@ -25,7 +25,7 @@ import com.clicktravel.cheddar.application.tx.Transactional;
 
 /**
  * Manages all {@link Continuation} objects and provides access for the application.</p>
- * 
+ *
  */
 @Component
 public class ContinuationHandler {
