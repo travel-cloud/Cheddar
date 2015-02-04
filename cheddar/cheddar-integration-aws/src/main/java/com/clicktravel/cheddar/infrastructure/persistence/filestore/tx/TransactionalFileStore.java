@@ -64,7 +64,7 @@ public class TransactionalFileStore implements FileStore, TransactionalResource 
         logger.trace("Committing transaction: " + transaction.transactionId());
         transaction.applyActions(fileStore);
         currentTransaction.remove();
-        logger.trace("Transaction successfully commit: " + transaction.transactionId());
+        logger.trace("Transaction successfully committed: " + transaction.transactionId());
     }
 
     @Override

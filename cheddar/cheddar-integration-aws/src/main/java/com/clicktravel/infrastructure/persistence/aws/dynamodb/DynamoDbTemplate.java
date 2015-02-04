@@ -34,6 +34,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.configuration
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.ItemConstraintViolationException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
@@ -207,7 +208,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
     }
 
     @Override
-    public <T extends Item> T create(final T item) {
+    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
                 itemConfiguration);
@@ -366,7 +367,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
     }
 
     @Override
-    public <T extends Item> T update(final T item) {
+    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         if (item.getVersion() == null) {
             return create(item);
@@ -478,7 +479,7 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
     }
 
     @Override
-    public void delete(final Item item) {
+    public void delete(final Item item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final ItemId itemId = itemConfiguration.getItemId(item);
         final Map<String, AttributeValue> key = new HashMap<>();

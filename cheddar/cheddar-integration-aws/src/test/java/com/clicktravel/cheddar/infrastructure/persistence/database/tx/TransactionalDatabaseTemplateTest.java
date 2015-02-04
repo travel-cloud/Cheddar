@@ -45,16 +45,16 @@ import com.clicktravel.cheddar.infrastructure.tx.TransactionalResourceException;
 @SuppressWarnings("unchecked")
 public class TransactionalDatabaseTemplateTest {
 
-    private final DatabaseTemplate dynamoDbTemplate = mock(DatabaseTemplate.class);
+    private final DatabaseTemplate mockDatabaseTemplate = mock(DatabaseTemplate.class);
 
     @Test
     public void shouldCreateTransactionalDatabaseTemplate_withDatabaseTemplate() {
         // Given
-        final DatabaseTemplate dynamoDbTemplate = mock(DatabaseTemplate.class);
+        final DatabaseTemplate databaseTemplate = mock(DatabaseTemplate.class);
 
         // When
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                databaseTemplate);
 
         // Then
         assertNotNull(transactionalDatabaseTemplate);
@@ -65,15 +65,15 @@ public class TransactionalDatabaseTemplateTest {
         // Given
         final ItemId itemId = mock(ItemId.class);
         final StubItem mockItem = mock(StubItem.class);
-        when(dynamoDbTemplate.read(any(ItemId.class), any(Class.class))).thenReturn(mockItem);
+        when(mockDatabaseTemplate.read(any(ItemId.class), any(Class.class))).thenReturn(mockItem);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
 
         // When
         final StubItem item = transactionalDatabaseTemplate.read(itemId, StubItem.class);
 
         // Then
-        verify(dynamoDbTemplate).read(itemId, StubItem.class);
+        verify(mockDatabaseTemplate).read(itemId, StubItem.class);
         assertEquals(mockItem, item);
     }
 
@@ -82,15 +82,15 @@ public class TransactionalDatabaseTemplateTest {
         // Given
         final Query query = mock(Query.class);
         final Set<StubItem> items = Sets.newSet(randomStubItem(), randomStubItem(), randomStubItem());
-        when(dynamoDbTemplate.fetch(any(Query.class), any(Class.class))).thenReturn(items);
+        when(mockDatabaseTemplate.fetch(any(Query.class), any(Class.class))).thenReturn(items);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
 
         // When
         final Collection<StubItem> returnedItems = transactionalDatabaseTemplate.fetch(query, StubItem.class);
 
         // Then
-        verify(dynamoDbTemplate).fetch(query, StubItem.class);
+        verify(mockDatabaseTemplate).fetch(query, StubItem.class);
         assertEquals(items, returnedItems);
     }
 
@@ -99,15 +99,15 @@ public class TransactionalDatabaseTemplateTest {
         // Given
         final Query query = mock(Query.class);
         final StubItem mockItem = mock(StubItem.class);
-        when(dynamoDbTemplate.fetchUnique(any(Query.class), any(Class.class))).thenReturn(mockItem);
+        when(mockDatabaseTemplate.fetchUnique(any(Query.class), any(Class.class))).thenReturn(mockItem);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
 
         // When
         final StubItem item = transactionalDatabaseTemplate.fetchUnique(query, StubItem.class);
 
         // Then
-        verify(dynamoDbTemplate).fetchUnique(query, StubItem.class);
+        verify(mockDatabaseTemplate).fetchUnique(query, StubItem.class);
         assertEquals(mockItem, item);
     }
 
@@ -116,16 +116,16 @@ public class TransactionalDatabaseTemplateTest {
         // Given
         final SequenceKeyGenerator sequenceKeyGenerator = mock(SequenceKeyGenerator.class);
         final GeneratedKeyHolder mockGeneratedKeyHolder = mock(GeneratedKeyHolder.class);
-        when(dynamoDbTemplate.generateKeys(any(SequenceKeyGenerator.class))).thenReturn(mockGeneratedKeyHolder);
+        when(mockDatabaseTemplate.generateKeys(any(SequenceKeyGenerator.class))).thenReturn(mockGeneratedKeyHolder);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
 
         // When
         final GeneratedKeyHolder returnedGeneratedKeyHolder = transactionalDatabaseTemplate
                 .generateKeys(sequenceKeyGenerator);
 
         // Then
-        verify(dynamoDbTemplate).generateKeys(sequenceKeyGenerator);
+        verify(mockDatabaseTemplate).generateKeys(sequenceKeyGenerator);
         assertEquals(mockGeneratedKeyHolder, returnedGeneratedKeyHolder);
     }
 
@@ -133,7 +133,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldBeginTransaction_withNoExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
 
         // When
         Exception actualException = null;
@@ -151,7 +151,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldNotBeginTransaction_withExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
 
         // When
@@ -170,7 +170,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldNotCommit_withNoExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
 
         // When
         NonExistentTransactionException actualException = null;
@@ -190,7 +190,7 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
 
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
 
@@ -204,14 +204,14 @@ public class TransactionalDatabaseTemplateTest {
 
         // Then
         assertNull(actualException);
-        verifyZeroInteractions(dynamoDbTemplate);
+        verifyZeroInteractions(mockDatabaseTemplate);
     }
 
     @Test
     public void shouldNotCreate_withNonExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         final StubItem item = randomStubItem();
 
         // When
@@ -230,7 +230,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldCommitCreate_withExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
         transactionalDatabaseTemplate.create(item);
@@ -239,7 +239,7 @@ public class TransactionalDatabaseTemplateTest {
         transactionalDatabaseTemplate.commit();
 
         // Then
-        verify(dynamoDbTemplate).create(item);
+        verify(mockDatabaseTemplate).create(item);
     }
 
     @Test
@@ -248,9 +248,9 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
-        when(dynamoDbTemplate.create(item)).thenThrow(persistenceException);
+        when(mockDatabaseTemplate.create(item)).thenThrow(persistenceException);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         transactionalDatabaseTemplate.create(item, persistenceExceptionHandler);
 
@@ -267,12 +267,12 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
-        when(dynamoDbTemplate.create(item)).thenThrow(persistenceException);
+        when(mockDatabaseTemplate.create(item)).thenThrow(persistenceException);
         final RuntimeException runtimeException = mock(RuntimeException.class);
         doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
 
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         transactionalDatabaseTemplate.create(item, persistenceExceptionHandler);
 
@@ -293,7 +293,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldUpdate_withExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
 
@@ -307,7 +307,7 @@ public class TransactionalDatabaseTemplateTest {
 
         // Then
         assertNull(actualException);
-        verifyZeroInteractions(dynamoDbTemplate);
+        verifyZeroInteractions(mockDatabaseTemplate);
     }
 
     @Test
@@ -316,7 +316,7 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
 
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
 
@@ -330,14 +330,14 @@ public class TransactionalDatabaseTemplateTest {
 
         // Then
         assertNull(actualException);
-        verifyZeroInteractions(dynamoDbTemplate);
+        verifyZeroInteractions(mockDatabaseTemplate);
     }
 
     @Test
     public void shouldNotUpdate_withNonExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         final StubItem item = randomStubItem();
 
         // When
@@ -356,7 +356,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldCommitUpdate_withExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
         transactionalDatabaseTemplate.update(item);
@@ -365,7 +365,7 @@ public class TransactionalDatabaseTemplateTest {
         transactionalDatabaseTemplate.commit();
 
         // Then
-        verify(dynamoDbTemplate).update(item);
+        verify(mockDatabaseTemplate).update(item);
     }
 
     @Test
@@ -374,9 +374,9 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
-        when(dynamoDbTemplate.update(item)).thenThrow(persistenceException);
+        when(mockDatabaseTemplate.update(item)).thenThrow(persistenceException);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         transactionalDatabaseTemplate.update(item, persistenceExceptionHandler);
 
@@ -393,12 +393,12 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
-        when(dynamoDbTemplate.update(item)).thenThrow(persistenceException);
+        when(mockDatabaseTemplate.update(item)).thenThrow(persistenceException);
         final RuntimeException runtimeException = mock(RuntimeException.class);
         doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
 
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         transactionalDatabaseTemplate.update(item, persistenceExceptionHandler);
 
@@ -419,7 +419,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldDelete_withExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
 
@@ -433,7 +433,7 @@ public class TransactionalDatabaseTemplateTest {
 
         // Then
         assertNull(actualException);
-        verifyZeroInteractions(dynamoDbTemplate);
+        verifyZeroInteractions(mockDatabaseTemplate);
     }
 
     @Test
@@ -441,7 +441,7 @@ public class TransactionalDatabaseTemplateTest {
         // Given
         final PersistenceExceptionHandler<?> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
 
@@ -455,14 +455,14 @@ public class TransactionalDatabaseTemplateTest {
 
         // Then
         assertNull(actualException);
-        verifyZeroInteractions(dynamoDbTemplate);
+        verifyZeroInteractions(mockDatabaseTemplate);
     }
 
     @Test
     public void shouldNotDelete_withNonExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         final StubItem item = randomStubItem();
 
         // When
@@ -481,7 +481,7 @@ public class TransactionalDatabaseTemplateTest {
     public void shouldCommitDelete_withExistingTransaction() throws Exception {
         // Given
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         final StubItem item = randomStubItem();
         transactionalDatabaseTemplate.delete(item);
@@ -490,7 +490,7 @@ public class TransactionalDatabaseTemplateTest {
         transactionalDatabaseTemplate.commit();
 
         // Then
-        verify(dynamoDbTemplate).delete(item);
+        verify(mockDatabaseTemplate).delete(item);
     }
 
     @Test
@@ -499,9 +499,9 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
-        doThrow(persistenceException).when(dynamoDbTemplate).delete(item);
+        doThrow(persistenceException).when(mockDatabaseTemplate).delete(item);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         transactionalDatabaseTemplate.delete(item, persistenceExceptionHandler);
 
@@ -518,12 +518,12 @@ public class TransactionalDatabaseTemplateTest {
         final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
-        doThrow(persistenceException).when(dynamoDbTemplate).delete(item);
+        doThrow(persistenceException).when(mockDatabaseTemplate).delete(item);
         final RuntimeException runtimeException = mock(RuntimeException.class);
         doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
 
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
-                dynamoDbTemplate);
+                mockDatabaseTemplate);
         transactionalDatabaseTemplate.begin();
         transactionalDatabaseTemplate.delete(item, persistenceExceptionHandler);
 

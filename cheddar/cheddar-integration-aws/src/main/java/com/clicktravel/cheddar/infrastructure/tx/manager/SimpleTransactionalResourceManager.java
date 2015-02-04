@@ -68,7 +68,7 @@ public class SimpleTransactionalResourceManager implements TransactionalResource
 
         commitMessageSenderTransaction();
 
-        // By doing this commit last, we ensure domain events are published only if all other actions in this
+        // By doing this commit last, we ensure events are published only if all other actions in this
         // transaction committed OK
         commitMessagePublisherTransaction();
     }

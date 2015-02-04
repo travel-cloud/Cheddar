@@ -60,7 +60,7 @@ public class TransactionalMessagePublisher implements MessagePublisher, Transact
         logger.trace("Committing transaction: " + transaction.transactionId());
         transaction.applyActions(messagePublisher);
         currentTransaction.remove();
-        logger.trace("Transaction successfully commit: " + transaction.transactionId());
+        logger.trace("Transaction successfully committed: " + transaction.transactionId());
     }
 
     @Override

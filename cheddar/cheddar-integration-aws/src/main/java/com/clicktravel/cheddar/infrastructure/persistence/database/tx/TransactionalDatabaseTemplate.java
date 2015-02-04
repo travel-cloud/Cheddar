@@ -31,9 +31,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.han
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Query;
 import com.clicktravel.cheddar.infrastructure.tx.*;
 
-public class TransactionalDatabaseTemplate implements ExceptionHandlingDatabaseTemplate, TransactionalResource {
-
-    private static final PersistenceExceptionHandler<?>[] EMPTY_PERSISTENCE_EXCEPTION_HANDLERS = new PersistenceExceptionHandler[] {};
+public class TransactionalDatabaseTemplate implements DatabaseTemplate, TransactionalResource {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -68,26 +66,11 @@ public class TransactionalDatabaseTemplate implements ExceptionHandlingDatabaseT
         try {
             transaction.applyActions(databaseTemplate);
             currentTransaction.remove();
-            logger.trace("Transaction successfully commit: " + transaction.transactionId());
+            logger.trace("Transaction successfully committed: " + transaction.transactionId());
         } catch (final Throwable e) {
-            throw new TransactionalResourceException("Failed to commit DynamoDb transaction: "
+            throw new TransactionalResourceException("Failed to commit DatabaseTemplate transaction: "
                     + transaction.transactionId(), e);
         }
-    }
-
-    @Override
-    public <T extends Item> T create(final T item) {
-        return create(item, EMPTY_PERSISTENCE_EXCEPTION_HANDLERS);
-    }
-
-    @Override
-    public <T extends Item> T update(final T item) {
-        return update(item, EMPTY_PERSISTENCE_EXCEPTION_HANDLERS);
-    }
-
-    @Override
-    public void delete(final Item item) {
-        delete(item, EMPTY_PERSISTENCE_EXCEPTION_HANDLERS);
     }
 
     @Override

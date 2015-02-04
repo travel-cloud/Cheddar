@@ -20,6 +20,7 @@ import java.util.Collection;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonUniqueResultException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Query;
 
 public interface DatabaseTemplate {
@@ -33,11 +34,11 @@ public interface DatabaseTemplate {
      */
     <T extends Item> T read(final ItemId itemId, Class<T> itemClass) throws NonExistentItemException;
 
-    <T extends Item> T create(final T item);
+    <T extends Item> T create(T item, PersistenceExceptionHandler<?>... persistenceExceptionHandlers);
 
-    <T extends Item> T update(final T item);
+    <T extends Item> T update(T item, PersistenceExceptionHandler<?>... persistenceExceptionHandlers);
 
-    void delete(final Item item);
+    void delete(Item item, PersistenceExceptionHandler<?>... persistenceExceptionHandlers);
 
     <T extends Item> Collection<T> fetch(final Query query, Class<T> itemClass);
 
