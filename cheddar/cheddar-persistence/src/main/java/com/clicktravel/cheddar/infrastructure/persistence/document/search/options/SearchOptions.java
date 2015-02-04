@@ -28,44 +28,6 @@ public class SearchOptions {
 
     public static final SearchOptions DEFAULT = new SearchOptions();
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (expressions == null ? 0 : expressions.hashCode());
-        result = prime * result + (sortOrder == null ? 0 : sortOrder.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final SearchOptions other = (SearchOptions) obj;
-        if (expressions == null) {
-            if (other.expressions != null) {
-                return false;
-            }
-        } else if (!expressions.equals(other.expressions)) {
-            return false;
-        }
-        if (sortOrder == null) {
-            if (other.sortOrder != null) {
-                return false;
-            }
-        } else if (!sortOrder.equals(other.sortOrder)) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * Sorting option applied to the query defaults to the default value and cannot be null
      */
