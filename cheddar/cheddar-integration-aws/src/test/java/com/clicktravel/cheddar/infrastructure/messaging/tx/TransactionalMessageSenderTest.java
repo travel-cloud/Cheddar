@@ -37,12 +37,12 @@ public class TransactionalMessageSenderTest {
     @Test
     public void shouldCreateTransactionalMessageSender_withMessageSender() throws Exception {
         // Given
-        final MessageSender snsMessageSender = mock(MessageSender.class);
+        final MessageSender messageSender = mock(MessageSender.class);
 
         // When
         Exception actualException = null;
         try {
-            new TransactionalMessageSender(snsMessageSender);
+            new TransactionalMessageSender(messageSender);
         } catch (final Exception e) {
             actualException = e;
         }
