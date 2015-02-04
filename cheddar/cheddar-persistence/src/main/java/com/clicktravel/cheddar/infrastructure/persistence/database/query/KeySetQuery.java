@@ -29,6 +29,36 @@ public class KeySetQuery extends AbstractQuery {
         this.itemIds = itemIds;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + (itemIds == null ? 0 : itemIds.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final KeySetQuery other = (KeySetQuery) obj;
+        if (itemIds == null) {
+            if (other.itemIds != null) {
+                return false;
+            }
+        } else if (!itemIds.equals(other.itemIds)) {
+            return false;
+        }
+        return true;
+    }
+
     public Collection<ItemId> itemIds() {
         return itemIds;
     }

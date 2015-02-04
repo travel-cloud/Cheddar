@@ -14,23 +14,20 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.persistence.document.search.sort;
+package com.clicktravel.cheddar.infrastructure.persistence.filestore.tx;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
+import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileStore;
 
-public class SortOrder {
+public class DeleteAction extends FileStoreAction {
 
-    private final List<SortingOption> sortingOptions = new ArrayList<SortingOption>();
-
-    public static final SortOrder DEFAULT = new SortOrder();
-
-    public void addSortingOption(final SortingOption sortingOption) {
-        sortingOptions.add(sortingOption);
+    public DeleteAction(final FilePath filePath) {
+        super(filePath);
     }
 
-    public List<SortingOption> sortingOptions() {
-        return sortingOptions;
+    @Override
+    public void apply(final FileStore fileStore) {
+        fileStore.delete(filePath());
     }
 
 }

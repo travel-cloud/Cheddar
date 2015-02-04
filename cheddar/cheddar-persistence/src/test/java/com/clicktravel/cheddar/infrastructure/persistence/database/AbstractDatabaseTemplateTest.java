@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonUniqueResultException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Query;
 
 public class AbstractDatabaseTemplateTest {
@@ -40,12 +41,19 @@ public class AbstractDatabaseTemplateTest {
         final AbstractDatabaseTemplate databaseTemplate = new AbstractDatabaseTemplate() {
 
             @Override
-            public <T extends Item> T update(final T item) {
+            public <T extends Item> T read(final ItemId key, final Class<T> itemClass) throws NonExistentItemException {
                 return null;
             }
 
             @Override
-            public <T extends Item> T read(final ItemId key, final Class<T> itemClass) throws NonExistentItemException {
+            public <T extends Item> T create(final T item,
+                    final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+                return null;
+            }
+
+            @Override
+            public <T extends Item> T update(final T item,
+                    final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
                 return null;
             }
 
@@ -56,17 +64,12 @@ public class AbstractDatabaseTemplateTest {
             }
 
             @Override
-            public void delete(final Item item) {
-            }
-
-            @Override
-            public <T extends Item> T create(final T item) {
-                return null;
-            }
-
-            @Override
             public GeneratedKeyHolder generateKeys(final SequenceKeyGenerator sequenceKeyGenerator) {
                 return null;
+            }
+
+            @Override
+            public void delete(final Item item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
             }
 
         };
@@ -86,7 +89,8 @@ public class AbstractDatabaseTemplateTest {
         final AbstractDatabaseTemplate databaseTemplate = new AbstractDatabaseTemplate() {
 
             @Override
-            public <T extends Item> T update(final T item) {
+            public <T extends Item> T update(final T item,
+                    final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
                 return null;
             }
 
@@ -102,11 +106,12 @@ public class AbstractDatabaseTemplateTest {
             }
 
             @Override
-            public void delete(final Item item) {
+            public void delete(final Item item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
             }
 
             @Override
-            public <T extends Item> T create(final T item) {
+            public <T extends Item> T create(final T item,
+                    final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
                 return null;
             }
 

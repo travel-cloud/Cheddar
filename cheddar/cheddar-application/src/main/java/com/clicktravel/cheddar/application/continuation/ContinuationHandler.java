@@ -21,8 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
-import com.clicktravel.cheddar.application.tx.Transactional;
-
 /**
  * Manages all {@link Continuation} objects and provides access for the application.</p>
  *
