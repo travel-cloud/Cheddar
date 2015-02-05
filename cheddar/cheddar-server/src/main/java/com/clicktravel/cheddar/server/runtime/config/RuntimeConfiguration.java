@@ -61,7 +61,8 @@ public class RuntimeConfiguration {
 
     public static boolean isLocalEnvironment(final Environment environment) {
         for (final String profile : environment.getActiveProfiles()) {
-            if (profile.equalsIgnoreCase(LOCAL_PROFILE)) {
+            if (profile.equalsIgnoreCase(LOCAL_PROFILE) || profile.equalsIgnoreCase(TEST_PROFILE)
+                    || profile.equalsIgnoreCase(DEV_PROFILE)) {
                 return true;
             }
         }
