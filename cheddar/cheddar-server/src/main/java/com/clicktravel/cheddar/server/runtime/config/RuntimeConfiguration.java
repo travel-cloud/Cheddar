@@ -59,12 +59,23 @@ public class RuntimeConfiguration {
     /** Profile for using services available in AWS "Production" infrastructure */
     public static final String PRODUCTION_PROFILE = "production";
 
-    public static boolean isLocalEnvironment(final Environment environment) {
+    public static boolean isLocalOrDevEnvironment(final Environment environment) {
         for (final String profile : environment.getActiveProfiles()) {
-            if (profile.equalsIgnoreCase(LOCAL_PROFILE)) {
+            if (profile.equalsIgnoreCase(LOCAL_PROFILE) || profile.equalsIgnoreCase(DEV_PROFILE)) {
                 return true;
             }
         }
         return false;
     }
+
+    public static boolean isDeployedEnvironment(final Environment environment) {
+        for (final String profile : environment.getActiveProfiles()) {
+            if (profile.equalsIgnoreCase(CI_PROFILE) || profile.equalsIgnoreCase(UAT_PROFILE)
+                    || profile.equalsIgnoreCase(PRODUCTION_PROFILE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

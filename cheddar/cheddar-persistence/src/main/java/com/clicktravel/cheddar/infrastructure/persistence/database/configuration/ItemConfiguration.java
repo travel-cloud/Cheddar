@@ -116,12 +116,15 @@ public class ItemConfiguration {
     public ItemId getItemId(final Item item) {
         final Method readMethod = properties.get(primaryKeyDefinition.propertyName()).getReadMethod();
         try {
-            final String itemIdValue = (String) readMethod.invoke(item);
+            final Object itemIdValueObj = readMethod.invoke(item);
+            final String itemIdValue = itemIdValueObj == null ? null : String.valueOf(itemIdValueObj);
             if (CompoundPrimaryKeyDefinition.class.isAssignableFrom(primaryKeyDefinition.getClass())) {
                 final CompoundPrimaryKeyDefinition compoundPrimaryKeyDefinition = (CompoundPrimaryKeyDefinition) primaryKeyDefinition;
                 final Method supportingReadMethod = properties.get(
                         compoundPrimaryKeyDefinition.supportingPropertyName()).getReadMethod();
-                final String itemIdSupportingValue = (String) supportingReadMethod.invoke(item);
+                final Object itemIdSupportingValueObj = supportingReadMethod.invoke(item);
+                final String itemIdSupportingValue = itemIdSupportingValueObj == null ? null : String
+                        .valueOf(itemIdSupportingValueObj);
                 return new ItemId(itemIdValue, itemIdSupportingValue);
             }
             return new ItemId(itemIdValue);
