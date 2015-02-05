@@ -20,13 +20,8 @@ import static com.amazonaws.services.dynamodbv2.datamodeling.DynamoDbPropertyMar
 
 import java.util.*;
 
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.*;
@@ -38,7 +33,6 @@ import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDbTemplate;
  *
  * The responsibility of implementing classes is to create tables
  */
-@Component
 public class DynamoDbTemplateInfrastructureManager {
 
     private static final long TABLE_CREATION_TIMEOUT_MS = 60000;
@@ -48,10 +42,8 @@ public class DynamoDbTemplateInfrastructureManager {
     private final int readThroughput;
     private final int writeThroughput;
 
-    @Autowired
-    public DynamoDbTemplateInfrastructureManager(final AmazonDynamoDB amazonDynamoDbClient,
-            @Value("${aws.dynamodb.read.throughput}") final int readThroughput,
-            @Value("${aws.dynamodb.write.throughput}") final int writeThroughput) {
+    public DynamoDbTemplateInfrastructureManager(final AmazonDynamoDB amazonDynamoDbClient, final int readThroughput,
+            final int writeThroughput) {
         this.amazonDynamoDbClient = amazonDynamoDbClient;
         dynamoDbTemplates = new HashSet<>();
         if (readThroughput < 1 || writeThroughput < 1) {
@@ -61,14 +53,12 @@ public class DynamoDbTemplateInfrastructureManager {
         this.writeThroughput = writeThroughput;
     }
 
-    @Autowired(required = false)
     public void setDynamoDbTemplates(final Collection<DynamoDbTemplate> dynamoDbTemplates) {
         if (dynamoDbTemplates != null) {
             this.dynamoDbTemplates.addAll(dynamoDbTemplates);
         }
     }
 
-    @PostConstruct
     public void init() {
         for (final DynamoDbTemplate dynamoDbTemplate : dynamoDbTemplates) {
             final Collection<String> tablesPendingCreation = new ArrayList<>();
