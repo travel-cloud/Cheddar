@@ -32,7 +32,7 @@ public abstract class PropertiesConfigurationBuilder {
         final ClassPathResource envProperties = new ClassPathResource(environmentPropertiesLocation);
         final ClassPathResource serverProperties = new ClassPathResource("com.clicktravel.cheddar.server.properties");
         final ClassPathResource serviceProperties = new ClassPathResource(
-                (RuntimeConfiguration.isLocalEnvironment(environment) ? "local-" : "") + servicePropertiesName);
+                (RuntimeConfiguration.isLocalOrDevEnvironment(environment) ? "local-" : "") + servicePropertiesName);
         // Note : Later property resources in this array override earlier ones
         configurer.setLocations(new ClassPathResource[] { serviceProperties, serverProperties, envProperties });
         return configurer;
