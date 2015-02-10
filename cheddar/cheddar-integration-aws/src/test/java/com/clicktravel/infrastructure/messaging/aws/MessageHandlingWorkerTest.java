@@ -28,20 +28,20 @@ import org.junit.Test;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 
 public class MessageHandlingWorkerTest {
 
-    private Message message;
-    private MessageHandler messageHandler;
+    private TypedMessage typedMessage;
+    private MessageHandler<TypedMessage> messageHandler;
     private AmazonSQS amazonSqsClient;
     private DeleteMessageRequest deleteMessageRequest;
     private Semaphore semaphore;
 
     @Before
     public void setUp() {
-        message = mock(Message.class);
+        typedMessage = mock(TypedMessage.class);
         messageHandler = mock(MessageHandler.class);
         amazonSqsClient = mock(AmazonSQS.class);
         deleteMessageRequest = mock(DeleteMessageRequest.class);
@@ -51,14 +51,14 @@ public class MessageHandlingWorkerTest {
     @Test
     public void shouldRun_withMessageAndMessageHandler() throws Exception {
         // Given
-        final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
+        final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(typedMessage, messageHandler,
                 amazonSqsClient, deleteMessageRequest, semaphore);
 
         // When
         messageHandlingWorker.run();
 
         // Then
-        verify(messageHandler).handle(message);
+        verify(messageHandler).handle(typedMessage);
         verify(amazonSqsClient).deleteMessage(deleteMessageRequest);
         verify(semaphore).release();
     }
@@ -66,15 +66,15 @@ public class MessageHandlingWorkerTest {
     @Test
     public void shouldRun_withMessageAndMessageHandlerAndException() throws Exception {
         // Given
-        doThrow(Exception.class).when(messageHandler).handle(any(Message.class));
-        final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(message, messageHandler,
+        doThrow(Exception.class).when(messageHandler).handle(any(TypedMessage.class));
+        final MessageHandlingWorker messageHandlingWorker = new MessageHandlingWorker(typedMessage, messageHandler,
                 amazonSqsClient, deleteMessageRequest, semaphore);
 
         // When
         messageHandlingWorker.run();
 
         // Then
-        verify(messageHandler).handle(message);
+        verify(messageHandler).handle(typedMessage);
         verify(amazonSqsClient).deleteMessage(deleteMessageRequest);
         verify(semaphore).release();
     }

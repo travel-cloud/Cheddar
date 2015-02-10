@@ -16,14 +16,19 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
-public class SimpleMessage implements Message {
+public class SimpleMessage extends AbstractMessage implements TypedMessage {
 
     private final String type;
     private final String payload;
 
-    public SimpleMessage(final String type, final String payload) {
+    public SimpleMessage(final String type, final String payload, final String receiptHandle) {
+        super(receiptHandle);
         this.type = type;
         this.payload = payload;
+    }
+
+    public SimpleMessage(final String type, final String payload) {
+        this(type, payload, null);
     }
 
     @Override

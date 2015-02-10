@@ -39,14 +39,15 @@ import com.clicktravel.infrastructure.messaging.aws.SqsMessageQueueAccessor;
 
 /**
  * Amazon Web Services Messaging Infrastructure Manager
- *
+ * 
  * The responsibility of implementing classes is to create queues and topics, fetch queue and topic-related information
  */
+@Deprecated
 public class AwsMessagingInfrastructureManager {
 
-    private static final String AWS_POLICY_ATTRIBUTE = "Policy";
-    private static final String SQS_QUEUE_ARN_ATTRIBUTE = "QueueArn";
-    private static final String SQS_VISIBILITY_TIMEOUT_ATTRIBUTE = "VisibilityTimeout";
+    private static final String AWS_POLICY_ATTRIBUTE = QueueAttributeName.Policy.toString();
+    private static final String SQS_QUEUE_ARN_ATTRIBUTE = QueueAttributeName.QueueArn.toString();
+    private static final String SQS_VISIBILITY_TIMEOUT_ATTRIBUTE = QueueAttributeName.VisibilityTimeout.toString();
     private static final String SQS_VISIBILITY_TIMEOUT_VALUE = "300";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -105,11 +106,11 @@ public class AwsMessagingInfrastructureManager {
             messagePublisher.configure(amazonSnsClient, topicArn);
         }
         logger.debug("Validating exchange-queue bindings");
-        final Map<String, Set<String>> exchangeQueueNameMap = new HashMap<>();
+        final Map<String, Set<String>> queueToExchangeNames = new HashMap<>();
         final Set<String> missingExchangeNames = new HashSet<>();
         for (final ExchangeQueueBinding exchangeQueueBinding : exchangeQueueBindings) {
             final String queueName = exchangeQueueBinding.queueName();
-            Set<String> exchangeNames = exchangeQueueNameMap.get(queueName);
+            Set<String> exchangeNames = queueToExchangeNames.get(queueName);
             if (exchangeNames == null) {
                 exchangeNames = new HashSet<String>();
             }
@@ -135,9 +136,9 @@ public class AwsMessagingInfrastructureManager {
                     missingExchangeNames.add(exchangeName);
                 }
             }
-            exchangeQueueNameMap.put(queueName, exchangeNames);
+            queueToExchangeNames.put(queueName, exchangeNames);
         }
-        for (final Entry<String, Set<String>> entrySet : exchangeQueueNameMap.entrySet()) {
+        for (final Entry<String, Set<String>> entrySet : queueToExchangeNames.entrySet()) {
             createExchangeQueueBinding(entrySet.getKey(), entrySet.getValue());
         }
         if (missingExchangeNames.size() > 0) {
@@ -236,7 +237,7 @@ public class AwsMessagingInfrastructureManager {
 
     /**
      * Checks to see if the exchange exists in AWS.
-     *
+     * 
      * @param exchangeName
      * @return
      */

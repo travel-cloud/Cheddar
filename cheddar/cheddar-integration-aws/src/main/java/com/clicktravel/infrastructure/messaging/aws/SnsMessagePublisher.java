@@ -21,11 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.PublishRequest;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
 
-public class SnsMessagePublisher implements MessagePublisher {
+@Deprecated
+public class SnsMessagePublisher implements MessagePublisher<TypedMessage> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final String exchangeName;
@@ -39,15 +40,15 @@ public class SnsMessagePublisher implements MessagePublisher {
     }
 
     @Override
-    public void publishMessage(final Message message) throws MessagePublishException {
+    public void publishMessage(final TypedMessage typedMessage) throws MessagePublishException {
         if (!configured) {
             throw new MessagePublishException("Publisher has not been configured. Exchange: [" + exchangeName + "]");
         }
         try {
-            amazonSnsClient.publish(new PublishRequest().withTopicArn(topicArn).withSubject(message.getType())
-                    .withMessage(message.getPayload()));
-            logger.debug("Successfully published message: [Subject=" + message.getType() + ", Message="
-                    + message.getPayload() + "] to SNS: [" + exchangeName + "]");
+            amazonSnsClient.publish(new PublishRequest().withTopicArn(topicArn).withSubject(typedMessage.getType())
+                    .withMessage(typedMessage.getPayload()));
+            logger.debug("Successfully published message: [Subject=" + typedMessage.getType() + ", Message="
+                    + typedMessage.getPayload() + "] to SNS: [" + exchangeName + "]");
         } catch (final Exception e) {
             throw new MessagePublishException("Could not publish to SNS: [" + exchangeName + "]", e);
         }

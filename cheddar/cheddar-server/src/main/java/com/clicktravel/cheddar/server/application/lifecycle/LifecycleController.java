@@ -32,7 +32,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
-import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 
 /**
  * Controls the start and shutdown of all {@link MessageListeners}. This class progresses the lifecycle status of this
@@ -42,24 +42,24 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 @Component
 public class LifecycleController implements ApplicationListener<ContextRefreshedEvent> {
 
-    private final MessageListener eventMessageListener;
-    private final MessageListener highPriorityEventMessageListener;
-    private final MessageListener systemEventMessageListener;
-    private final Collection<MessageListener> messageListeners;
+    private final TypedMessageListener eventMessageListener;
+    private final TypedMessageListener highPriorityEventMessageListener;
+    private final TypedMessageListener systemEventMessageListener;
+    private final Collection<TypedMessageListener> typedMessageListeners;
     private final CountDownLatch restAdapterStartLatch;
     private final LifecycleStatusHolder lifecycleStatusHolder;
     private final TerminationThread terminationThread;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    public LifecycleController(final MessageListener eventMessageListener,
-            final MessageListener highPriorityEventMessageListener, final MessageListener systemEventMessageListener,
-            final Collection<MessageListener> messageListeners, final CountDownLatch restAdapterStartLatch,
+    public LifecycleController(final TypedMessageListener eventMessageListener,
+            final TypedMessageListener highPriorityEventMessageListener, final TypedMessageListener systemEventMessageListener,
+            final Collection<TypedMessageListener> typedMessageListeners, final CountDownLatch restAdapterStartLatch,
             final LifecycleStatusHolder lifecycleStatusHolder) {
         this.eventMessageListener = eventMessageListener;
         this.highPriorityEventMessageListener = highPriorityEventMessageListener;
         this.systemEventMessageListener = systemEventMessageListener;
-        this.messageListeners = messageListeners;
+        this.typedMessageListeners = typedMessageListeners;
         this.restAdapterStartLatch = restAdapterStartLatch;
         this.lifecycleStatusHolder = lifecycleStatusHolder;
         terminationThread = new TerminationThread();
@@ -163,30 +163,30 @@ public class LifecycleController implements ApplicationListener<ContextRefreshed
         lifecycleStatusHolder.setLifecycleStatus(lifecycleStatus);
     }
 
-    private void startAll(final Collection<MessageListener> messageListenersToStart) {
-        for (final MessageListener messageListener : messageListenersToStart) {
-            messageListener.start();
+    private void startAll(final Collection<TypedMessageListener> messageListenersToStart) {
+        for (final TypedMessageListener typedMessageListener : messageListenersToStart) {
+            typedMessageListener.start();
         }
     }
 
-    private void shutdownAll(final Collection<MessageListener> messageListenersToShutdown) {
-        for (final MessageListener messageListener : messageListenersToShutdown) {
-            messageListener.shutdown();
+    private void shutdownAll(final Collection<TypedMessageListener> messageListenersToShutdown) {
+        for (final TypedMessageListener typedMessageListener : messageListenersToShutdown) {
+            typedMessageListener.shutdown();
         }
     }
 
-    private void shutdownAll(final MessageListener... messageListenersToShutdown) {
+    private void shutdownAll(final TypedMessageListener... messageListenersToShutdown) {
         shutdownAll(Arrays.asList(messageListenersToShutdown));
     }
 
     private void prepareAllMessageListenersForShutdown() {
-        for (final MessageListener messageListener : messageListeners) {
-            messageListener.prepareForShutdown();
+        for (final TypedMessageListener typedMessageListener : typedMessageListeners) {
+            typedMessageListener.prepareForShutdown();
         }
     }
 
-    private Set<MessageListener> messageListenersExcept(final MessageListener... exceptions) {
-        final Set<MessageListener> result = new HashSet<>(messageListeners);
+    private Set<TypedMessageListener> messageListenersExcept(final TypedMessageListener... exceptions) {
+        final Set<TypedMessageListener> result = new HashSet<>(typedMessageListeners);
         result.removeAll(Arrays.asList(exceptions));
         return result;
     }

@@ -25,19 +25,19 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 import org.junit.Test;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.tx.NestedTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.NonExistentTransactionException;
 
 public class TransactionalMessageSenderTest {
 
-    final MessageSender mockMessageSender = mock(MessageSender.class);
+    final MessageSender<TypedMessage> mockMessageSender = mock(MessageSender.class);
 
     @Test
     public void shouldCreateTransactionalMessageSender_withMessageSender() throws Exception {
         // Given
-        final MessageSender messageSender = mock(MessageSender.class);
+        final MessageSender<TypedMessage> messageSender = mock(MessageSender.class);
 
         // When
         Exception actualException = null;
@@ -108,12 +108,12 @@ public class TransactionalMessageSenderTest {
         // Given
         final TransactionalMessageSender transactionalMessageSender = new TransactionalMessageSender(mockMessageSender);
         transactionalMessageSender.begin();
-        final Message message = mock(Message.class);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
 
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessageSender.sendMessage(message);
+            transactionalMessageSender.sendMessage(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -127,12 +127,12 @@ public class TransactionalMessageSenderTest {
     public void shouldNotSendMessage_withNonExistingTransaction() throws Exception {
         // Given
         final TransactionalMessageSender transactionalMessageSender = new TransactionalMessageSender(mockMessageSender);
-        final Message message = mock(Message.class);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
 
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessageSender.sendMessage(message);
+            transactionalMessageSender.sendMessage(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -146,14 +146,14 @@ public class TransactionalMessageSenderTest {
         // Given
         final TransactionalMessageSender transactionalMessageSender = new TransactionalMessageSender(mockMessageSender);
         transactionalMessageSender.begin();
-        final Message message = mock(Message.class);
-        transactionalMessageSender.sendMessage(message);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
+        transactionalMessageSender.sendMessage(typedMessage);
 
         // When
         transactionalMessageSender.commit();
 
         // Then
-        verify(mockMessageSender).sendMessage(message);
+        verify(mockMessageSender).sendMessage(typedMessage);
     }
 
     @Test
@@ -161,13 +161,13 @@ public class TransactionalMessageSenderTest {
         // Given
         final TransactionalMessageSender transactionalMessageSender = new TransactionalMessageSender(mockMessageSender);
         transactionalMessageSender.begin();
-        final Message message = mock(Message.class);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
         final int delay = 1 + randomInt(100);
 
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessageSender.sendDelayedMessage(message, delay);
+            transactionalMessageSender.sendDelayedMessage(typedMessage, delay);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -181,13 +181,13 @@ public class TransactionalMessageSenderTest {
     public void shouldNotSendDelayedMessage_withNonExistingTransaction() throws Exception {
         // Given
         final TransactionalMessageSender transactionalMessageSender = new TransactionalMessageSender(mockMessageSender);
-        final Message message = mock(Message.class);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
         final int delay = 1 + randomInt(100);
 
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessageSender.sendDelayedMessage(message, delay);
+            transactionalMessageSender.sendDelayedMessage(typedMessage, delay);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -201,15 +201,15 @@ public class TransactionalMessageSenderTest {
         // Given
         final TransactionalMessageSender transactionalMessageSender = new TransactionalMessageSender(mockMessageSender);
         transactionalMessageSender.begin();
-        final Message message = mock(Message.class);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
         final int delay = 1 + randomInt(100);
-        transactionalMessageSender.sendDelayedMessage(message, delay);
+        transactionalMessageSender.sendDelayedMessage(typedMessage, delay);
 
         // When
         transactionalMessageSender.commit();
 
         // Then
-        verify(mockMessageSender).sendDelayedMessage(message, delay);
+        verify(mockMessageSender).sendDelayedMessage(typedMessage, delay);
     }
 
 }

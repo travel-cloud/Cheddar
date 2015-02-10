@@ -18,16 +18,17 @@ package com.clicktravel.cheddar.domain.event;
 
 import com.clicktravel.cheddar.event.EventPublisher;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 
 public class DomainEventPublisher extends EventPublisher<DomainEvent> {
 
     private static DomainEventPublisher instance;
 
-    public static void init(final MessagePublisher messagePublisher) {
+    public static void init(final MessagePublisher<TypedMessage> messagePublisher) {
         instance = new DomainEventPublisher(messagePublisher);
     }
 
-    private DomainEventPublisher(final MessagePublisher messagePublisher) {
+    private DomainEventPublisher(final MessagePublisher<TypedMessage> messagePublisher) {
         super(messagePublisher);
     }
 

@@ -32,9 +32,9 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 import com.clicktravel.cheddar.infrastructure.messaging.SimpleMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.common.concurrent.RateLimiter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,6 +48,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Messages are received from the SQS queue when there is sufficient processing capacity to handle the messages. A
  * semaphore guards against receiving too many messages, but also aims to keep all processing threads active.
  */
+@Deprecated
 public class SqsMessageProcessor implements Runnable {
 
     /**
@@ -95,7 +96,7 @@ public class SqsMessageProcessor implements Runnable {
     private final String queueUrl;
     private final AmazonSQS amazonSqsClient;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final Map<String, MessageHandler> messageHandlers;
+    private final Map<String, MessageHandler<TypedMessage>> messageHandlers;
     private final SqsMessageProcessorExecutor executor;
     private final RateLimiter rateLimiter;
     private final Semaphore semaphore;
@@ -105,7 +106,7 @@ public class SqsMessageProcessor implements Runnable {
     private volatile boolean shutdownRequestImminent;
 
     public SqsMessageProcessor(final AmazonSQS amazonSqsClient, final String queueName,
-            final Map<String, MessageHandler> messageHandlers, final RateLimiter rateLimiter,
+            final Map<String, MessageHandler<TypedMessage>> messageHandlers, final RateLimiter rateLimiter,
             final SqsMessageProcessorExecutor executor) {
         this.amazonSqsClient = amazonSqsClient;
         this.queueName = queueName;
@@ -171,8 +172,8 @@ public class SqsMessageProcessor implements Runnable {
     private void processSqsMessage(final com.amazonaws.services.sqs.model.Message sqsMessage) {
         final DeleteMessageRequest deleteMessageRequest = new DeleteMessageRequest().withQueueUrl(queueUrl)
                 .withReceiptHandle(sqsMessage.getReceiptHandle());
-        Message message = null;
-        MessageHandler messageHandler = null;
+        TypedMessage message = null;
+        MessageHandler<TypedMessage> messageHandler = null;
 
         // TODO Replace the following hack to generalise message listener to handle any message, including foreign ones
         if (messageHandlers.containsKey("")) {
@@ -181,7 +182,7 @@ public class SqsMessageProcessor implements Runnable {
             messageHandler = messageHandlers.get("");
         } else {
             // Handle native Cheddar message
-            message = getMessage(sqsMessage);
+            message = getTypedMessage(sqsMessage);
             if (message != null) {
                 messageHandler = messageHandlers.get(message.getType());
                 if (messageHandler == null) {
@@ -200,7 +201,7 @@ public class SqsMessageProcessor implements Runnable {
         }
     }
 
-    private Message getMessage(final com.amazonaws.services.sqs.model.Message sqsMessage) {
+    private TypedMessage getTypedMessage(final com.amazonaws.services.sqs.model.Message sqsMessage) {
         try {
             final JsonNode jsonNode = mapper.readTree(sqsMessage.getBody());
             final String messageType = jsonNode.get("Subject").textValue();

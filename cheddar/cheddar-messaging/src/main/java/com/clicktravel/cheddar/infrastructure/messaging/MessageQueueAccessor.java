@@ -16,6 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
+@Deprecated
 public interface MessageQueueAccessor {
 
     String queueName();

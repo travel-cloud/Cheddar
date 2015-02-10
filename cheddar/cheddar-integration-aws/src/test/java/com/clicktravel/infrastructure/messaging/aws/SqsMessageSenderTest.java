@@ -30,21 +30,21 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.common.random.Randoms;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SqsMessageSenderTest {
 
-    AmazonSQS mockAmazonSqsClient;
-    String queueName;
-    String queueUrl;
-    String subject;
-    String messageBody;
-    SqsMessageSender sqsMessageSender;
-    Message message;
-    GetQueueUrlResult mockGetQueueUrlResult;
+    private AmazonSQS mockAmazonSqsClient;
+    private String queueName;
+    private String queueUrl;
+    private String subject;
+    private String messageBody;
+    private SqsMessageSender sqsMessageSender;
+    private TypedMessage typedMessage;
+    private GetQueueUrlResult mockGetQueueUrlResult;
 
     @Before
     public void setUp() {
@@ -55,12 +55,12 @@ public class SqsMessageSenderTest {
         messageBody = Randoms.randomString(20);
         sqsMessageSender = new SqsMessageSender(queueName);
         sqsMessageSender.configure(mockAmazonSqsClient);
-        message = mock(Message.class);
+        typedMessage = mock(TypedMessage.class);
         mockGetQueueUrlResult = mock(GetQueueUrlResult.class);
         when(mockGetQueueUrlResult.getQueueUrl()).thenReturn(queueUrl);
         when(mockAmazonSqsClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(mockGetQueueUrlResult);
-        when(message.getType()).thenReturn(subject);
-        when(message.getPayload()).thenReturn(messageBody);
+        when(typedMessage.getType()).thenReturn(subject);
+        when(typedMessage.getPayload()).thenReturn(messageBody);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class SqsMessageSenderTest {
         final int delaySeconds = 1 + Randoms.randomInt(10);
 
         // When
-        sqsMessageSender.sendDelayedMessage(message, delaySeconds);
+        sqsMessageSender.sendDelayedMessage(typedMessage, delaySeconds);
 
         // Then
         checkSendMessageRequest(delaySeconds);
@@ -80,7 +80,7 @@ public class SqsMessageSenderTest {
         // Given
 
         // When
-        sqsMessageSender.sendMessage(message);
+        sqsMessageSender.sendMessage(typedMessage);
 
         // Then
         checkSendMessageRequest(0);

@@ -18,13 +18,13 @@ package com.clicktravel.cheddar.infrastructure.messaging;
 
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageHandlingException;
 
-public interface MessageHandler {
+public interface MessageHandler<T extends Message> {
 
     /**
      * Process a given message
      * @param message
      * @throws MessageHandlingException
      */
-    void handle(Message message) throws MessageHandlingException;
+    void handle(T message) throws MessageHandlingException;
 
 }

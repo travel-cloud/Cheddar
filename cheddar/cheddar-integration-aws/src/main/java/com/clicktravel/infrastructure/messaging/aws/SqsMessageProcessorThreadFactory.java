@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * queue.
  * @see SqsMessageProcessor
  */
+@Deprecated
 public class SqsMessageProcessorThreadFactory implements ThreadFactory {
 
     private final AtomicInteger threadSequenceNumber = new AtomicInteger();

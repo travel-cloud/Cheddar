@@ -25,14 +25,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
-import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 import com.clicktravel.common.concurrent.RateLimiter;
 
-public class SqsMessageListener extends SqsMessageQueueAccessor implements MessageListener {
+@Deprecated
+public class SqsMessageListener extends SqsMessageQueueAccessor implements TypedMessageListener {
 
     private static final int NUM_THREADS = 10;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Map<String, MessageHandler> messageHandlers = new ConcurrentHashMap<>();
+    private final Map<String, MessageHandler<TypedMessage>> messageHandlers = new ConcurrentHashMap<>();
     private final RateLimiter rateLimiter;
     private SqsMessageProcessor queueProcessor;
     private SqsMessageProcessorExecutor executor;
@@ -61,7 +63,7 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Messa
     }
 
     @Override
-    public void registerMessageHandler(final String messageType, final MessageHandler messageHandler) {
+    public void registerMessageHandler(final String messageType, final MessageHandler<TypedMessage> messageHandler) {
         messageHandlers.put(messageType, messageHandler);
     }
 

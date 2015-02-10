@@ -19,22 +19,22 @@ package com.clicktravel.cheddar.infrastructure.messaging.tx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 import com.clicktravel.cheddar.infrastructure.tx.NestedTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.NonExistentTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.TransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.TransactionalResource;
 
-public class TransactionalMessageSender implements MessageSender, TransactionalResource {
+public class TransactionalMessageSender implements MessageSender<TypedMessage>, TransactionalResource {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final MessageSender messageSender;
+    private final MessageSender<TypedMessage> messageSender;
     private final ThreadLocal<MessagingTransaction> currentTransaction = new ThreadLocal<MessagingTransaction>();
 
-    public TransactionalMessageSender(final MessageSender messageSender) {
+    public TransactionalMessageSender(final MessageSender<TypedMessage> messageSender) {
         this.messageSender = messageSender;
     }
 
@@ -64,15 +64,15 @@ public class TransactionalMessageSender implements MessageSender, TransactionalR
     }
 
     @Override
-    public void sendMessage(final Message message) throws MessageSendException {
+    public void sendMessage(final TypedMessage typedMessage) throws MessageSendException {
         final MessagingTransaction transaction = getCurrentTransaction();
-        transaction.addMessage(message);
+        transaction.addMessage(typedMessage);
     }
 
     @Override
-    public void sendDelayedMessage(final Message message, final int delay) throws MessageSendException {
+    public void sendDelayedMessage(final TypedMessage typedMessage, final int delay) throws MessageSendException {
         final MessagingTransaction transaction = getCurrentTransaction();
-        transaction.addDelayedMessage(message, delay);
+        transaction.addDelayedMessage(typedMessage, delay);
     }
 
     @Override

@@ -19,22 +19,22 @@ package com.clicktravel.cheddar.infrastructure.messaging.tx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
 import com.clicktravel.cheddar.infrastructure.tx.NestedTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.NonExistentTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.TransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.TransactionalResource;
 
-public class TransactionalMessagePublisher implements MessagePublisher, TransactionalResource {
+public class TransactionalMessagePublisher implements MessagePublisher<TypedMessage>, TransactionalResource {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final MessagePublisher messagePublisher;
+    private final MessagePublisher<TypedMessage> messagePublisher;
     private final ThreadLocal<MessagingTransaction> currentTransaction = new ThreadLocal<MessagingTransaction>();
 
-    public TransactionalMessagePublisher(final MessagePublisher messagePublisher) {
+    public TransactionalMessagePublisher(final MessagePublisher<TypedMessage> messagePublisher) {
         this.messagePublisher = messagePublisher;
     }
 
@@ -64,9 +64,9 @@ public class TransactionalMessagePublisher implements MessagePublisher, Transact
     }
 
     @Override
-    public void publishMessage(final Message message) throws MessagePublishException {
+    public void publishMessage(final TypedMessage typedMessage) throws MessagePublishException {
         final MessagingTransaction transaction = getCurrentTransaction();
-        transaction.addMessage(message);
+        transaction.addMessage(typedMessage);
     }
 
     @Override

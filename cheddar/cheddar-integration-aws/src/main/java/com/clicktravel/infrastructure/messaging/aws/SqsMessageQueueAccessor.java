@@ -19,6 +19,7 @@ package com.clicktravel.infrastructure.messaging.aws;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageQueueAccessor;
 
+@Deprecated
 public class SqsMessageQueueAccessor implements MessageQueueAccessor {
 
     private AmazonSQS amazonSqsClient;

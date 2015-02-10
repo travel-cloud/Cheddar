@@ -45,6 +45,7 @@ import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.common.concurrent.RateLimiter;
 import com.clicktravel.common.random.Randoms;
 
@@ -55,8 +56,8 @@ public class SqsMessageProcessorTest {
     private String queueUrl;
     private String handledMessageType;
     private String handledMessagePayload;
-    private MessageHandler mockMessageHandler;
-    private Map<String, MessageHandler> messageHandlers;
+    private MessageHandler<TypedMessage> mockMessageHandler;
+    private Map<String, MessageHandler<TypedMessage>> messageHandlers;
     private SqsMessageProcessorExecutor mockSqsMessageProcessorExecutor;
     private RateLimiter mockRateLimiter;
     private com.amazonaws.services.sqs.model.Message mockSqsMessage;

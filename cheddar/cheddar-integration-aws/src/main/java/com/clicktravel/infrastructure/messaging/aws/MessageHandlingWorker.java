@@ -23,21 +23,22 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 
+@Deprecated
 public class MessageHandlingWorker implements Runnable {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Message message;
-    private final MessageHandler messageHandler;
+    private final TypedMessage typedMessage;
+    private final MessageHandler<TypedMessage> messageHandler;
     private final AmazonSQS amazonSqsClient;
     private final DeleteMessageRequest deleteMessageRequest;
     private final Semaphore semaphore;
 
-    public MessageHandlingWorker(final Message message, final MessageHandler messageHandler,
+    public MessageHandlingWorker(final TypedMessage message, final MessageHandler<TypedMessage> messageHandler,
             final AmazonSQS amazonSqsClient, final DeleteMessageRequest deleteMessageRequest, final Semaphore semaphore) {
-        this.message = message;
+        typedMessage = message;
         this.messageHandler = messageHandler;
         this.amazonSqsClient = amazonSqsClient;
         this.deleteMessageRequest = deleteMessageRequest;
@@ -47,20 +48,20 @@ public class MessageHandlingWorker implements Runnable {
     @Override
     public void run() {
         try {
-            messageHandler.handle(message);
+            messageHandler.handle(typedMessage);
         } catch (final Exception e) {
-            logger.error("Error handling message: " + message, e);
+            logger.error("Error handling message: " + typedMessage, e);
         } finally {
             amazonSqsClient.deleteMessage(deleteMessageRequest);
             semaphore.release();
         }
     }
 
-    public Message message() {
-        return message;
+    public TypedMessage message() {
+        return typedMessage;
     }
 
-    public MessageHandler messageHandler() {
+    public MessageHandler<TypedMessage> messageHandler() {
         return messageHandler;
     }
 

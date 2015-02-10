@@ -72,4 +72,30 @@ public class StringUtils {
         final E value = E.valueOf(enumClass, t);
         return value;
     }
+
+    /**
+     * Joins a list of substrings with a join between each element
+     * @param substrings List of substrings
+     * @param join Join to place between each element
+     * @return Joined string
+     */
+    public static String join(final List<String> substrings, final String join) {
+        final StringBuilder sb = new StringBuilder();
+        for (final String substring : substrings) {
+            if (sb.length() != 0) {
+                sb.append(join);
+            }
+            sb.append(substring);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Joins a list of substring with commas
+     * @param substrings List of substrings
+     * @return Joined string
+     */
+    public static String join(final List<String> substrings) {
+        return join(substrings, ", ");
+    }
 }

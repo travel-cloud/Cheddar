@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.common.random.Randoms;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -41,7 +41,7 @@ public class EventMessageHandlerTest {
         rootNode.put("testValue", testValue);
         final String serializedEvent = mapper.writeValueAsString(rootNode);
 
-        final Message message = mock(Message.class);
+        final TypedMessage message = mock(TypedMessage.class);
         final String eventType = Randoms.randomString(5);
         when(message.getType()).thenReturn(eventType);
         when(message.getPayload()).thenReturn(serializedEvent);

@@ -24,6 +24,7 @@ import com.clicktravel.cheddar.domain.event.DomainEventHandler;
 import com.clicktravel.cheddar.event.EventHandler;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageRouter;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 
 public class DomainEventHandlerConfigurationUtils {
 
@@ -36,7 +37,8 @@ public class DomainEventHandlerConfigurationUtils {
      * @param messageSender MessageSender to the appropriate queue (either high or low)
      */
     public static void addRoutes(final MessageRouter messageRouter,
-            final Collection<? extends DomainEventHandler> domainEventHandlers, final MessageSender messageSender) {
+            final Collection<? extends DomainEventHandler> domainEventHandlers,
+            final MessageSender<TypedMessage> messageSender) {
         final Collection<EventHandler<DomainEvent>> eventHandlers = castDomainEventHandlers(domainEventHandlers);
         for (final EventHandler<DomainEvent> eventHandler : eventHandlers) {
             try {

@@ -18,17 +18,18 @@ package com.clicktravel.cheddar.system.event.publisher;
 
 import com.clicktravel.cheddar.event.EventPublisher;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.system.event.SystemEvent;
 
 public class SystemEventPublisher extends EventPublisher<SystemEvent> {
 
     private static SystemEventPublisher instance;
 
-    public static void init(final MessagePublisher messagePublisher) {
+    public static void init(final MessagePublisher<TypedMessage> messagePublisher) {
         instance = new SystemEventPublisher(messagePublisher);
     }
 
-    private SystemEventPublisher(final MessagePublisher messagePublisher) {
+    private SystemEventPublisher(final MessagePublisher<TypedMessage> messagePublisher) {
         super(messagePublisher);
     }
 

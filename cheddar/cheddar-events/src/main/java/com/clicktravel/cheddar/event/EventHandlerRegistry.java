@@ -23,17 +23,17 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 
 /**
  * Registers message and event handlers associated with a given message listener
- *
+ * 
  * @param <E> Base class for all events associated with this message listener
  */
 public class EventHandlerRegistry<E extends Event> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final MessageListener eventMessageListener;
+    private final TypedMessageListener eventMessageListener;
     private final EventMessageHandler<E> eventMessageHandler;
     private final Set<EventHandler<E>> eventHandlers;
 
@@ -43,7 +43,7 @@ public class EventHandlerRegistry<E extends Event> {
      * @param eventMessageHandler {@link EventMessageHandler} on which all event handlers will be registered
      * @param eventHandlers Collection of {@link EventHandler}&lt;E&gt; that will handle all events
      */
-    public EventHandlerRegistry(final MessageListener eventMessageListener,
+    public EventHandlerRegistry(final TypedMessageListener eventMessageListener,
             final EventMessageHandler<E> eventMessageHandler, final Collection<EventHandler<E>> eventHandlers) {
         this.eventMessageListener = eventMessageListener;
         this.eventMessageHandler = eventMessageHandler;

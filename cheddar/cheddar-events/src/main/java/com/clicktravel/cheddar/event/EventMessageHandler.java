@@ -22,11 +22,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageHandlingException;
 
-public class EventMessageHandler<E extends Event> implements MessageHandler {
+public class EventMessageHandler<E extends Event> implements MessageHandler<TypedMessage> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<String, EventHandler<E>> eventHandlers;
@@ -36,12 +36,12 @@ public class EventMessageHandler<E extends Event> implements MessageHandler {
     }
 
     @Override
-    public void handle(final Message message) throws MessageHandlingException {
+    public void handle(final TypedMessage typedMessage) throws MessageHandlingException {
         try {
-            final String messageType = message.getType();
+            final String messageType = typedMessage.getType();
             logger.debug("Handling: " + messageType);
             final EventHandler<E> eventHandler = eventHandlers.get(messageType);
-            final E event = AbstractEvent.newEvent(eventHandler.getEventClass(), message.getPayload());
+            final E event = AbstractEvent.newEvent(eventHandler.getEventClass(), typedMessage.getPayload());
             if (!eventHandler.getEventClass().isAssignableFrom(event.getClass())) {
                 throw new IllegalStateException("Event of type " + event.getClass() + " is not compatible with "
                         + eventHandler.getEventClass() + " in event handler");

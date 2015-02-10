@@ -16,6 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
+@Deprecated
 public class ExchangeQueueBinding {
 
     private final String exchangeName;

@@ -19,23 +19,23 @@ package com.clicktravel.cheddar.event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
 import com.clicktravel.cheddar.infrastructure.messaging.SimpleMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 
 public abstract class EventPublisher<E extends Event> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final MessagePublisher messagePublisher;
+    private final MessagePublisher<TypedMessage> messagePublisher;
 
-    protected EventPublisher(final MessagePublisher messagePublisher) {
+    protected EventPublisher(final MessagePublisher<TypedMessage> messagePublisher) {
         this.messagePublisher = messagePublisher;
     }
 
     public void publishEvent(final E event) {
         logger.debug("Publishing event: [" + event.type() + "]");
-        final Message message = new SimpleMessage(event.type(), event.serialize());
-        messagePublisher.publishMessage(message);
+        final TypedMessage typedMessage = new SimpleMessage(event.type(), event.serialize());
+        messagePublisher.publishMessage(typedMessage);
     }
 
 }

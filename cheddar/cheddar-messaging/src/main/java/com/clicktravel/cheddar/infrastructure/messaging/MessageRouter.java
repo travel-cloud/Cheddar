@@ -16,10 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,48 +24,43 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageHandlingException;
+import com.clicktravel.common.functional.StringUtils;
 
-public class MessageRouter implements MessageHandler, ApplicationListener<ContextRefreshedEvent> {
+public class MessageRouter implements MessageHandler<TypedMessage>, ApplicationListener<ContextRefreshedEvent> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Map<String, Set<MessageSender>> routes = new HashMap<>();;
-    private final MessageListener messageListener;
+    private final Map<String, Set<MessageSender<TypedMessage>>> routes = new HashMap<>();;
+    private final TypedMessageListener typedMessageListener;
 
-    public MessageRouter(final MessageListener messageListener) {
-        this.messageListener = messageListener;
+    public MessageRouter(final TypedMessageListener typedMessageListener) {
+        this.typedMessageListener = typedMessageListener;
     }
 
-    public void addRoute(final String messageType, final MessageSender messageSender) {
-        Set<MessageSender> routesForMessageType = routes.get(messageType);
+    public void addRoute(final String messageType, final MessageSender<TypedMessage> messageSender) {
+        Set<MessageSender<TypedMessage>> routesForMessageType = routes.get(messageType);
         if (routesForMessageType == null) {
             routesForMessageType = new HashSet<>();
             routes.put(messageType, routesForMessageType);
-            messageListener.registerMessageHandler(messageType, this);
+            typedMessageListener.registerMessageHandler(messageType, this);
         }
         routesForMessageType.add(messageSender);
     }
 
     @Override
-    public void handle(final Message message) throws MessageHandlingException {
-        final Set<MessageSender> routesForMessageType = routes.get(message.getType());
+    public void handle(final TypedMessage typedMessage) throws MessageHandlingException {
+        final Set<MessageSender<TypedMessage>> routesForMessageType = routes.get(typedMessage.getType());
         if (routesForMessageType != null) {
-            for (final MessageSender messageSender : routesForMessageType) {
-                messageSender.sendMessage(message);
+            for (final MessageSender<TypedMessage> messageSender : routesForMessageType) {
+                messageSender.sendMessage(typedMessage);
             }
         } else {
-            logger.warn("Unable to route message of type : " + message.getType());
+            logger.warn("Unable to route message of type : " + typedMessage.getType());
         }
     }
 
     @Override
     public void onApplicationEvent(final ContextRefreshedEvent event) {
-        final StringBuilder sb = new StringBuilder();
-        for (final String route : routes.keySet()) {
-            if (sb.length() != 0) {
-                sb.append(", ");
-            }
-            sb.append(route);
-        }
-        logger.debug("Started MessageRouter for these message types: [" + sb.toString() + "]");
+        final String messageTypes = StringUtils.join(new ArrayList<>(routes.keySet()));
+        logger.debug("Started MessageRouter for these message types: [" + messageTypes + "]");
     }
 }

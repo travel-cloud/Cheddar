@@ -16,38 +16,38 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging.tx;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 
 public class MessageAction {
 
-    private final Message message;
+    private final TypedMessage typedMessage;
     private final int delaySeconds;
 
-    public MessageAction(final Message message, final int delaySeconds) {
-        this.message = message;
+    public MessageAction(final TypedMessage typedMessage, final int delaySeconds) {
+        this.typedMessage = typedMessage;
         this.delaySeconds = delaySeconds;
     }
 
-    public Message message() {
-        return message;
+    public TypedMessage message() {
+        return typedMessage;
     }
 
     public int delay() {
         return delaySeconds;
     }
 
-    public void apply(final MessageSender messageSender) {
+    public void apply(final MessageSender<TypedMessage> messageSender) {
         if (delay() > 0) {
-            messageSender.sendDelayedMessage(message, delaySeconds);
+            messageSender.sendDelayedMessage(typedMessage, delaySeconds);
         } else {
-            messageSender.sendMessage(message);
+            messageSender.sendMessage(typedMessage);
         }
     }
 
-    public void apply(final MessagePublisher messagePublisher) {
-        messagePublisher.publishMessage(message);
+    public void apply(final MessagePublisher<TypedMessage> messagePublisher) {
+        messagePublisher.publishMessage(typedMessage);
     }
 
 }

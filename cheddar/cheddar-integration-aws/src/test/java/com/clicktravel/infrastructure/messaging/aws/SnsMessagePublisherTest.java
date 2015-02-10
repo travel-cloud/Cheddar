@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 
 import com.amazonaws.services.sns.AmazonSNS;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
 import com.clicktravel.common.random.Randoms;
 
@@ -42,7 +42,7 @@ public class SnsMessagePublisherTest {
         final SnsMessagePublisher snsMessagePublisher = new SnsMessagePublisher(exchange);
         final String topicArn = randomString(10);
         snsMessagePublisher.configure(mockAmazonSnsClient, topicArn);
-        final Message message = mock(Message.class);
+        final TypedMessage message = mock(TypedMessage.class);
         when(message.getType()).thenReturn(subject);
         when(message.getPayload()).thenReturn(messagePayload);
 
@@ -61,7 +61,7 @@ public class SnsMessagePublisherTest {
         final String subject = Randoms.randomString(10);
         final String messagePayload = Randoms.randomString(20);
         final SnsMessagePublisher snsMessagePublisher = new SnsMessagePublisher(exchange);
-        final Message message = mock(Message.class);
+        final TypedMessage message = mock(TypedMessage.class);
         when(message.getType()).thenReturn(subject);
         when(message.getPayload()).thenReturn(messagePayload);
 

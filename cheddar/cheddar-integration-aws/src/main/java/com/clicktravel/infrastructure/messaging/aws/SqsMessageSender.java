@@ -21,13 +21,14 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class SqsMessageSender extends SqsMessageQueueAccessor implements MessageSender {
+@Deprecated
+public class SqsMessageSender extends SqsMessageQueueAccessor implements MessageSender<TypedMessage> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private String queueUrl;
@@ -44,14 +45,14 @@ public class SqsMessageSender extends SqsMessageQueueAccessor implements Message
     }
 
     @Override
-    public void sendMessage(final Message message) throws MessageSendException {
-        sendDelayedMessage(message, 0);
+    public void sendMessage(final TypedMessage typedMessage) throws MessageSendException {
+        sendDelayedMessage(typedMessage, 0);
     }
 
     @Override
-    public void sendDelayedMessage(final Message message, final int delaySeconds) throws MessageSendException {
+    public void sendDelayedMessage(final TypedMessage typedMessage, final int delaySeconds) throws MessageSendException {
         try {
-            final String json = asJson(message);
+            final String json = asJson(typedMessage);
             amazonSqsClient().sendMessage(new SendMessageRequest(queueUrl(), json).withDelaySeconds(delaySeconds));
             logger.trace("Successfully sent message: Payload=" + json + "] to SQS queue: [" + queueName() + "]");
         } catch (final Exception e) {
@@ -59,7 +60,7 @@ public class SqsMessageSender extends SqsMessageQueueAccessor implements Message
         }
     }
 
-    private String asJson(final Message message) {
+    private String asJson(final TypedMessage message) {
         final ObjectMapper mapper = new ObjectMapper();
         final ObjectNode rootNode = mapper.createObjectNode();
         rootNode.put("Subject", message.getType());

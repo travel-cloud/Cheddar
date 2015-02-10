@@ -23,26 +23,26 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 
 @Component
 public class DeferrableProcessingStatusHolder {
 
-    private final Set<MessageListener> messageListenersForDeferrableProcessing;
+    private final Set<TypedMessageListener> messageListenersForDeferrableProcessing;
 
     @Autowired
-    public DeferrableProcessingStatusHolder(final Collection<MessageListener> messageListeners,
-            final MessageListener eventMessageListener, final MessageListener highPriorityEventMessageListener,
-            final MessageListener systemEventMessageListener) {
-        messageListenersForDeferrableProcessing = new HashSet<>(messageListeners);
+    public DeferrableProcessingStatusHolder(final Collection<TypedMessageListener> typedMessageListeners,
+            final TypedMessageListener eventMessageListener, final TypedMessageListener highPriorityEventMessageListener,
+            final TypedMessageListener systemEventMessageListener) {
+        messageListenersForDeferrableProcessing = new HashSet<>(typedMessageListeners);
         messageListenersForDeferrableProcessing.remove(eventMessageListener);
         messageListenersForDeferrableProcessing.remove(highPriorityEventMessageListener);
         messageListenersForDeferrableProcessing.remove(systemEventMessageListener);
     }
 
     public boolean isDeferrableProcessing() {
-        for (final MessageListener messageListener : messageListenersForDeferrableProcessing) {
-            if (!messageListener.hasTerminated()) {
+        for (final TypedMessageListener typedMessageListener : messageListenersForDeferrableProcessing) {
+            if (!typedMessageListener.hasTerminated()) {
                 return true;
             }
         }
