@@ -18,13 +18,15 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
 import java.util.Collection;
 
+import com.clicktravel.common.functional.Equals;
+
 public class Operators {
 
     public static final ComparisonOperator EQUALS = new ComparisonOperator() {
 
         @Override
         public boolean compare(final String value1, final String value2) {
-            return value1.equals(value2);
+            return Equals.safeEquals(value1, value2);
         }
 
         @Override
