@@ -32,25 +32,25 @@ import com.amazonaws.services.sns.model.ListTopicsResult;
 import com.amazonaws.services.sns.model.Topic;
 
 @Component
-public class DefaultSnsTopicFactory implements SnsTopicFactory {
+public class DefaultSnsTopicResourceFactory implements SnsTopicResourceFactory {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final AmazonSNS amazonSnsClient;
 
     @Autowired
-    public DefaultSnsTopicFactory(final AmazonSNS amazonSnsClient) {
+    public DefaultSnsTopicResourceFactory(final AmazonSNS amazonSnsClient) {
         this.amazonSnsClient = amazonSnsClient;
     }
 
     @Override
-    public SnsTopicResource createSnsTopicForExistingAwsSnsTopic(final String name) {
+    public SnsTopicResource createSnsTopicResourceForExistingAwsSnsTopic(final String name) {
         final String topicArn = pollAndRetryForTopicArnForName(name);
         logger.info("Using existing SNS topic: " + name);
         return new SnsTopicResource(name, topicArn, amazonSnsClient);
     }
 
     @Override
-    public SnsTopicResource createSnsTopicAndAwsSnsTopicIfAbsent(final String name) {
+    public SnsTopicResource createSnsTopicResourceAndAwsSnsTopicIfAbsent(final String name) {
         String topicArn = pollForTopicArnForName(name);
         if (topicArn == null) {
             topicArn = createAwsSnsTopic(name);

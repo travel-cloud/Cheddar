@@ -37,7 +37,7 @@ import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 import com.clicktravel.common.functional.StringUtils;
 
 @Component
-public class DefaultSqsQueueFactory implements SqsQueueFactory {
+public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
 
     private static final String SQS_VISIBILITY_TIMEOUT_ATTRIBUTE = QueueAttributeName.VisibilityTimeout.toString();
     private static final String SQS_VISIBILITY_TIMEOUT_VALUE = "300";
@@ -46,12 +46,12 @@ public class DefaultSqsQueueFactory implements SqsQueueFactory {
     private final AmazonSQS amazonSqsClient;
 
     @Autowired
-    public DefaultSqsQueueFactory(final AmazonSQS amazonSqsClient) {
+    public DefaultSqsQueueResourceFactory(final AmazonSQS amazonSqsClient) {
         this.amazonSqsClient = amazonSqsClient;
     }
 
     @Override
-    public SqsQueueResource createSqsQueue(final String name, final SnsTopicResource... snsTopics) {
+    public SqsQueueResource createSqsQueueResource(final String name, final SnsTopicResource... snsTopics) {
         String queueUrl;
         try {
             queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(name)).getQueueUrl();
