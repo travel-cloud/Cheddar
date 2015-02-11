@@ -16,10 +16,7 @@
  */
 package com.clicktravel.infrastructure.messaging.aws;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +34,7 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.QueueAttributeName;
 import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
+import com.clicktravel.common.functional.StringUtils;
 
 @Component
 public class DefaultSqsQueueFactory implements SqsQueueFactory {
@@ -53,51 +51,65 @@ public class DefaultSqsQueueFactory implements SqsQueueFactory {
     }
 
     @Override
-    public SqsQueue createSqsQueue(final String name, final SnsTopic... snsTopics) {
+    public SqsQueueResource createSqsQueue(final String name, final SnsTopicResource... snsTopics) {
         String queueUrl;
         try {
             queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(name)).getQueueUrl();
+            logger.info("Using existing SQS queue: " + name);
         } catch (final QueueDoesNotExistException e) {
             queueUrl = createAwsSqsQueue(name);
         }
-        final SqsQueue sqsQueue = new SqsQueue(name, queueUrl, amazonSqsClient);
+        final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, queueUrl, amazonSqsClient);
 
         // If this queue should subscribe to any topics, create (or update existing) subscriptions and queue policy
         if (snsTopics.length != 0) {
-            sqsQueue.setPolicy(acceptMessagesFromTopicsPolicy(sqsQueue, snsTopics));
-            for (final SnsTopic snsTopic : snsTopics) {
-                snsTopic.subscribe(sqsQueue);
+            logger.info("Adding SQS queue [" + name + "] as a subscriber for these SNS topics: ["
+                    + snsTopicNames(snsTopics) + "]");
+            sqsQueueResource.setPolicy(acceptMessagesFromTopicsPolicy(sqsQueueResource, snsTopics));
+            for (final SnsTopicResource snsTopicResource : snsTopics) {
+                snsTopicResource.subscribe(sqsQueueResource);
             }
         }
 
-        return sqsQueue;
+        return sqsQueueResource;
     }
 
     private String createAwsSqsQueue(final String name) {
-        logger.debug("Creating SQS queue: " + name);
+        logger.info("Creating SQS queue: " + name);
         final Map<String, String> attributes = new HashMap<>();
         attributes.put(SQS_VISIBILITY_TIMEOUT_ATTRIBUTE, SQS_VISIBILITY_TIMEOUT_VALUE);
         final CreateQueueRequest createQueueRequest = new CreateQueueRequest(name).withAttributes(attributes);
         return amazonSqsClient.createQueue(createQueueRequest).getQueueUrl();
     }
 
-    private Policy acceptMessagesFromTopicsPolicy(final SqsQueue sqsQueue, final SnsTopic... snsTopics) {
+    private Policy acceptMessagesFromTopicsPolicy(final SqsQueueResource sqsQueueResource,
+            final SnsTopicResource... snsTopics) {
         final Collection<Statement> statements = new ArrayList<>();
-        for (final SnsTopic snsTopic : snsTopics) {
-            statements.add(acceptMessagesFromTopicStatement(sqsQueue, snsTopic));
+        for (final SnsTopicResource snsTopicResource : snsTopics) {
+            statements.add(acceptMessagesFromTopicStatement(sqsQueueResource, snsTopicResource));
         }
         final Policy policy = new Policy();
         policy.setStatements(statements);
         return policy;
     }
 
-    private Statement acceptMessagesFromTopicStatement(final SqsQueue sqsQueue, final SnsTopic snsTopic) {
+    private Statement acceptMessagesFromTopicStatement(final SqsQueueResource sqsQueueResource,
+            final SnsTopicResource snsTopicResource) {
         return new Statement(Effect.Allow)
                 .withPrincipals(Principal.AllUsers)
                 .withActions(SQSActions.SendMessage)
-                .withResources(new Resource(sqsQueue.queueArn()))
+                .withResources(new Resource(sqsQueueResource.queueArn()))
                 .withConditions(
                         new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY,
-                                snsTopic.getTopicArn()));
+                                snsTopicResource.getTopicArn()));
     }
+
+    private String snsTopicNames(final SnsTopicResource[] snsTopics) {
+        final List<String> names = new ArrayList<>();
+        for (final SnsTopicResource snsTopic : snsTopics) {
+            names.add(snsTopic.getTopicName());
+        }
+        return StringUtils.join(names);
+    }
+
 }

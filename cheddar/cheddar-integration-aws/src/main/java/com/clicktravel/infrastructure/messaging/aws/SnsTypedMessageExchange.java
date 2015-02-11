@@ -20,8 +20,8 @@ import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 
 public class SnsTypedMessageExchange extends SnsExchange<TypedMessage> {
 
-    public SnsTypedMessageExchange(final SnsTopic snsTopic) {
-        super(snsTopic, new SnsTypedMessageAdapter());
+    public SnsTypedMessageExchange(final SnsTopicResource snsTopicResource) {
+        super(snsTopicResource, new SnsTypedMessageAdapter());
     }
 
 }

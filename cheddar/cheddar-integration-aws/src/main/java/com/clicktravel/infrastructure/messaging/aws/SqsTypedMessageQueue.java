@@ -23,8 +23,8 @@ import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
  */
 public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
 
-    public SqsTypedMessageQueue(final SqsQueue sqsQueue) {
-        super(sqsQueue, new SqsTypedMessageAdapter());
+    public SqsTypedMessageQueue(final SqsQueueResource sqsQueueResource) {
+        super(sqsQueueResource, new SqsTypedMessageAdapter());
     }
 
 }

@@ -31,10 +31,10 @@ import com.amazonaws.services.sqs.model.*;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 
 /**
- * A representative for an actual existing AWS SQS queue. Provides some convenience methods for working with the actual
- * AWS SQS queue.
+ * Represents an actual AWS SQS queue that exists in the AWS environment. Provides some convenience methods for working
+ * with the actual AWS SQS queue.
  */
-public class SqsQueue {
+public class SqsQueueResource {
 
     /**
      * Time to pause SQS request has service error (5xx) response, in milliseconds
@@ -50,7 +50,7 @@ public class SqsQueue {
     private final String queueUrl;
     private String queueArn; // lazily initialised
 
-    public SqsQueue(final String queueName, final String queueUrl, final AmazonSQS amazonSqsClient) {
+    public SqsQueueResource(final String queueName, final String queueUrl, final AmazonSQS amazonSqsClient) {
         this.queueName = queueName;
         this.queueUrl = queueUrl;
         this.amazonSqsClient = amazonSqsClient;

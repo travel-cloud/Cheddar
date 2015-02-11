@@ -19,17 +19,17 @@ package com.clicktravel.infrastructure.messaging.aws;
 public interface SnsTopicFactory {
 
     /**
-     * Creates a {@link SnsTopic} and the actual AWS SNS topic if it does not already exist with the given name.
+     * Creates a {@link SnsTopicResource} and the actual AWS SNS topic if it does not already exist with the given name.
      * @param name Topic name
-     * @return {@link SnsTopic} with the given name
+     * @return {@link SnsTopicResource} with the given name
      */
-    SnsTopic createSnsTopicAndAwsSnsTopicIfAbsent(String name);
+    SnsTopicResource createSnsTopicAndAwsSnsTopicIfAbsent(String name);
 
     /**
-     * Creates a {@link SnsTopic} representing an existing actual AWS SNS topic.
+     * Creates a {@link SnsTopicResource} representing an existing actual AWS SNS topic.
      * @param name Topic name
-     * @return {@link SnsTopic} with the given name
+     * @return {@link SnsTopicResource} with the given name
      */
-    SnsTopic createSnsTopicForExistingAwsSnsTopic(String name);
+    SnsTopicResource createSnsTopicForExistingAwsSnsTopic(String name);
 
 }

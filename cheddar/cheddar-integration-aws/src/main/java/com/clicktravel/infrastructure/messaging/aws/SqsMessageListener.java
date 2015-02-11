@@ -108,7 +108,9 @@ public class SqsMessageListener extends SqsMessageQueueAccessor implements Typed
             if (sb.length() != 0) {
                 sb.append(", ");
             }
+            sb.append('[');
             sb.append(messageType);
+            sb.append(']');
         }
         return sb.toString();
     }

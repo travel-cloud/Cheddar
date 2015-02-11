@@ -34,6 +34,24 @@ import com.clicktravel.common.concurrent.RateLimiter;
 public abstract class PooledMessageListener<T extends Message> implements MessageListener, Runnable {
 
     /**
+     * Maximum number of messages to receive from the queue at a time. Using larger numbers decreases the number of
+     * calls to receive and thus increases throughput, at the possible expense of latency.
+     */
+    protected static final int DEFAULT_MAX_RECEIVED_MESSAGES = 10;
+
+    /**
+     * Controls when messages are received from the queue by setting an ideal minimum number of runnable tasks for each
+     * thread. This minimum includes the currently executing tasks and those on the thread pool work queue. When the
+     * number of runnable tasks dips below the ideal, more messages are received.
+     */
+    protected static final int IDEAL_RUNNABLES_PER_THREAD = 2; // Each thread has 1 executing + 1 queued runnable
+
+    /**
+     * The default number of worker threads to use in a fixed size thread pool
+     */
+    protected static final int DEFAULT_NUM_WORKER_THREADS = 10;
+
+    /**
      * Maximum duration (in seconds) to wait for messages on the queue during normal processing. If there is at least
      * one message on the queue, the actual duration will be shorter.
      */
@@ -77,6 +95,8 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
 
     protected abstract MessageHandler<T> getHandlerForMessage(T message);
 
+    protected abstract void listenerStarted();
+
     @Override
     public void start() {
         new Thread(this).start();
@@ -84,8 +104,12 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
 
     @Override
     public void run() {
-        logger.debug("Message listener for queue [" + queueName() + "] is starting to receive messages");
         try {
+            listenerStarted();
+            final String limiterSummary = rateLimiter != null ? ("using " + rateLimiter.toString())
+                    : "not rate limited";
+            logger.debug("Listener for queue [" + queueName() + "] has pool of "
+                    + threadPoolExecutor.getMaximumPoolSize() + " threads and is " + limiterSummary);
             processMessagesUntilShutdownRequested();
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();

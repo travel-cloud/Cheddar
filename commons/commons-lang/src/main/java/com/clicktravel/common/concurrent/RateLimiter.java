@@ -167,6 +167,12 @@ public class RateLimiter {
         this.tokenReplacementDelayMillis = tokenReplacementDelayMillis;
     }
 
+    @Override
+    public String toString() {
+        return "RateLimiter [bucketCapacity=" + bucketCapacity + ", tokenReplacementDelayMillis="
+                + tokenReplacementDelayMillis + "]";
+    }
+
     private class Token implements Delayed {
 
         final long endTime;

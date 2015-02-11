@@ -25,17 +25,17 @@ import com.clicktravel.cheddar.infrastructure.messaging.Message;
  */
 public class SnsExchange<T extends Message> implements Exchange<T> {
 
-    private final SnsTopic snsTopic;
+    private final SnsTopicResource snsTopicResource;
     private final SnsMessageAdapter<T> snsMessageAdapter;
 
-    public SnsExchange(final SnsTopic snsTopic, final SnsMessageAdapter<T> snsMessageAdapter) {
-        this.snsTopic = snsTopic;
+    public SnsExchange(final SnsTopicResource snsTopicResource, final SnsMessageAdapter<T> snsMessageAdapter) {
+        this.snsTopicResource = snsTopicResource;
         this.snsMessageAdapter = snsMessageAdapter;
     }
 
     @Override
     public String exchangeName() {
-        return snsTopic.getTopicName();
+        return snsTopicResource.getTopicName();
     }
 
     @Override
@@ -43,7 +43,7 @@ public class SnsExchange<T extends Message> implements Exchange<T> {
         final SnsSubjectAndMessage snsSubjectAndMessage = snsMessageAdapter.toSnsSubjectAndMessage(message);
         final String subject = snsSubjectAndMessage.getSubject();
         final String snsMessage = snsSubjectAndMessage.getMessage();
-        snsTopic.publish(subject, snsMessage);
+        snsTopicResource.publish(subject, snsMessage);
     }
 
 }

@@ -43,27 +43,29 @@ public class DefaultSnsTopicFactory implements SnsTopicFactory {
     }
 
     @Override
-    public SnsTopic createSnsTopicForExistingAwsSnsTopic(final String name) {
+    public SnsTopicResource createSnsTopicForExistingAwsSnsTopic(final String name) {
         final String topicArn = pollAndRetryForTopicArnForName(name);
-        return new SnsTopic(name, topicArn, amazonSnsClient);
+        logger.info("Using existing SNS topic: " + name);
+        return new SnsTopicResource(name, topicArn, amazonSnsClient);
     }
 
     @Override
-    public SnsTopic createSnsTopicAndAwsSnsTopicIfAbsent(final String name) {
+    public SnsTopicResource createSnsTopicAndAwsSnsTopicIfAbsent(final String name) {
         String topicArn = pollForTopicArnForName(name);
         if (topicArn == null) {
             topicArn = createAwsSnsTopic(name);
-            final SnsTopic snsTopic = new SnsTopic(name, topicArn, amazonSnsClient);
-            snsTopic.setPolicy(defaultPolicy(snsTopic)); // policy is set once, on creation of AWS SNS topic
-            return snsTopic;
+            final SnsTopicResource snsTopicResource = new SnsTopicResource(name, topicArn, amazonSnsClient);
+            snsTopicResource.setPolicy(allowAllQueuesPolicy(snsTopicResource)); // policy is set once, on creation of
+                                                                                // SNS topic
+            return snsTopicResource;
         } else {
-            return new SnsTopic(name, topicArn, amazonSnsClient);
+            logger.info("Using existing SNS topic: " + name);
+            return new SnsTopicResource(name, topicArn, amazonSnsClient);
         }
     }
 
-    // TODO : Give this method a better name. What does this policy do?
-    private Policy defaultPolicy(final SnsTopic snsTopic) {
-        final String topicArn = snsTopic.getTopicArn();
+    private Policy allowAllQueuesPolicy(final SnsTopicResource snsTopicResource) {
+        final String topicArn = snsTopicResource.getTopicArn();
         final String[] topicArnParts = topicArn.split(":");
         final String sourceOwner = topicArnParts[topicArnParts.length - 2];
         final Condition condition = new Condition().withType("StringEquals").withConditionKey("AWS:SourceOwner")
@@ -82,7 +84,7 @@ public class DefaultSnsTopicFactory implements SnsTopicFactory {
     }
 
     private String createAwsSnsTopic(final String name) {
-        logger.debug("Creating SNS topic: " + name);
+        logger.info("Creating SNS topic: " + name);
         return amazonSnsClient.createTopic(new CreateTopicRequest(name)).getTopicArn();
     }
 

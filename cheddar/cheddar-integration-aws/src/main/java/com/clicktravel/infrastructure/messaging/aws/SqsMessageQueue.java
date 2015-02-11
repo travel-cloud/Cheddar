@@ -31,38 +31,38 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageQueue;
 public class SqsMessageQueue<T extends Message> implements MessageQueue<T> {
 
     private final SqsMessageAdapter<T> sqsMessageAdapter;
-    private final SqsQueue sqsQueue;
+    private final SqsQueueResource sqsQueueResource;
 
-    public SqsMessageQueue(final SqsQueue sqsQueue, final SqsMessageAdapter<T> sqsMessageAdapter) {
+    public SqsMessageQueue(final SqsQueueResource sqsQueueResource, final SqsMessageAdapter<T> sqsMessageAdapter) {
         this.sqsMessageAdapter = sqsMessageAdapter;
-        this.sqsQueue = sqsQueue;
+        this.sqsQueueResource = sqsQueueResource;
     }
 
     @Override
     public String getName() {
-        return sqsQueue.getQueueName();
+        return sqsQueueResource.getQueueName();
     }
 
     @Override
     public void sendMessage(final T message) {
         final String messageBody = sqsMessageAdapter.toSqsMessageBody(message);
-        sqsQueue.sendMessage(messageBody);
+        sqsQueueResource.sendMessage(messageBody);
     }
 
     @Override
     public void sendDelayedMessage(final T message, final int delaySeconds) {
         final String messageBody = sqsMessageAdapter.toSqsMessageBody(message);
-        sqsQueue.sendDelayedMessage(messageBody, delaySeconds);
+        sqsQueueResource.sendDelayedMessage(messageBody, delaySeconds);
     }
 
     @Override
     public List<T> receive() throws InterruptedException {
-        return toMessages(sqsQueue.receiveMessages());
+        return toMessages(sqsQueueResource.receiveMessages());
     }
 
     @Override
     public List<T> receive(final int waitTimeSeconds, final int maxMessages) throws InterruptedException {
-        return toMessages(sqsQueue.receiveMessages(waitTimeSeconds, maxMessages));
+        return toMessages(sqsQueueResource.receiveMessages(waitTimeSeconds, maxMessages));
     }
 
     private List<T> toMessages(final List<com.amazonaws.services.sqs.model.Message> sqsMessages) {
@@ -75,10 +75,10 @@ public class SqsMessageQueue<T extends Message> implements MessageQueue<T> {
 
     @Override
     public void delete(final T message) {
-        sqsQueue.deleteMessage(message.getReceiptHandle());
+        sqsQueueResource.deleteMessage(message.getReceiptHandle());
     }
 
-    public SqsQueue getSqsQueue() {
-        return sqsQueue;
+    public SqsQueueResource getSqsQueue() {
+        return sqsQueueResource;
     }
 }

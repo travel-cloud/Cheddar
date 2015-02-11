@@ -27,10 +27,10 @@ import com.amazonaws.services.sns.model.SubscribeRequest;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
 
 /**
- * A representative for an actual existing AWS SNS topic. Provides some convenience methods for working with the actual
- * AWS SNS topic.
+ * Represents an actual AWS SNS topic that exists in the AWS environment. Provides some convenience methods for working
+ * with the actual AWS SNS topic.
  */
-public class SnsTopic {
+public class SnsTopicResource {
 
     private static final String TOPIC_POLICY_ATTRIBUTE = "Policy";
 
@@ -39,7 +39,7 @@ public class SnsTopic {
     private final String topicArn;
     private final AmazonSNS amazonSnsClient;
 
-    public SnsTopic(final String topicName, final String topicArn, final AmazonSNS amazonSnsClient) {
+    public SnsTopicResource(final String topicName, final String topicArn, final AmazonSNS amazonSnsClient) {
         this.topicName = topicName;
         this.topicArn = topicArn;
         this.amazonSnsClient = amazonSnsClient;
@@ -63,10 +63,11 @@ public class SnsTopic {
 
     /**
      * Adds an AWS SQS subscription to the AWS SNS topic.
-     * @param sqsQueue {@link SqsQueue} representative of AWS SQS queue subscribing to the AWS SNS topic.
+     * @param sqsQueueResource {@link SqsQueueResource} representative of AWS SQS queue subscribing to the AWS SNS
+     *            topic.
      */
-    public void subscribe(final SqsQueue sqsQueue) {
-        amazonSnsClient.subscribe(new SubscribeRequest(topicArn, "sqs", sqsQueue.queueArn()));
+    public void subscribe(final SqsQueueResource sqsQueueResource) {
+        amazonSnsClient.subscribe(new SubscribeRequest(topicArn, "sqs", sqsQueueResource.queueArn()));
     }
 
     /**

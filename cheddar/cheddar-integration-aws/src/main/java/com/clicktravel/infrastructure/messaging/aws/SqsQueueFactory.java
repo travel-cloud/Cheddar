@@ -19,14 +19,14 @@ package com.clicktravel.infrastructure.messaging.aws;
 public interface SqsQueueFactory {
 
     /**
-     * Creates an {@link SqsQueue} which is subscribed to the given {@link SnsTopic}s. An actual AWS SQS queue is
+     * Creates an {@link SqsQueueResource} which is subscribed to the given {@link SnsTopicResource}s. An actual AWS SQS queue is
      * created if one does not already exist with the given name. The topic subscriptions (and a compatible queue
      * policy) are always updated, whether or not the AWS SQS queue already exists.
      * @param name Queue name
-     * @param snsTopics {@link SnsTopic}s to subscribe to
-     * @return {@link SqsQueue} with the given name, subscribed to the specified topics.
+     * @param snsTopics {@link SnsTopicResource}s to subscribe to
+     * @return {@link SqsQueueResource} with the given name, subscribed to the specified topics.
      */
-    SqsQueue createSqsQueue(String name, SnsTopic... snsTopics);
+    SqsQueueResource createSqsQueue(String name, SnsTopicResource... snsTopics);
 
     /**
      * Creates an {@link SqsQueue} without any topic subscriptions. An actual AWS SQS queue is created if one does not

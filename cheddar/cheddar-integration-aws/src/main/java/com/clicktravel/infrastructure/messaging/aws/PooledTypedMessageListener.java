@@ -16,6 +16,7 @@
  */
 package com.clicktravel.infrastructure.messaging.aws;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -29,26 +30,9 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageQueue;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 import com.clicktravel.common.concurrent.RateLimiter;
+import com.clicktravel.common.functional.StringUtils;
 
 public class PooledTypedMessageListener extends PooledMessageListener<TypedMessage> implements TypedMessageListener {
-
-    /**
-     * Maximum number of messages to receive from the queue at a time. Using larger numbers decreases the number of
-     * calls to receive and thus increases throughput, at the possible expense of latency.
-     */
-    private static final int DEFAULT_MAX_RECEIVED_MESSAGES = 10;
-
-    /**
-     * Controls when messages are received from the queue by setting an ideal minimum number of runnable tasks for each
-     * thread. This minimum includes the currently executing tasks and those on the thread pool work queue. When the
-     * number of runnable tasks dips below the ideal, more messages are received.
-     */
-    private static final int IDEAL_RUNNABLES_PER_THREAD = 2; // Each thread has 1 executing + 1 queued runnable
-
-    /**
-     * The default number of worker threads to use in a fixed size thread pool
-     */
-    private static final int DEFAULT_NUM_WORKER_THREADS = 10;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<String, MessageHandler<TypedMessage>> messageHandlers = new HashMap<>();
@@ -95,8 +79,6 @@ public class PooledTypedMessageListener extends PooledMessageListener<TypedMessa
             final RateLimiter rateLimiter, final ThreadPoolExecutor threadPoolExecutor, final Semaphore semaphore,
             final int maxReceivedMessages) {
         super(typedMessageQueue, rateLimiter, threadPoolExecutor, semaphore, maxReceivedMessages);
-        // logger.debug("Message listener for queue [" + queueName() + "] configured to handle these message types :["
-        // + StringUtils.join(new ArrayList<>(messageHandlers.keySet())) + "]");
     }
 
     @Override
@@ -111,6 +93,12 @@ public class PooledTypedMessageListener extends PooledMessageListener<TypedMessa
     @Override
     public void registerMessageHandler(final String messageType, final MessageHandler<TypedMessage> messageHandler) {
         messageHandlers.put(messageType, messageHandler);
+    }
+
+    @Override
+    protected void listenerStarted() {
+        logger.info("Starting to listen for messages on queue [" + queueName() + "] for these message types : ["
+                + StringUtils.join(new ArrayList<>(messageHandlers.keySet())) + "]");
     }
 
 }

@@ -20,8 +20,8 @@ import com.clicktravel.cheddar.infrastructure.messaging.BasicMessage;
 
 public class SqsBasicMessageQueue extends SqsMessageQueue<BasicMessage> {
 
-    public SqsBasicMessageQueue(final SqsQueue sqsQueue) {
-        super(sqsQueue, new SqsBasicMessageAdapter());
+    public SqsBasicMessageQueue(final SqsQueueResource sqsQueueResource) {
+        super(sqsQueueResource, new SqsBasicMessageAdapter());
     }
 
 }
