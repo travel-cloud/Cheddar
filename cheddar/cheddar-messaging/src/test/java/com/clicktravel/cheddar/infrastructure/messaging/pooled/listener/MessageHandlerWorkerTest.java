@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.infrastructure.messaging.aws;
+package com.clicktravel.cheddar.infrastructure.messaging.pooled.listener;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -26,8 +26,6 @@ import org.junit.Test;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
-import com.clicktravel.cheddar.infrastructure.messaging.pooled.listener.MessageHandlerWorker;
-import com.clicktravel.cheddar.infrastructure.messaging.pooled.listener.PooledMessageListener;
 
 @SuppressWarnings("unchecked")
 public class MessageHandlerWorkerTest {

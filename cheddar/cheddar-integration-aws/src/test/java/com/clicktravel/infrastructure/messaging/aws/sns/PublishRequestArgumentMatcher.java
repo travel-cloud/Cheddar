@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.infrastructure.messaging.aws;
+package com.clicktravel.infrastructure.messaging.aws.sns;
 
 import org.mockito.ArgumentMatcher;
 

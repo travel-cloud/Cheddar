@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.cheddar.infrastructure.messaging.router;
 
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
@@ -27,7 +27,9 @@ import java.util.Collection;
 
 import org.junit.Test;
 
-import com.clicktravel.cheddar.infrastructure.messaging.router.MessageRouter;
+import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 import com.clicktravel.common.random.Randoms;
 
 @SuppressWarnings("unchecked")
