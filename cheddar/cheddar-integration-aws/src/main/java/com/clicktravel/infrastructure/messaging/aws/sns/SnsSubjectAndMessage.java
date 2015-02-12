@@ -14,25 +14,11 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.infrastructure.messaging.aws.sns;
 
-import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageListenerException;
+public interface SnsSubjectAndMessage {
 
-/**
- * Controls the lifecycle of listening for messages on a queue and handling them.
- */
-public interface MessageListener {
+    String getSubject();
 
-    void start() throws MessageListenerException;
-
-    void shutdown();
-
-    void prepareForShutdown();
-
-    void shutdownAfterQueueDrained();
-
-    boolean hasTerminated();
-
-    void awaitTermination();
-
+    String getMessage();
 }

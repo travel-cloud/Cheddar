@@ -22,9 +22,9 @@ import java.util.Collection;
 import com.clicktravel.cheddar.domain.event.DomainEvent;
 import com.clicktravel.cheddar.domain.event.DomainEventHandler;
 import com.clicktravel.cheddar.event.EventHandler;
-import com.clicktravel.cheddar.infrastructure.messaging.MessageRouter;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.router.MessageRouter;
 
 public class DomainEventHandlerConfigurationUtils {
 

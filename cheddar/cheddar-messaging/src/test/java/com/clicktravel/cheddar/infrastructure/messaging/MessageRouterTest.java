@@ -27,6 +27,7 @@ import java.util.Collection;
 
 import org.junit.Test;
 
+import com.clicktravel.cheddar.infrastructure.messaging.router.MessageRouter;
 import com.clicktravel.common.random.Randoms;
 
 @SuppressWarnings("unchecked")
