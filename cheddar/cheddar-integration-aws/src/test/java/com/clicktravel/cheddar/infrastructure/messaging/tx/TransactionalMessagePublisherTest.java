@@ -27,19 +27,20 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.tx.NestedTransactionException;
 import com.clicktravel.cheddar.infrastructure.tx.NonExistentTransactionException;
 
+@SuppressWarnings("unchecked")
 public class TransactionalMessagePublisherTest {
 
-    final MessagePublisher mockMessagePublisher = mock(MessagePublisher.class);
+    final MessagePublisher<TypedMessage> mockMessagePublisher = mock(MessagePublisher.class);
 
     @Test
     public void shouldCreateTransactionalMessagePublisher_withMessagePublisher() throws Exception {
         // Given
-        final MessagePublisher messagePublisher = mock(MessagePublisher.class);
+        final MessagePublisher<TypedMessage> messagePublisher = mock(MessagePublisher.class);
 
         // When
         Exception actualException = null;
@@ -130,12 +131,12 @@ public class TransactionalMessagePublisherTest {
         final TransactionalMessagePublisher transactionalMessagePublisher = new TransactionalMessagePublisher(
                 mockMessagePublisher);
         transactionalMessagePublisher.begin();
-        final Message message = mock(Message.class);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
 
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessagePublisher.publishMessage(message);
+            transactionalMessagePublisher.publishMessage(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -150,12 +151,12 @@ public class TransactionalMessagePublisherTest {
         // Given
         final TransactionalMessagePublisher transactionalMessagePublisher = new TransactionalMessagePublisher(
                 mockMessagePublisher);
-        final Message message = mock(Message.class);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
 
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessagePublisher.publishMessage(message);
+            transactionalMessagePublisher.publishMessage(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -170,14 +171,14 @@ public class TransactionalMessagePublisherTest {
         final TransactionalMessagePublisher transactionalMessagePublisher = new TransactionalMessagePublisher(
                 mockMessagePublisher);
         transactionalMessagePublisher.begin();
-        final Message message = mock(Message.class);
-        transactionalMessagePublisher.publishMessage(message);
+        final TypedMessage typedMessage = mock(TypedMessage.class);
+        transactionalMessagePublisher.publishMessage(typedMessage);
 
         // When
         transactionalMessagePublisher.commit();
 
         // Then
-        verify(mockMessagePublisher).publishMessage(message);
+        verify(mockMessagePublisher).publishMessage(typedMessage);
     }
 
 }

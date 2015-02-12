@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.cheddar.infrastructure.messaging.router;
 
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
@@ -27,25 +27,29 @@ import java.util.Collection;
 
 import org.junit.Test;
 
+import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 import com.clicktravel.common.random.Randoms;
 
+@SuppressWarnings("unchecked")
 public class MessageRouterTest {
 
     @Test
     public void shouldSendMessageOnCorrectRoute_onHandle() throws Exception {
         // Given
-        final Message mockMessage = mock(Message.class);
+        final TypedMessage mockMessage = mock(TypedMessage.class);
         final String messageType = Randoms.randomString();
         when(mockMessage.getType()).thenReturn(messageType);
 
-        final MessageListener mockMessageListener = mock(MessageListener.class);
+        final TypedMessageListener mockMessageListener = mock(TypedMessageListener.class);
         final MessageRouter messageRouter = new MessageRouter(mockMessageListener);
 
-        final MessageSender expectedMessageSender = mock(MessageSender.class);
+        final MessageSender<TypedMessage> expectedMessageSender = mock(MessageSender.class);
         messageRouter.addRoute(messageType, expectedMessageSender);
-        final Collection<MessageSender> unusedMessageSenders = new ArrayList<>();
+        final Collection<MessageSender<TypedMessage>> unusedMessageSenders = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            final MessageSender messageSender = mock(MessageSender.class);
+            final MessageSender<TypedMessage> messageSender = mock(MessageSender.class);
             messageRouter.addRoute(Randoms.randomString(), messageSender);
             unusedMessageSenders.add(messageSender);
         }
@@ -55,7 +59,7 @@ public class MessageRouterTest {
 
         // Then
         verify(expectedMessageSender).sendMessage(mockMessage);
-        for (final MessageSender unusedMessageSender : unusedMessageSenders) {
+        for (final MessageSender<TypedMessage> unusedMessageSender : unusedMessageSenders) {
             verifyZeroInteractions(unusedMessageSender);
         }
     }
@@ -63,15 +67,15 @@ public class MessageRouterTest {
     @Test
     public void shouldSendMessageOnMultipleRoutes_onHandle() throws Exception {
         // Given
-        final Message mockMessage = mock(Message.class);
+        final TypedMessage mockMessage = mock(TypedMessage.class);
         final String messageType = Randoms.randomString();
         when(mockMessage.getType()).thenReturn(messageType);
 
-        final MessageListener mockMessageListener = mock(MessageListener.class);
+        final TypedMessageListener mockMessageListener = mock(TypedMessageListener.class);
         final MessageRouter messageRouter = new MessageRouter(mockMessageListener);
-        final Collection<MessageSender> messageSenders = new ArrayList<>();
+        final Collection<MessageSender<TypedMessage>> messageSenders = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            final MessageSender messageSender = mock(MessageSender.class);
+            final MessageSender<TypedMessage> messageSender = mock(MessageSender.class);
             messageSenders.add(messageSender);
             messageRouter.addRoute(messageType, messageSender);
         }
@@ -80,7 +84,7 @@ public class MessageRouterTest {
         messageRouter.handle(mockMessage);
 
         // Then
-        for (final MessageSender messageSender : messageSenders) {
+        for (final MessageSender<TypedMessage> messageSender : messageSenders) {
             verify(messageSender).sendMessage(mockMessage);
         }
     }
@@ -88,11 +92,11 @@ public class MessageRouterTest {
     @Test
     public void shoudIgnoreUnroutedMessageType_onHandle() {
         // Given
-        final Message mockMessage = mock(Message.class);
+        final TypedMessage mockMessage = mock(TypedMessage.class);
         final String messageType = Randoms.randomString();
         when(mockMessage.getType()).thenReturn(messageType);
 
-        final MessageListener mockMessageListener = mock(MessageListener.class);
+        final TypedMessageListener mockMessageListener = mock(TypedMessageListener.class);
         final MessageRouter messageRouter = new MessageRouter(mockMessageListener);
 
         // When

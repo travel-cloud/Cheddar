@@ -16,26 +16,17 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
-public class ExchangeQueueBinding {
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageParseException;
 
-    private final String exchangeName;
-    private final String queueName;
+public class InvalidBasicMessage extends InvalidMessage implements BasicMessage {
 
-    public ExchangeQueueBinding(final String exchangeName, final String queueName) {
-        if (exchangeName == null || queueName == null) {
-            throw new IllegalStateException("Exchange or queue name must not be null. Exchange: " + exchangeName
-                    + ", queue: " + queueName);
-        }
-        this.exchangeName = exchangeName;
-        this.queueName = queueName;
+    public InvalidBasicMessage(final String receiptHandle, final MessageParseException messageParseException) {
+        super(receiptHandle, messageParseException);
     }
 
-    public String exchangeName() {
-        return exchangeName;
-    }
-
-    public String queueName() {
-        return queueName;
+    @Override
+    public String getBody() {
+        throw getMessageParseException();
     }
 
 }

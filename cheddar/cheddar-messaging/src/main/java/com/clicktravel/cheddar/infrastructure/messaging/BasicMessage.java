@@ -17,15 +17,10 @@
 package com.clicktravel.cheddar.infrastructure.messaging;
 
 /**
- * A logical representation of a message that is sent, published or received.
- * @see TypedMessage
- * @see BasicMessage
+ * An abstract representation of a message that only contains a body and no other information. This is typically used
+ * for foreign messages not sent by a Cheddar application.
  */
-public interface Message {
+public interface BasicMessage extends Message {
 
-    /**
-     * @return Identifier associated with the receipt of this message from a {@link MessageQueue}. The receipt handle is
-     *         used to delete this message from the queue.
-     */
-    String getReceiptHandle();
+    String getBody();
 }

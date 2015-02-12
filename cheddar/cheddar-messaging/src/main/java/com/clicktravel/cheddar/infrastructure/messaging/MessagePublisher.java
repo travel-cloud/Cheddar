@@ -18,14 +18,19 @@ package com.clicktravel.cheddar.infrastructure.messaging;
 
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
 
-public interface MessagePublisher {
+/**
+ * A message publisher is logically a contributor to an exchange. Implementations are free to model message publishers
+ * and exchanges as distinct objects.
+ * @param <T> Type of messages published
+ */
+public interface MessagePublisher<T extends Message> {
 
     /**
      * Forward a message for publication
      * @param message
      * @throws MessagePublishException
      */
-    void publishMessage(Message message) throws MessagePublishException;
+    void publishMessage(T message) throws MessagePublishException;
 
     /**
      * Exposes which exchange the message will be published to

@@ -24,18 +24,17 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.clicktravel.common.random.Randoms;
-import com.clicktravel.cheddar.event.Event;
-import com.clicktravel.cheddar.event.EventPublisher;
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
+import com.clicktravel.common.random.Randoms;
 
 public class EventPublisherTest {
 
+    @SuppressWarnings("unchecked")
     @Test
     public void shouldPublishEvent_withEvent() {
         // Given
-        final MessagePublisher messagePublisher = mock(MessagePublisher.class);
+        final MessagePublisher<TypedMessage> messagePublisher = mock(MessagePublisher.class);
         final Event event = mock(Event.class);
         final String type = Randoms.randomString(5);
         when(event.type()).thenReturn(type);
@@ -48,7 +47,7 @@ public class EventPublisherTest {
         eventPublisher.publishEvent(event);
 
         // Then
-        final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+        final ArgumentCaptor<TypedMessage> messageArgumentCaptor = ArgumentCaptor.forClass(TypedMessage.class);
         verify(messagePublisher).publishMessage(messageArgumentCaptor.capture());
         assertEquals(type, messageArgumentCaptor.getValue().getType());
         assertEquals(serialized, messageArgumentCaptor.getValue().getPayload());

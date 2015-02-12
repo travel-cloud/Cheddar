@@ -16,16 +16,18 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
-/**
- * A logical representation of a message that is sent, published or received.
- * @see TypedMessage
- * @see BasicMessage
- */
-public interface Message {
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageParseException;
 
-    /**
-     * @return Identifier associated with the receipt of this message from a {@link MessageQueue}. The receipt handle is
-     *         used to delete this message from the queue.
-     */
-    String getReceiptHandle();
+public abstract class InvalidMessage extends AbstractMessage {
+
+    private final MessageParseException messageParseException;
+
+    public InvalidMessage(final String receiptHandle, final MessageParseException messageParseException) {
+        super(receiptHandle);
+        this.messageParseException = messageParseException;
+    }
+
+    protected MessageParseException getMessageParseException() {
+        return messageParseException;
+    }
 }

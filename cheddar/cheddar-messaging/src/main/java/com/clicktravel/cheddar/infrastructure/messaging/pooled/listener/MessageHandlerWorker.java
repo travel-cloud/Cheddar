@@ -14,34 +14,26 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.infrastructure.messaging.aws;
-
-import java.util.concurrent.Semaphore;
+package com.clicktravel.cheddar.infrastructure.messaging.pooled.listener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 
-public class MessageHandlingWorker implements Runnable {
+public class MessageHandlerWorker<T extends Message> implements Runnable {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Message message;
-    private final MessageHandler messageHandler;
-    private final AmazonSQS amazonSqsClient;
-    private final DeleteMessageRequest deleteMessageRequest;
-    private final Semaphore semaphore;
+    private final T message;
+    private final MessageHandler<T> messageHandler;
+    private final PooledMessageListener<T> pooledMessageListener;
 
-    public MessageHandlingWorker(final Message message, final MessageHandler messageHandler,
-            final AmazonSQS amazonSqsClient, final DeleteMessageRequest deleteMessageRequest, final Semaphore semaphore) {
+    public MessageHandlerWorker(final PooledMessageListener<T> pooledMessageListener, final T message,
+            final MessageHandler<T> messageHandler) {
         this.message = message;
         this.messageHandler = messageHandler;
-        this.amazonSqsClient = amazonSqsClient;
-        this.deleteMessageRequest = deleteMessageRequest;
-        this.semaphore = semaphore;
+        this.pooledMessageListener = pooledMessageListener;
     }
 
     @Override
@@ -51,17 +43,8 @@ public class MessageHandlingWorker implements Runnable {
         } catch (final Exception e) {
             logger.error("Error handling message: " + message, e);
         } finally {
-            amazonSqsClient.deleteMessage(deleteMessageRequest);
-            semaphore.release();
+            pooledMessageListener.completeMessageProcessing(message);
         }
-    }
-
-    public Message message() {
-        return message;
-    }
-
-    public MessageHandler messageHandler() {
-        return messageHandler;
     }
 
 }

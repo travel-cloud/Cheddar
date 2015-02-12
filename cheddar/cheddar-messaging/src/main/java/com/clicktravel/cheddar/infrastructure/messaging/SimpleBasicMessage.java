@@ -16,34 +16,22 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
-public class SimpleMessage extends AbstractMessage implements TypedMessage {
+public class SimpleBasicMessage extends AbstractMessage implements BasicMessage {
 
-    private final String type;
-    private final String payload;
+    private final String body;
 
-    public SimpleMessage(final String type, final String payload, final String receiptHandle) {
+    public SimpleBasicMessage(final String body, final String receiptHandle) {
         super(receiptHandle);
-        this.type = type;
-        this.payload = payload;
+        this.body = body;
     }
 
-    public SimpleMessage(final String type, final String payload) {
-        this(type, payload, null);
-    }
-
-    @Override
-    public String getType() {
-        return type;
+    public SimpleBasicMessage(final String body) {
+        this(body, null);
     }
 
     @Override
-    public String getPayload() {
-        return payload;
-    }
-
-    @Override
-    public String toString() {
-        return "SimpleMessage; type:[" + type + "] payload:[" + payload + "]";
+    public String getBody() {
+        return body;
     }
 
 }

@@ -14,10 +14,13 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.cheddar.infrastructure.messaging.exception;
 
-public interface MessageQueueAccessor {
+public class MessageParseException extends MessagingException {
 
-    String queueName();
+    private static final long serialVersionUID = -2685391351834131593L;
 
+    public MessageParseException(final String message) {
+        super(message);
+    }
 }

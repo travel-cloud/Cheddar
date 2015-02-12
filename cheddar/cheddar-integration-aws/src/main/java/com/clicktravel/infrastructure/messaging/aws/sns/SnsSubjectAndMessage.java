@@ -14,18 +14,11 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.infrastructure.messaging.aws.sns;
 
-/**
- * A logical representation of a message that is sent, published or received.
- * @see TypedMessage
- * @see BasicMessage
- */
-public interface Message {
+public interface SnsSubjectAndMessage {
 
-    /**
-     * @return Identifier associated with the receipt of this message from a {@link MessageQueue}. The receipt handle is
-     *         used to delete this message from the queue.
-     */
-    String getReceiptHandle();
+    String getSubject();
+
+    String getMessage();
 }

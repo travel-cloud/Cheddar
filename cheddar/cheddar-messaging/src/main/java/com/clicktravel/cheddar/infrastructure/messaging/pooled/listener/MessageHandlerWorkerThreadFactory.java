@@ -14,28 +14,23 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.infrastructure.messaging.aws;
+package com.clicktravel.cheddar.infrastructure.messaging.pooled.listener;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * A {@link ThreadFactory} that names each thread, identifying it as a messaging processing thread for a particular
- * queue.
- * @see SqsMessageProcessor
- */
-public class SqsMessageProcessorThreadFactory implements ThreadFactory {
+public class MessageHandlerWorkerThreadFactory implements ThreadFactory {
 
     private final AtomicInteger threadSequenceNumber = new AtomicInteger();
     private final String queueName;
 
-    public SqsMessageProcessorThreadFactory(final String queueName) {
+    public MessageHandlerWorkerThreadFactory(final String queueName) {
         this.queueName = queueName;
     }
 
     @Override
     public Thread newThread(final Runnable r) {
         final int seq = threadSequenceNumber.incrementAndGet();
-        return new Thread(r, "MessageProcessor:" + queueName + ":" + seq);
+        return new Thread(r, "MessageHandler:" + queueName + ":" + seq);
     }
 }

@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import com.clicktravel.cheddar.event.EventHandler;
 import com.clicktravel.cheddar.event.EventHandlerRegistry;
 import com.clicktravel.cheddar.event.EventMessageHandler;
-import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 import com.clicktravel.cheddar.system.event.SystemEvent;
 import com.clicktravel.cheddar.system.event.handler.SystemEventHandler;
 
@@ -38,7 +38,8 @@ public class SystemEventHandlerConfiguration {
 
     @Bean
     @Autowired
-    public EventHandlerRegistry<SystemEvent> systemEventHandlerRegistry(final MessageListener systemEventMessageListener) {
+    public EventHandlerRegistry<SystemEvent> systemEventHandlerRegistry(
+            final TypedMessageListener systemEventMessageListener) {
         final EventHandlerRegistry<SystemEvent> eventHandlerRegistry = new EventHandlerRegistry<SystemEvent>(
                 systemEventMessageListener, new EventMessageHandler<SystemEvent>(),
                 castSystemEventHandlers(systemEventHandlers));

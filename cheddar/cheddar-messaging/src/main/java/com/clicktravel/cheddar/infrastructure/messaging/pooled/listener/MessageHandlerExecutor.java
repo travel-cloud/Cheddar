@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.infrastructure.messaging.aws;
+package com.clicktravel.cheddar.infrastructure.messaging.pooled.listener;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,13 +22,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Convenience class for creating a {@link ExecutorService} for use with a {@link SqsMessageProcessor}. This ensures a
+ * Convenience class for creating a {@link ExecutorService} for use with a {@link PooledMessageListener}. This ensures a
  * fixed size thread pool is used, and the threads are named correctly.
  */
-public class SqsMessageProcessorExecutor extends ThreadPoolExecutor {
+public class MessageHandlerExecutor extends ThreadPoolExecutor {
 
-    public SqsMessageProcessorExecutor(final String queueName, final int numThreads) {
+    public MessageHandlerExecutor(final String queueName, final int numThreads) {
         super(numThreads, numThreads, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                new SqsMessageProcessorThreadFactory(queueName));
+                new MessageHandlerWorkerThreadFactory(queueName));
     }
+
 }

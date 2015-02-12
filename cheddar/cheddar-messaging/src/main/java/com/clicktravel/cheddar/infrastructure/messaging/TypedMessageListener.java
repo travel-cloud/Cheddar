@@ -17,15 +17,11 @@
 package com.clicktravel.cheddar.infrastructure.messaging;
 
 /**
- * A logical representation of a message that is sent, published or received.
- * @see TypedMessage
- * @see BasicMessage
+ * A message listener that supports handling of messages by message type. This is typically used for listening to
+ * messages sent by a Cheddar application.
  */
-public interface Message {
+public interface TypedMessageListener extends MessageListener {
 
-    /**
-     * @return Identifier associated with the receipt of this message from a {@link MessageQueue}. The receipt handle is
-     *         used to delete this message from the queue.
-     */
-    String getReceiptHandle();
+    void registerMessageHandler(String messageType, MessageHandler<TypedMessage> messageHandler);
+
 }

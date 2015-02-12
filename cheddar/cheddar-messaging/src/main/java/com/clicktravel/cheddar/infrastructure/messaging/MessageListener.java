@@ -18,11 +18,12 @@ package com.clicktravel.cheddar.infrastructure.messaging;
 
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageListenerException;
 
-public interface MessageListener extends MessageQueueAccessor {
+/**
+ * Controls the lifecycle of listening for messages on a queue and handling them.
+ */
+public interface MessageListener {
 
     void start() throws MessageListenerException;
-
-    void registerMessageHandler(String messageType, MessageHandler messageHandler);
 
     void shutdown();
 
@@ -33,4 +34,5 @@ public interface MessageListener extends MessageQueueAccessor {
     boolean hasTerminated();
 
     void awaitTermination();
+
 }

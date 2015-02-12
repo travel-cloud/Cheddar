@@ -20,9 +20,9 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
 
-import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessagePublisher;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageSender;
+import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.tx.Transaction;
 
 public class MessagingTransaction implements Transaction {
@@ -41,26 +41,26 @@ public class MessagingTransaction implements Transaction {
         return transactionId;
     }
 
-    public void applyActions(final MessagePublisher messagePublisher) {
+    public void applyActions(final MessagePublisher<TypedMessage> messagePublisher) {
         while (!messageActions.isEmpty()) {
             final MessageAction messageAction = messageActions.remove();
             messagePublisher.publishMessage(messageAction.message());
         }
     }
 
-    public void applyActions(final MessageSender messageSender) {
+    public void applyActions(final MessageSender<TypedMessage> messageSender) {
         while (!messageActions.isEmpty()) {
             final MessageAction messageAction = messageActions.remove();
             messageAction.apply(messageSender);
         }
     }
 
-    public void addMessage(final Message message) {
-        messageActions.add(new MessageAction(message, 0));
+    public void addMessage(final TypedMessage typedMessage) {
+        messageActions.add(new MessageAction(typedMessage, 0));
     }
 
-    public void addDelayedMessage(final Message message, final int delay) {
-        messageActions.add(new MessageAction(message, delay));
+    public void addDelayedMessage(final TypedMessage typedMessage, final int delay) {
+        messageActions.add(new MessageAction(typedMessage, delay));
     }
 
 }
