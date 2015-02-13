@@ -64,7 +64,7 @@ public class TransactionalMessageSender implements MessageSender<TypedMessage>, 
     }
 
     @Override
-    public void sendMessage(final TypedMessage typedMessage) throws MessageSendException {
+    public void send(final TypedMessage typedMessage) throws MessageSendException {
         final MessagingTransaction transaction = getCurrentTransaction();
         transaction.addMessage(typedMessage);
     }

@@ -18,11 +18,13 @@ package com.clicktravel.cheddar.infrastructure.messaging;
 
 import java.util.List;
 
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
+
 /**
  * A named queue of {@link Message} elements.
  * @param <T> message type accepted by this queue
  */
-public interface MessageQueue<T extends Message> extends MessageSender<T> {
+public interface MessageQueue<T extends Message> {
 
     /**
      * @return The queue name
@@ -30,7 +32,22 @@ public interface MessageQueue<T extends Message> extends MessageSender<T> {
     String getName();
 
     /**
-     * Receives any number of messages on the queue, but does not delete them. No order or priority of messages is
+     * Send a message to this message queue
+     * @param message Message to send
+     * @throws MessageSendException
+     */
+    void send(T message) throws MessageSendException;
+
+    /**
+     * Send a message to this message queue; the message is not visible to receivers for the specified delay duration
+     * @param message Message to send
+     * @param delaySeconds Duration for which sent message is invisible to receivers
+     * @throws MessageSendException
+     */
+    void sendDelayedMessage(T message, int delaySeconds) throws MessageSendException;
+
+    /**
+     * Receives any number of messages on this queue, but does not delete them. No order or priority of messages is
      * guaranteed.
      * @return List of received {@code Message}s
      * @throws InterruptedException
@@ -38,8 +55,8 @@ public interface MessageQueue<T extends Message> extends MessageSender<T> {
     List<T> receive() throws InterruptedException;
 
     /**
-     * Receives any number of messages up to the maximum specified, but does not delete them. This call will spend up to
-     * the wait time given for a message to arrive in the queue before returning.
+     * Receives any number of messages on this queue up to the maximum specified, but does not delete them. This call
+     * will spend up to the wait time given for a message to arrive in the queue before returning.
      * @param waitTimeSeconds The duration (in seconds) for which the call will wait for a message to arrive in the
      *            queue before returning. If a message is available, the call will return sooner.
      * @param maxMessages The maximum number of messages to return. Will never return more messages than this value but

@@ -48,7 +48,7 @@ public class EventPublisherTest {
 
         // Then
         final ArgumentCaptor<TypedMessage> messageArgumentCaptor = ArgumentCaptor.forClass(TypedMessage.class);
-        verify(messagePublisher).publishMessage(messageArgumentCaptor.capture());
+        verify(messagePublisher).publish(messageArgumentCaptor.capture());
         assertEquals(type, messageArgumentCaptor.getValue().getType());
         assertEquals(serialized, messageArgumentCaptor.getValue().getPayload());
     }

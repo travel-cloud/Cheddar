@@ -46,7 +46,7 @@ public abstract class SqsMessageQueue<T extends Message> implements MessageQueue
     }
 
     @Override
-    public void sendMessage(final T message) {
+    public void send(final T message) {
         sqsQueueResource.sendMessage(toSqsMessageBody(message));
     }
 

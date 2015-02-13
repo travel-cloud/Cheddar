@@ -64,14 +64,9 @@ public class TransactionalMessagePublisher implements MessagePublisher<TypedMess
     }
 
     @Override
-    public void publishMessage(final TypedMessage typedMessage) throws MessagePublishException {
+    public void publish(final TypedMessage typedMessage) throws MessagePublishException {
         final MessagingTransaction transaction = getCurrentTransaction();
         transaction.addMessage(typedMessage);
-    }
-
-    @Override
-    public String exchangeName() {
-        return messagePublisher.exchangeName();
     }
 
     @Override

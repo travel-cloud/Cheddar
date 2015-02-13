@@ -42,12 +42,12 @@ public class MessageAction {
         if (delay() > 0) {
             messageSender.sendDelayedMessage(typedMessage, delaySeconds);
         } else {
-            messageSender.sendMessage(typedMessage);
+            messageSender.send(typedMessage);
         }
     }
 
     public void apply(final MessagePublisher<TypedMessage> messagePublisher) {
-        messagePublisher.publishMessage(typedMessage);
+        messagePublisher.publish(typedMessage);
     }
 
 }

@@ -35,7 +35,7 @@ public abstract class EventPublisher<E extends Event> {
     public void publishEvent(final E event) {
         logger.debug("Publishing event: [" + event.type() + "]");
         final TypedMessage typedMessage = new SimpleMessage(event.type(), event.serialize());
-        messagePublisher.publishMessage(typedMessage);
+        messagePublisher.publish(typedMessage);
     }
 
 }

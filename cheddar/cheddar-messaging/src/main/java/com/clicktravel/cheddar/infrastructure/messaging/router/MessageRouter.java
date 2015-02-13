@@ -55,7 +55,7 @@ public class MessageRouter implements MessageHandler<TypedMessage>, ApplicationL
         final Set<MessageSender<TypedMessage>> routesForMessageType = routes.get(typedMessage.getType());
         if (routesForMessageType != null) {
             for (final MessageSender<TypedMessage> messageSender : routesForMessageType) {
-                messageSender.sendMessage(typedMessage);
+                messageSender.send(typedMessage);
             }
         } else {
             logger.warn("Unable to route message of type : " + typedMessage.getType());

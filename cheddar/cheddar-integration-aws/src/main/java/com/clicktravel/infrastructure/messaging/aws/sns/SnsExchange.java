@@ -34,16 +34,16 @@ public abstract class SnsExchange<T extends Message> implements Exchange<T> {
     abstract protected SnsSubjectAndMessage toSnsSubjectAndMessage(T message);
 
     @Override
-    public String exchangeName() {
-        return snsTopicResource.getTopicName();
-    }
-
-    @Override
-    public void publishMessage(final T message) {
+    public void route(final T message) {
         final SnsSubjectAndMessage snsSubjectAndMessage = toSnsSubjectAndMessage(message);
         final String subject = snsSubjectAndMessage.getSubject();
         final String snsMessage = snsSubjectAndMessage.getMessage();
         snsTopicResource.publish(subject, snsMessage);
+    }
+
+    @Override
+    public String getName() {
+        return snsTopicResource.getTopicName();
     }
 
 }
