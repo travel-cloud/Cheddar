@@ -16,14 +16,11 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging.tx;
 
-import static com.clicktravel.common.random.Randoms.randomString;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
@@ -52,22 +49,6 @@ public class TransactionalMessagePublisherTest {
 
         // Then
         assertNull(actualException);
-    }
-
-    @Test
-    public void shouldReturnExchangeName_withMessagePublisher() throws Exception {
-        // Given
-        final String exchangeName = randomString(10);
-        when(mockMessagePublisher.exchangeName()).thenReturn(exchangeName);
-        final TransactionalMessagePublisher transactionalMessagePublisher = new TransactionalMessagePublisher(
-                mockMessagePublisher);
-
-        // When
-        final String returnedExchangeName = transactionalMessagePublisher.exchangeName();
-
-        // Then
-        verify(mockMessagePublisher).exchangeName();
-        assertEquals(exchangeName, returnedExchangeName);
     }
 
     @Test
@@ -136,7 +117,7 @@ public class TransactionalMessagePublisherTest {
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessagePublisher.publishMessage(typedMessage);
+            transactionalMessagePublisher.publish(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -156,7 +137,7 @@ public class TransactionalMessagePublisherTest {
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessagePublisher.publishMessage(typedMessage);
+            transactionalMessagePublisher.publish(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -172,13 +153,13 @@ public class TransactionalMessagePublisherTest {
                 mockMessagePublisher);
         transactionalMessagePublisher.begin();
         final TypedMessage typedMessage = mock(TypedMessage.class);
-        transactionalMessagePublisher.publishMessage(typedMessage);
+        transactionalMessagePublisher.publish(typedMessage);
 
         // When
         transactionalMessagePublisher.commit();
 
         // Then
-        verify(mockMessagePublisher).publishMessage(typedMessage);
+        verify(mockMessagePublisher).publish(typedMessage);
     }
 
 }

@@ -113,7 +113,7 @@ public class TransactionalMessageSenderTest {
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessageSender.sendMessage(typedMessage);
+            transactionalMessageSender.send(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -132,7 +132,7 @@ public class TransactionalMessageSenderTest {
         // When
         NonExistentTransactionException actualException = null;
         try {
-            transactionalMessageSender.sendMessage(typedMessage);
+            transactionalMessageSender.send(typedMessage);
         } catch (final NonExistentTransactionException e) {
             actualException = e;
         }
@@ -147,13 +147,13 @@ public class TransactionalMessageSenderTest {
         final TransactionalMessageSender transactionalMessageSender = new TransactionalMessageSender(mockMessageSender);
         transactionalMessageSender.begin();
         final TypedMessage typedMessage = mock(TypedMessage.class);
-        transactionalMessageSender.sendMessage(typedMessage);
+        transactionalMessageSender.send(typedMessage);
 
         // When
         transactionalMessageSender.commit();
 
         // Then
-        verify(mockMessageSender).sendMessage(typedMessage);
+        verify(mockMessageSender).send(typedMessage);
     }
 
     @Test

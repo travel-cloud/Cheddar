@@ -44,7 +44,7 @@ public class MessagingTransaction implements Transaction {
     public void applyActions(final MessagePublisher<TypedMessage> messagePublisher) {
         while (!messageActions.isEmpty()) {
             final MessageAction messageAction = messageActions.remove();
-            messagePublisher.publishMessage(messageAction.message());
+            messagePublisher.publish(messageAction.message());
         }
     }
 

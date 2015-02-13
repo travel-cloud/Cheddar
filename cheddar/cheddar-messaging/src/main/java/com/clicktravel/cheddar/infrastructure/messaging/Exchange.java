@@ -17,8 +17,18 @@
 package com.clicktravel.cheddar.infrastructure.messaging;
 
 /**
- * An exchange publishes messages to all subscribers. Otherwise known as a topic.
+ * An exchange routes messages to all subscribers. Otherwise known as a topic.
  */
-public interface Exchange<T extends Message> extends MessagePublisher<T> {
+public interface Exchange<T extends Message> {
 
+    /**
+     * Routes a message to all subscribers for this exchange
+     * @param message Message to be routed
+     */
+    public void route(T message);
+
+    /**
+     * @return The name of this exchange
+     */
+    public String getName();
 }

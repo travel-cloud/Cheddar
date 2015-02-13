@@ -58,7 +58,7 @@ public class MessageRouterTest {
         messageRouter.handle(mockMessage);
 
         // Then
-        verify(expectedMessageSender).sendMessage(mockMessage);
+        verify(expectedMessageSender).send(mockMessage);
         for (final MessageSender<TypedMessage> unusedMessageSender : unusedMessageSenders) {
             verifyZeroInteractions(unusedMessageSender);
         }
@@ -85,7 +85,7 @@ public class MessageRouterTest {
 
         // Then
         for (final MessageSender<TypedMessage> messageSender : messageSenders) {
-            verify(messageSender).sendMessage(mockMessage);
+            verify(messageSender).send(mockMessage);
         }
     }
 

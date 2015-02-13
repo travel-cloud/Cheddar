@@ -19,23 +19,25 @@ package com.clicktravel.cheddar.infrastructure.messaging;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 
 /**
- * Methods for sending {@link Message}s, normally to a queue
- * @param <T> message type accepted by these methods
+ * A simple message sender implementation which sends all messages to a queue
+ * @param <T> Type of messages sent
  */
-public interface MessageSender<T extends Message> {
+public class MessageSenderImpl<T extends Message> implements MessageSender<T> {
 
-    /**
-     * Send a message
-     * @param message Message to send
-     * @throws MessageSendException
-     */
-    void send(T message) throws MessageSendException;
+    private final MessageQueue<T> messageQueue;
 
-    /**
-     * Send a message, where the message is not visible to receivers for the specified delay duration
-     * @param message Message to send
-     * @param delaySeconds Duration for which sent message is invisible to receivers
-     * @throws MessageSendException
-     */
-    void sendDelayedMessage(T message, int delaySeconds) throws MessageSendException;
+    public MessageSenderImpl(final MessageQueue<T> messageQueue) {
+        this.messageQueue = messageQueue;
+    }
+
+    @Override
+    public void send(final T message) throws MessageSendException {
+        messageQueue.send(message);
+    }
+
+    @Override
+    public void sendDelayedMessage(final T message, final int delaySeconds) throws MessageSendException {
+        messageQueue.sendDelayedMessage(message, delaySeconds);
+    }
+
 }
