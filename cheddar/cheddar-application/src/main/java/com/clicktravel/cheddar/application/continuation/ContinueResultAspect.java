@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.application.continuation;
 
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
@@ -37,5 +38,10 @@ public class ContinueResultAspect {
     @AfterReturning("@annotation(com.clicktravel.cheddar.application.continuation.ContinueResult)")
     public void returnMethodResult() {
         continuationHandler.offerMethodResult();
+    }
+
+    @AfterThrowing("@annotation(com.clicktravel.cheddar.application.continuation.ContinueResult)")
+    public void abortOfferMethodResult() {
+        continuationHandler.abortOfferMethodResult();
     }
 }

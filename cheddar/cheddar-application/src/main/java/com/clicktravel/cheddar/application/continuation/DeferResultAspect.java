@@ -38,8 +38,12 @@ public class DeferResultAspect {
     @Around("@annotation(com.clicktravel.cheddar.application.continuation.DeferResult)")
     public Object invokeAndDeferResult(final ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         continuationHandler.createContinuation();
-        proceedingJoinPoint.proceed(); // discard returned value
-        return continuationHandler.pollForMethodReturnValue();
+        try {
+            proceedingJoinPoint.proceed(); // discard returned value
+            return continuationHandler.pollForMethodReturnValue();
+        } finally {
+            continuationHandler.removeContinuation();
+        }
     }
 
 }

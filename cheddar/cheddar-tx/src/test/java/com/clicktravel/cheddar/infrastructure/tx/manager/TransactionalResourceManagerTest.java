@@ -16,6 +16,9 @@
  */
 package com.clicktravel.cheddar.infrastructure.tx.manager;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -38,7 +41,7 @@ public class TransactionalResourceManagerTest {
     private TransactionalDatabaseTemplate mockTransactionalDatabaseTemplate;
     private TransactionalMessagePublisher mockTransactionalMessagePublisher;
     private TransactionalMessageSender mockTransactionalMessageSender;
-    private TransactionalResourceManager awsTransactionalResourceManager;
+    private TransactionalResourceManager transactionalResourceManager;
     private InOrder inOrder;
     private TransactionException mockTransactionException;
 
@@ -48,17 +51,72 @@ public class TransactionalResourceManagerTest {
         mockTransactionalDatabaseTemplate = mock(TransactionalDatabaseTemplate.class);
         mockTransactionalMessagePublisher = mock(TransactionalMessagePublisher.class);
         mockTransactionalMessageSender = mock(TransactionalMessageSender.class);
-        awsTransactionalResourceManager = new SimpleTransactionalResourceManager(mockTransactionalDatabaseTemplate,
-                mockTransactionalFilestore, mockTransactionalMessageSender, mockTransactionalMessagePublisher);
+        transactionalResourceManager = new SimpleTransactionalResourceManager();
+        transactionalResourceManager.setTransactionalFileStore(mockTransactionalFilestore);
+        transactionalResourceManager.setTransactionalDatabaseTemplate(mockTransactionalDatabaseTemplate);
+        transactionalResourceManager.setTransactionalMessagePublisher(mockTransactionalMessagePublisher);
+        transactionalResourceManager.setTransactionalMessageSender(mockTransactionalMessageSender);
         inOrder = Mockito.inOrder(mockTransactionalDatabaseTemplate, mockTransactionalFilestore,
                 mockTransactionalMessageSender, mockTransactionalMessagePublisher);
         mockTransactionException = mock(TransactionException.class);
     }
 
     @Test
+    public void shouldThrowExceptionIfAlreadyInTransaction_onBegin() {
+        // Given
+        transactionalResourceManager.begin();
+
+        // When
+        TransactionException thrownException = null;
+        try {
+            transactionalResourceManager.begin();
+        } catch (final TransactionException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldThrowExceptionIfNotInTransaction_onCommit() {
+        // When
+        TransactionException thrownException = null;
+        try {
+            transactionalResourceManager.commit();
+        } catch (final TransactionException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldReturnFalseWhenNotInTransaction_onInTransaction() {
+        // When
+        final boolean inTransaction = transactionalResourceManager.inTransaction();
+
+        // Then
+        assertFalse(inTransaction);
+    }
+
+    @Test
+    public void shouldReturnTrueWhenInTransaction_onInTransaction() {
+        // Given
+        transactionalResourceManager.begin();
+
+        // When
+        final boolean inTransaction = transactionalResourceManager.inTransaction();
+
+        // Then
+        assertTrue(inTransaction);
+    }
+
+    @Test
     public void shouldBeginAllTransactionalResourcesInCorrectOrder() {
         // When
-        awsTransactionalResourceManager.begin();
+        transactionalResourceManager.begin();
 
         // Then
         inOrder.verify(mockTransactionalMessagePublisher).begin();
@@ -71,10 +129,17 @@ public class TransactionalResourceManagerTest {
 
     @Test
     public void shouldCommitTransactionalResourceInCorrectOrder() {
+        // Given
+        transactionalResourceManager.begin();
+
         // When
-        awsTransactionalResourceManager.commit();
+        transactionalResourceManager.commit();
 
         // Then
+        inOrder.verify(mockTransactionalMessagePublisher).begin();
+        inOrder.verify(mockTransactionalMessageSender).begin();
+        inOrder.verify(mockTransactionalFilestore).begin();
+        inOrder.verify(mockTransactionalDatabaseTemplate).begin();
         inOrder.verify(mockTransactionalDatabaseTemplate).commit();
         inOrder.verify(mockTransactionalFilestore).commit();
         inOrder.verify(mockTransactionalMessageSender).commit();
@@ -85,10 +150,17 @@ public class TransactionalResourceManagerTest {
 
     @Test
     public void shouldAbortTransactionalResourceInCorrectOrder() {
+        // Given
+        transactionalResourceManager.begin();
+
         // When
-        awsTransactionalResourceManager.abort();
+        transactionalResourceManager.abort();
 
         // Then
+        inOrder.verify(mockTransactionalMessagePublisher).begin();
+        inOrder.verify(mockTransactionalMessageSender).begin();
+        inOrder.verify(mockTransactionalFilestore).begin();
+        inOrder.verify(mockTransactionalDatabaseTemplate).begin();
         inOrder.verify(mockTransactionalDatabaseTemplate).abort();
         inOrder.verify(mockTransactionalFilestore).abort();
         inOrder.verify(mockTransactionalMessageSender).abort();
@@ -104,11 +176,16 @@ public class TransactionalResourceManagerTest {
         doThrow(mockTransactionException).when(mockTransactionalFilestore).abort();
         doThrow(mockTransactionException).when(mockTransactionalMessagePublisher).abort();
         doThrow(mockTransactionException).when(mockTransactionalMessageSender).abort();
+        transactionalResourceManager.begin();
 
         // When
-        awsTransactionalResourceManager.abort();
+        transactionalResourceManager.abort();
 
         // Then
+        inOrder.verify(mockTransactionalMessagePublisher).begin();
+        inOrder.verify(mockTransactionalMessageSender).begin();
+        inOrder.verify(mockTransactionalFilestore).begin();
+        inOrder.verify(mockTransactionalDatabaseTemplate).begin();
         inOrder.verify(mockTransactionalDatabaseTemplate).abort();
         inOrder.verify(mockTransactionalFilestore).abort();
         inOrder.verify(mockTransactionalMessageSender).abort();

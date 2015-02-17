@@ -14,8 +14,23 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.tx;
+package com.clicktravel.cheddar.infrastructure.tx.manager;
 
-public interface TransactionalResourceManager extends TransactionalResource {
+import java.util.UUID;
+
+import com.clicktravel.cheddar.infrastructure.tx.Transaction;
+
+public class ResourceManagerTransaction implements Transaction {
+
+    private final String transactionId;
+
+    public ResourceManagerTransaction() {
+        transactionId = UUID.randomUUID().toString();
+    }
+
+    @Override
+    public String transactionId() {
+        return transactionId;
+    }
 
 }
