@@ -19,35 +19,29 @@ package com.clicktravel.cheddar.infrastructure.tx.manager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.infrastructure.messaging.tx.TransactionalMessagePublisher;
-import com.clicktravel.cheddar.infrastructure.messaging.tx.TransactionalMessageSender;
-import com.clicktravel.cheddar.infrastructure.persistence.database.tx.TransactionalDatabaseTemplate;
-import com.clicktravel.cheddar.infrastructure.persistence.filestore.tx.TransactionalFileStore;
-import com.clicktravel.cheddar.infrastructure.tx.TransactionException;
-import com.clicktravel.cheddar.infrastructure.tx.TransactionalResource;
-import com.clicktravel.cheddar.infrastructure.tx.TransactionalResourceManager;
+import com.clicktravel.cheddar.infrastructure.tx.*;
 
 public class SimpleTransactionalResourceManager implements TransactionalResourceManager {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final TransactionalResource transactionalDatabaseTemplate;
-    private final TransactionalResource transactionalFileStore;
-    private final TransactionalResource transactionalMessageSender;
-    private final TransactionalResource transactionalMessagePublisher;
+    private final ThreadLocal<ResourceManagerTransaction> currentTransaction = new ThreadLocal<>();
+    private TransactionalResource transactionalDatabaseTemplate;
+    private TransactionalResource transactionalFileStore;
+    private TransactionalResource transactionalMessageSender;
+    private TransactionalResource transactionalMessagePublisher;
 
-    public SimpleTransactionalResourceManager(final TransactionalDatabaseTemplate transactionalDatabaseTemplate,
-            final TransactionalFileStore transactionalFileStore,
-            final TransactionalMessageSender transactionalMessageSender,
-            final TransactionalMessagePublisher transactionalMessagePublisher) {
-        this.transactionalDatabaseTemplate = transactionalDatabaseTemplate;
-        this.transactionalFileStore = transactionalFileStore;
-        this.transactionalMessageSender = transactionalMessageSender;
-        this.transactionalMessagePublisher = transactionalMessagePublisher;
+    @Override
+    public boolean inTransaction() {
+        return currentTransaction.get() != null;
     }
 
     @Override
     public void begin() throws TransactionException {
-        logger.trace("Starting global transaction");
+        if (inTransaction()) {
+            throw new NestedTransactionException(currentTransaction.get());
+        }
+        currentTransaction.set(new ResourceManagerTransaction());
+        logger.trace("Beginning global transaction: " + currentTransaction.get().transactionId());
         beginMessagePublisherTransaction();
         beginMessageSenderTransaction();
         beginFilestoreTransaction();
@@ -56,6 +50,9 @@ public class SimpleTransactionalResourceManager implements TransactionalResource
 
     @Override
     public void commit() throws TransactionException {
+        if (!inTransaction()) {
+            throw new NonExistentTransactionException();
+        }
         logger.trace("Committing global transaction");
 
         // Order of commits is important
@@ -71,15 +68,21 @@ public class SimpleTransactionalResourceManager implements TransactionalResource
         // By doing this commit last, we ensure events are published only if all other actions in this
         // transaction committed OK
         commitMessagePublisherTransaction();
+
+        currentTransaction.remove();
     }
 
     @Override
     public void abort() {
         logger.trace("Aborting global transaction");
-        abortDatabaseTemplateTransaction();
-        abortFileStoreTransaction();
-        abortMessageSenderTransaction();
-        abortMessagePublisherTransaction();
+        try {
+            abortDatabaseTemplateTransaction();
+            abortFileStoreTransaction();
+            abortMessageSenderTransaction();
+            abortMessagePublisherTransaction();
+        } finally {
+            currentTransaction.remove();
+        }
     }
 
     private void beginDatabaseTemplateTransaction() throws TransactionException {
@@ -168,6 +171,26 @@ public class SimpleTransactionalResourceManager implements TransactionalResource
                 logger.error("Problem aborting MessagePublisher transaction : " + e.getMessage());
             }
         }
+    }
+
+    @Override
+    public void setTransactionalDatabaseTemplate(final TransactionalResource transactionalDatabaseTemplate) {
+        this.transactionalDatabaseTemplate = transactionalDatabaseTemplate;
+    }
+
+    @Override
+    public void setTransactionalFileStore(final TransactionalResource transactionalFileStore) {
+        this.transactionalFileStore = transactionalFileStore;
+    }
+
+    @Override
+    public void setTransactionalMessageSender(final TransactionalResource transactionalMessageSender) {
+        this.transactionalMessageSender = transactionalMessageSender;
+    }
+
+    @Override
+    public void setTransactionalMessagePublisher(final TransactionalResource transactionalMessagePublisher) {
+        this.transactionalMessagePublisher = transactionalMessagePublisher;
     }
 
 }

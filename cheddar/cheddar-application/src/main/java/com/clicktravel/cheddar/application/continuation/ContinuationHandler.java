@@ -21,22 +21,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
+import com.clicktravel.cheddar.application.tx.Transactional;
+
 /**
  * Manages all {@link Continuation} objects and provides access for the application.</p>
- *
+ * 
  */
 @Component
 public class ContinuationHandler {
 
     private final ConcurrentHashMap<String, Continuation> continuationMap = new ConcurrentHashMap<>();
-    private final ThreadLocal<String> continuationIdForThread = new ThreadLocal<>();
+    private final ThreadLocal<String> deferContinuationIdForThread = new ThreadLocal<>();
+    private final ThreadLocal<String> continueContinuationIdForThread = new ThreadLocal<>();
 
     /**
      * @return continuationId Id for continuation associated with calling method. This should be called only by methods
      *         annotated {@link DeferResult}.
      */
     public String getContinuationId() {
-        final String continuationId = continuationIdForThread.get();
+        final String continuationId = deferContinuationIdForThread.get();
         if (continuationId == null) {
             throw new ContinuationException("Calling method is not annotated @DeferResult");
         }
@@ -70,44 +73,49 @@ public class ContinuationHandler {
     void createContinuation() {
         final String continuationId = UUID.randomUUID().toString();
         continuationMap.put(continuationId, new Continuation());
-        continuationIdForThread.set(continuationId);
+        deferContinuationIdForThread.set(continuationId);
     }
 
-    private void setMethodResult(final String continuationId, final MethodResult methodResult) {
-        continuationIdForThread.set(continuationId);
+    void removeContinuation() {
+        final String continuationId = deferContinuationIdForThread.get();
+        deferContinuationIdForThread.remove();
+        continuationMap.remove(continuationId);
+    }
+
+    private Continuation getContinuation(final String continuationId) {
         final Continuation continuation = continuationMap.get(continuationId);
         if (continuation == null) {
             throw new ContinuationException("@DeferResult method has timed out waiting for method result");
         }
+        return continuation;
+    }
+
+    private void setMethodResult(final String continuationId, final MethodResult methodResult) {
+        continueContinuationIdForThread.set(continuationId);
+        final Continuation continuation = getContinuation(continuationId);
         continuation.setMethodResult(methodResult);
     }
 
     Object pollForMethodReturnValue() throws Exception {
-        final String continuationId = continuationIdForThread.get();
-        final Continuation continuation = continuationMap.get(continuationId);
-        if (continuation == null) {
-            throw new ContinuationException("@ContinueResult method failed to offer method result");
-        }
-        try {
-            final MethodResult methodResult = continuation.pollForMethodResult();
-            return methodResult.getReturnValue();
-        } finally {
-            continuationMap.remove(continuationId);
-            continuationIdForThread.remove();
-        }
+        final String continuationId = deferContinuationIdForThread.get();
+        final Continuation continuation = getContinuation(continuationId);
+        final MethodResult methodResult = continuation.pollForMethodResult();
+        return methodResult.getReturnValue();
     }
 
     void offerMethodResult() {
-        final String continuationId = continuationIdForThread.get();
-        if (continuationId == null) {
-            throw new ContinuationException("Continuation method result has not been set");
+        final String continuationId = continueContinuationIdForThread.get();
+        if (continuationId != null) { // setMethodResult was called
+            try {
+                final Continuation continuation = getContinuation(continuationId);
+                continuation.offerMethodResult();
+            } finally {
+                continueContinuationIdForThread.remove();
+            }
         }
-        final Continuation continuation = continuationMap.get(continuationId);
-        try {
-            continuation.offerMethodResult();
-        } finally {
-            continuationMap.remove(continuationId);
-            continuationIdForThread.remove();
-        }
+    }
+
+    void abortOfferMethodResult() {
+        continueContinuationIdForThread.remove();
     }
 }

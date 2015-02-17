@@ -1,14 +1,8 @@
 apply from: '../../test.gradle'
 
-def springVersion = '4.1.1.RELEASE'
-
 dependencies {
-    compile project(':commons:commons-lang')
-
-    compile "org.springframework:spring-core:${springVersion}"
-    compile "org.springframework:spring-context-support:${springVersion}"
-    compile "org.springframework:spring-aop:${springVersion}"
-
-    compile "org.aspectj:aspectjrt:1.7.4"
-    compile "org.aspectj:aspectjweaver:1.7.4"
+    compile project(':cheddar:cheddar-tx-api')
+    compile project(':cheddar:cheddar-messaging')
+    compile project(':cheddar:cheddar-persistence')
 }
+

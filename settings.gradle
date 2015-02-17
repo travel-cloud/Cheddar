@@ -10,6 +10,7 @@ include (
     "cheddar:cheddar-query-model",
     "cheddar:cheddar-messaging",
     "cheddar:cheddar-persistence",
+    "cheddar:cheddar-tx-api",
     "cheddar:cheddar-tx",
     "cheddar:cheddar-persisted-trackers",
     "cheddar:cheddar-server",
