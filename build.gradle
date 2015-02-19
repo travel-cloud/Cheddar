@@ -101,15 +101,25 @@ task checkstyleAggregate << {
 }
 checkstyleAggregate.dependsOn { subproj.check }
 
+ext.runIntegrationTests = System.properties['runIntegrationTests'] != null
+
 // Execute check on all subprojects
 task checkAll { dependsOn { subproj.check } }
+
+// Execute check on all subprojects and follow with integration tests if needed
+def integrationTestTask = tasks.getByPath(':cheddar:cheddar-integration-aws:integrationTest')
+task checkAllWithIntegrationIfNeeded {
+    dependsOn { checkAll }
+    if (runIntegrationTests) { dependsOn { integrationTestTask } }
+}
+integrationTestTask.mustRunAfter checkAll
 
 // Upload source and binaries for all subprojects
 task uploadAll { dependsOn { subproj.uploadArchives } }
 
 // Upload source and binaries, but only if checks pass for all subprojects
-task checkAndUploadAll { dependsOn { [checkAll, uploadAll] } }
-uploadAll.mustRunAfter checkAll
+task checkAndUploadAll { dependsOn { [checkAllWithIntegrationIfNeeded, uploadAll] } }
+uploadAll.mustRunAfter checkAllWithIntegrationIfNeeded
 
 // Produce Gradle Wrapper scripts for running Gradle on machines that don't have Gradle installed
 task wrapper(type: Wrapper) { gradleVersion = '1.7' }
