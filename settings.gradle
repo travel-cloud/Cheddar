@@ -15,6 +15,7 @@ include (
     "cheddar:cheddar-persisted-trackers",
     "cheddar:cheddar-server",
     "cheddar:cheddar-cdm",
+    "cheddar:cheddar-integration-mocks",
     "cheddar:cheddar-integration-aws",
     "cheddar:cheddar-events",
     "cheddar:cheddar-system-events",
