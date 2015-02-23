@@ -1,0 +1,14 @@
+apply from: '../../test.gradle'
+
+def springVersion = '4.1.1.RELEASE'
+
+dependencies {
+    compile project(':cheddar:cheddar-persistence')
+    compile project(':cheddar:cheddar-messaging')
+    compile project(':cheddar:cheddar-events')
+    compile project(':cheddar:cheddar-tx')
+
+    compile "org.springframework:spring-context:${springVersion}"
+    compile 'org.slf4j:slf4j-api:1.7.5'
+}
+
