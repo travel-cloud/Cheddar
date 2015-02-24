@@ -16,13 +16,13 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search.query;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class OrQuery extends StructuredQuery {
 
-    private final List<StructuredQuery> queries = new ArrayList<>();
+    private final Set<StructuredQuery> queries = new HashSet<>();
 
     public OrQuery(final Collection<StructuredQuery> queries) {
         this.queries.addAll(queries);
@@ -32,7 +32,7 @@ public class OrQuery extends StructuredQuery {
         queries.add(query);
     }
 
-    public List<StructuredQuery> getQueries() {
+    public Set<StructuredQuery> getQueries() {
         return queries;
     }
 

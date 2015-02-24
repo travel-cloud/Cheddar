@@ -21,6 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomDouble;
 import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
@@ -192,9 +193,10 @@ public class StructuredQueryBuilderTest {
         final String result = builder.buildQuery(andQuery);
 
         // Then
-        final String expected = "(and (term field=" + field1Name + " '" + value1 + "') (term field=" + field2Name
-                + " '" + value2 + "'))";
-        assertEquals(expected, result);
+        assertTrue(result.startsWith("(and"));
+        assertTrue(result.endsWith(")"));
+        assertTrue(result.matches(".*(term field=" + field1Name + " '" + value1 + "').*(term field=" + field2Name
+                + " '" + value2 + "')*"));
     }
 
     @Test
@@ -213,8 +215,9 @@ public class StructuredQueryBuilderTest {
         final String result = builder.buildQuery(orQuery);
 
         // Then
-        final String expected = "(or (term field=" + field1Name + " '" + value1 + "') (term field=" + field2Name + " '"
-                + value2 + "'))";
-        assertEquals(expected, result);
+        assertTrue(result.startsWith("(or"));
+        assertTrue(result.endsWith(")"));
+        assertTrue(result.matches(".*(term field=" + field1Name + " '" + value1 + "').*(term field=" + field2Name
+                + " '" + value2 + "')*"));
     }
 }
