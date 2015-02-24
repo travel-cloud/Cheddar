@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.infrastructure.persistence.document.search.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -28,6 +29,20 @@ public class SimpleQueryTest {
     public void shouldBeSimpleQuery() {
         final SimpleQuery query = new SimpleQuery(Randoms.randomString());
         assertEquals(QueryType.SIMPLE, query.queryType());
+    }
+
+    @Test
+    public void shouldBeEqual_withSameValues() {
+        // Given
+        final String query = Randoms.randomString();
+        final SimpleQuery luceneQuery = new SimpleQuery(query);
+        final SimpleQuery otherLuceneQuery = new SimpleQuery(query);
+
+        // When
+        final boolean equals = luceneQuery.equals(otherLuceneQuery);
+
+        // Then
+        assertTrue(equals);
     }
 
 }

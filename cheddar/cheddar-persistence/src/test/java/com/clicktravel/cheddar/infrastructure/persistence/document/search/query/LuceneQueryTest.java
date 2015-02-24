@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.infrastructure.persistence.document.search.query;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -28,6 +29,20 @@ public class LuceneQueryTest {
     public void shouldBeLuceneQuery() {
         final LuceneQuery query = new LuceneQuery(Randoms.randomString());
         assertEquals(QueryType.LUCENE, query.queryType());
+    }
+
+    @Test
+    public void shouldBeEqual_withSameValues() {
+        // Given
+        final String query = Randoms.randomString();
+        final LuceneQuery luceneQuery = new LuceneQuery(query);
+        final LuceneQuery otherLuceneQuery = new LuceneQuery(query);
+
+        // When
+        final boolean equals = luceneQuery.equals(otherLuceneQuery);
+
+        // Then
+        assertTrue(equals);
     }
 
 }

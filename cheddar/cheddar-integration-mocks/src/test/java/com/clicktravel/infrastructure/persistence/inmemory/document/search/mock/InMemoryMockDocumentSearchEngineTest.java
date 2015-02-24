@@ -17,41 +17,26 @@
 package com.clicktravel.infrastructure.persistence.inmemory.document.search.mock;
 
 import static com.clicktravel.common.random.Randoms.randomInt;
-import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.options.SearchOptions;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.LuceneQuery;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.QueryType;
 import com.clicktravel.infrastructure.persistence.inmemory.document.search.StubDocument;
 import com.clicktravel.infrastructure.persistence.inmemory.document.search.mock.exception.SearchExpectationException;
 import com.clicktravel.infrastructure.persistence.inmemory.document.search.mock.exception.UnexpectedSearchException;
 
 public class InMemoryMockDocumentSearchEngineTest {
-
-    // TODO can remove this instance variable and setup after framework change to implement equals
-    private LuceneQuery query;
-
-    @Before
-    public void setUp() {
-        query = mock(LuceneQuery.class);
-        when(query.queryType()).thenReturn(QueryType.LUCENE);
-        when(query.getQuery()).thenReturn(randomString());
-    }
 
     @Test
     public void shouldUpdateDocument_withDocument() throws Exception {
@@ -118,6 +103,7 @@ public class InMemoryMockDocumentSearchEngineTest {
     @Test
     public void shouldStubQueryBehaviour_withMatchingQuery() throws Exception {
         // Given
+        final Query query = mock(Query.class);
         final Integer start = randomInt(Integer.MAX_VALUE);
         final Integer size = randomInt(Integer.MAX_VALUE);
         final Class<StubDocument> documentClass = StubDocument.class;
@@ -139,6 +125,7 @@ public class InMemoryMockDocumentSearchEngineTest {
     @Test
     public void shouldNotStubQueryBehaviour_withNonMatchingQuery() throws Exception {
         // Given
+        final Query query = mock(Query.class);
         final Integer start = randomInt(Integer.MAX_VALUE);
         final Integer size = randomInt(Integer.MAX_VALUE);
         final Class<StubDocument> documentClass = StubDocument.class;
@@ -163,6 +150,7 @@ public class InMemoryMockDocumentSearchEngineTest {
     @Test
     public void shouldNotStubQueryBehaviour_withMatchingQueryButOngoingStubbing() throws Exception {
         // Given
+        final Query query = mock(Query.class);
         final Integer start = randomInt(Integer.MAX_VALUE);
         final Integer size = randomInt(Integer.MAX_VALUE);
         final Class<StubDocument> documentClass = StubDocument.class;
