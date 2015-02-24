@@ -32,7 +32,8 @@ import com.clicktravel.infrastructure.inmemory.Resettable;
  * Simple mock {@link MessageSender} that uses in-memory queues.<br />
  * This implementation stores all sent messages, for the purpose of test verification.<br />
  * There is an option to forward all sent messages to a queue. This is used where a test relies on sent messages being
- * received by a {@link InMemoryMessageListener}.
+ * received by a {@link InMemoryMessageListener}. <br />
+ * @see InMemoryMessageVerifier
  */
 public class InMemoryMessageSender<T extends Message> implements MessageSender<T>, Resettable {
 
