@@ -19,19 +19,31 @@ package com.clicktravel.infrastructure.messaging.inmemory;
 import com.clicktravel.cheddar.infrastructure.tx.TransactionalResourceManager;
 
 /**
- * Convenience class to cause all {@link InMemoryMessageListener}s to poll for all messages on their message queues.
- * In-memory queues are designed to be used in a single-threaded environment. They do not use extra threads to receive
- * and handle messages. Instead, they rely on manual polling to perform message processing.
+ * Convenience class to cause all registered {@link InMemoryMessageListener}s to poll for all messages on their message
+ * queues. In-memory queues are designed to be used in a single-threaded environment. They do not use extra threads to
+ * receive and handle messages. Instead, they rely on manual polling to perform message processing.
  */
 public interface InMemoryMessageQueuePoller {
 
     /**
-     * Ensures that all messages are polled for by registered listeners. This method returns immediately if a poll is
-     * already in progress. This is to prevent transactional failures due to recursive calls to this method.
+     * Ensures that all messages are polled for by registered listeners. This method returns immediately if either a
+     * poll is already in progress or a global transaction has been started. This is to prevent transactional failures
+     * due to recursive calls to this method.
      */
     void poll();
 
+    /**
+     * Register an {@link InMemoryMessageListener} to participate in message queue polling. Listeners should be
+     * registered soon after construction of this class. This is done after construction to break circular Spring bean
+     * wiring dependencies.
+     * @param inMemoryMessageListener {@link InMemoryMessageListener} to register
+     */
     void register(InMemoryMessageListener<?> inMemoryMessageListener);
 
+    /**
+     * Set the transactional resource manager to use. This is set after construction to break circular Spring bean
+     * wiring dependencies.
+     * @param transactionalResourceManager
+     */
     void setTransactionalResourceManager(TransactionalResourceManager transactionalResourceManager);
 }
