@@ -16,11 +16,16 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search.query;
 
+import static com.clicktravel.common.random.Randoms.randomBoolean;
+import static com.clicktravel.common.random.Randoms.randomDateTime;
+import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 
 import com.clicktravel.common.random.Randoms;
@@ -40,6 +45,41 @@ public class StructuredQueryTest {
         queries.add(term);
         assertEquals(QueryType.STRUCTURED, new AndQuery(queries).queryType());
         assertEquals(QueryType.STRUCTURED, new OrQuery(queries).queryType());
+    }
+
+    @Test
+    public void shouldBeEqualRangeQuerys_withSameValues() {
+        // Given
+        final String fieldName = randomString();
+        final DateTime lowerBound = randomDateTime();
+        final DateTime upperBound = randomDateTime();
+        final boolean lowerBoundInclusive = randomBoolean();
+        final boolean upperBoundInclusive = randomBoolean();
+        final RangeQuery rangeQuery = new RangeQuery(fieldName, lowerBound, upperBound, lowerBoundInclusive,
+                upperBoundInclusive);
+        final RangeQuery otherRangeQuery = new RangeQuery(fieldName, lowerBound, upperBound, lowerBoundInclusive,
+                upperBoundInclusive);
+
+        // When
+        final boolean equals = rangeQuery.equals(otherRangeQuery);
+
+        // Then
+        assertTrue(equals);
+    }
+
+    @Test
+    public void shouldBeEqualTermQuerys_withSameValues() {
+        // Given
+        final String fieldName = randomString();
+        final String value = randomString();
+        final TermQuery termQuery = new TermQuery(fieldName, value);
+        final TermQuery otherTermQuery = new TermQuery(fieldName, value);
+
+        // When
+        final boolean equals = termQuery.equals(otherTermQuery);
+
+        // Then
+        assertTrue(equals);
     }
 
 }

@@ -19,7 +19,7 @@ package com.clicktravel.infrastructure.persistence.aws.cloudsearch;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -29,7 +29,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.
 
 /**
  * Class Responsible for constructing cloudsearch query strings from Query.class
- *
+ * 
  */
 public class QueryBuilder implements QueryVisitor {
 
@@ -94,7 +94,7 @@ public class QueryBuilder implements QueryVisitor {
         writeBooleanQuery(orQuery.getQueries(), "or");
     }
 
-    private void writeBooleanQuery(final List<StructuredQuery> subqueries, final String operator) {
+    private void writeBooleanQuery(final Set<StructuredQuery> subqueries, final String operator) {
         write('(');
         write(operator);
         for (final StructuredQuery query : subqueries) {

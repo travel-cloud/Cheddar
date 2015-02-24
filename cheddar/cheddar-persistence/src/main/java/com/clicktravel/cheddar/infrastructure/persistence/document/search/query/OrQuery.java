@@ -16,13 +16,13 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search.query;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class OrQuery extends StructuredQuery {
 
-    private final List<StructuredQuery> queries = new ArrayList<>();
+    private final Set<StructuredQuery> queries = new HashSet<>();
 
     public OrQuery(final Collection<StructuredQuery> queries) {
         this.queries.addAll(queries);
@@ -32,7 +32,7 @@ public class OrQuery extends StructuredQuery {
         queries.add(query);
     }
 
-    public List<StructuredQuery> getQueries() {
+    public Set<StructuredQuery> getQueries() {
         return queries;
     }
 
@@ -40,4 +40,35 @@ public class OrQuery extends StructuredQuery {
     public void accept(final QueryVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((queries == null) ? 0 : queries.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final OrQuery other = (OrQuery) obj;
+        if (queries == null) {
+            if (other.queries != null) {
+                return false;
+            }
+        } else if (!queries.equals(other.queries)) {
+            return false;
+        }
+        return true;
+    }
+
 }

@@ -25,4 +25,7 @@ public abstract class Query {
      * @return
      */
     public abstract QueryType queryType();
+
+    @Override
+    public abstract boolean equals(final Object obj);
 }
