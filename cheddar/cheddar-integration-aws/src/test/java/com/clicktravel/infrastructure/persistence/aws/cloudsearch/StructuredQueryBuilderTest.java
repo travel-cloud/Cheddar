@@ -194,9 +194,9 @@ public class StructuredQueryBuilderTest {
 
         // Then
         assertTrue(result.startsWith("(and"));
+        assertTrue(result.contains("(term field=" + field1Name + " '" + value1 + "')"));
+        assertTrue(result.contains("(term field=" + field2Name + " '" + value2 + "')"));
         assertTrue(result.endsWith(")"));
-        assertTrue(result.matches(".*(term field=" + field1Name + " '" + value1 + "').*(term field=" + field2Name
-                + " '" + value2 + "')*"));
     }
 
     @Test
@@ -216,8 +216,8 @@ public class StructuredQueryBuilderTest {
 
         // Then
         assertTrue(result.startsWith("(or"));
+        assertTrue(result.contains("(term field=" + field1Name + " '" + value1 + "')"));
+        assertTrue(result.contains("(term field=" + field2Name + " '" + value2 + "')"));
         assertTrue(result.endsWith(")"));
-        assertTrue(result.matches(".*(term field=" + field1Name + " '" + value1 + "').*(term field=" + field2Name
-                + " '" + value2 + "')*"));
     }
 }
