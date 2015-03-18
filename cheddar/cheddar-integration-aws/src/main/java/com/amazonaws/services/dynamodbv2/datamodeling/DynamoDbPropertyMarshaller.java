@@ -43,7 +43,8 @@ public class DynamoDbPropertyMarshaller {
     public static <T extends Item> void setValue(final T item, final PropertyDescriptor propertyDescriptor,
             final AttributeValue attributeValue) {
         if (attributeValue != null) {
-            final DynamoDBReflector reflector = new DynamoDBReflector();
+            final DynamoDBReflectorUtil reflector = new DynamoDBReflectorUtil();
+
             final Method writeMethod = propertyDescriptor.getWriteMethod();
             Object argument = null;
             if (writeMethod != null) {
@@ -53,8 +54,7 @@ public class DynamoDbPropertyMarshaller {
                     argument = unmarshaller.unmarshall(attributeValue);
                 } catch (final DynamoDBMappingException | ParseException mappingException) {
                     try {
-                        final JsonParser jsonParser = jsonFactory.createJsonParser(new StringReader(attributeValue
-                                .getS()));
+                        final JsonParser jsonParser = jsonFactory.createParser(new StringReader(attributeValue.getS()));
                         argument = jsonParser.readValueAs(writeMethod.getParameterTypes()[0]);
                     } catch (final Exception e) {
                         throw new IllegalStateException("Could not parse attribute value: " + attributeValue, e);
@@ -83,14 +83,14 @@ public class DynamoDbPropertyMarshaller {
         if (propertyValue instanceof Collection && ((Collection<?>) propertyValue).isEmpty()) {
             return null;
         }
-        final DynamoDBReflector reflector = new DynamoDBReflector();
+        final DynamoDBReflectorUtil reflector = new DynamoDBReflectorUtil();
         try {
             final ArgumentMarshaller marshaller = reflector.getArgumentMarshaller(readMethod);
             return marshaller.marshall(propertyValue);
         } catch (final DynamoDBMappingException e) {
             try {
                 final StringWriter output = new StringWriter();
-                final JsonGenerator jsonGenerator = jsonFactory.createJsonGenerator(output);
+                final JsonGenerator jsonGenerator = jsonFactory.createGenerator(output);
                 jsonGenerator.writeObject(propertyValue);
                 return new AttributeValue(output.toString());
             } catch (final IOException ioException) {
