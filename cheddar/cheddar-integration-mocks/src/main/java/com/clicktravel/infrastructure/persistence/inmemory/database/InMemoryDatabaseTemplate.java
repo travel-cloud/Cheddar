@@ -239,7 +239,15 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 final Class<?> itemPropertyType = getter.getReturnType();
                 final Condition condition = query.getCondition();
                 final Set<String> values = condition.getValues();
-                if (String.class.isAssignableFrom(itemPropertyType) && values.size() == 1) {
+                if (Operators.NULL.equals(query.getCondition().getComparisonOperator())) {
+                    if (itemPropertyValue == null) {
+                        matches.add(item);
+                    }
+                } else if (Operators.NOT_NULL.equals(query.getCondition().getComparisonOperator())) {
+                    if (itemPropertyValue != null) {
+                        matches.add(item);
+                    }
+                } else if (String.class.isAssignableFrom(itemPropertyType) && values.size() == 1) {
                     final String itemPropertyValueString = itemPropertyValue == null ? null
                             : (String) itemPropertyValue;
                     if (condition.getComparisonOperator().compare(itemPropertyValueString, values.iterator().next())) {

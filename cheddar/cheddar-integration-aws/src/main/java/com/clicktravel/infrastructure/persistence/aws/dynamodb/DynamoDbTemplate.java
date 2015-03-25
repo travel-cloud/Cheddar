@@ -526,6 +526,8 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
 
         if (query.getCondition().getComparisonOperator().equals(Operators.NULL)) {
             condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.NULL);
+        } else if (query.getCondition().getComparisonOperator().equals(Operators.NOT_NULL)) {
+            condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.NOT_NULL);
         } else {
             if (query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
                 condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.EQ);
