@@ -23,7 +23,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.AmazonServiceException;
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.*;
@@ -115,9 +115,9 @@ public class SqsQueueResource {
         while (true) {
             try {
                 return amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
-            } catch (final AmazonServiceException amazonServiceException) {
-                logger.error("Error receiving SQS messages on queue:[" + queueName + "]", amazonServiceException);
-                // Ignore all amazon errors and hope SQS recovers
+            } catch (final AmazonClientException amazonClientException) {
+                logger.error("Error receiving SQS messages on queue:[" + queueName + "]", amazonClientException);
+                // Ignore all amazon specific errors and hope SQS recovers
                 Thread.sleep(SQS_SERVICE_ERROR_PAUSE_MILLIS);
             }
         }
