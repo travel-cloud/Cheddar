@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDbTemplate;
+import com.clicktravel.infrastructure.persistence.aws.dynamodb.AbstractDynamoDbTemplate;
 
 /**
  * Amazon Web Services Persistence Infrastructure Manager
@@ -38,7 +38,7 @@ public class DynamoDbTemplateInfrastructureManager {
     private static final long TABLE_CREATION_TIMEOUT_MS = 60000;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final AmazonDynamoDB amazonDynamoDbClient;
-    private final Collection<DynamoDbTemplate> dynamoDbTemplates;
+    private final Collection<AbstractDynamoDbTemplate> dynamoDbTemplates;
     private final int readThroughput;
     private final int writeThroughput;
 
@@ -53,14 +53,14 @@ public class DynamoDbTemplateInfrastructureManager {
         this.writeThroughput = writeThroughput;
     }
 
-    public void setDynamoDbTemplates(final Collection<DynamoDbTemplate> dynamoDbTemplates) {
+    public void setDynamoDbTemplates(final Collection<AbstractDynamoDbTemplate> dynamoDbTemplates) {
         if (dynamoDbTemplates != null) {
             this.dynamoDbTemplates.addAll(dynamoDbTemplates);
         }
     }
 
     public void init() {
-        for (final DynamoDbTemplate dynamoDbTemplate : dynamoDbTemplates) {
+        for (final AbstractDynamoDbTemplate dynamoDbTemplate : dynamoDbTemplates) {
             final Collection<String> tablesPendingCreation = new ArrayList<>();
             final DatabaseSchemaHolder databaseSchemaHolder = dynamoDbTemplate.databaseSchemaHolder();
             for (final ItemConfiguration itemConfiguration : databaseSchemaHolder.itemConfigurations()) {
@@ -96,12 +96,12 @@ public class DynamoDbTemplateInfrastructureManager {
                                 indexDefinition.propertyName()).withAttributeType(attributeType));
 
                         final ProvisionedThroughput indexProvisionedThroughput = new ProvisionedThroughput()
-                                .withReadCapacityUnits((long) readThroughput).withWriteCapacityUnits(
-                                        (long) writeThroughput);
+                        .withReadCapacityUnits((long) readThroughput).withWriteCapacityUnits(
+                                (long) writeThroughput);
                         final GlobalSecondaryIndex globalSecondaryIndex = new GlobalSecondaryIndex()
-                                .withIndexName(indexDefinition.propertyName() + "_idx")
-                                .withProvisionedThroughput(indexProvisionedThroughput)
-                                .withProjection(new Projection().withProjectionType("ALL"));
+                        .withIndexName(indexDefinition.propertyName() + "_idx")
+                        .withProvisionedThroughput(indexProvisionedThroughput)
+                        .withProjection(new Projection().withProjectionType("ALL"));
 
                         final ArrayList<KeySchemaElement> indexKeySchema = new ArrayList<KeySchemaElement>();
 
@@ -113,8 +113,8 @@ public class DynamoDbTemplateInfrastructureManager {
                     }
 
                     final ProvisionedThroughput tableProvisionedThroughput = new ProvisionedThroughput()
-                            .withReadCapacityUnits((long) readThroughput)
-                            .withWriteCapacityUnits((long) writeThroughput);
+                    .withReadCapacityUnits((long) readThroughput)
+                    .withWriteCapacityUnits((long) writeThroughput);
 
                     CreateTableRequest request = new CreateTableRequest().withTableName(tableName)
                             .withAttributeDefinitions(attributeDefinitions).withKeySchema(keySchema)
@@ -141,12 +141,12 @@ public class DynamoDbTemplateInfrastructureManager {
                         attributeDefinitions.add(new AttributeDefinition("property", ScalarAttributeType.S));
                         attributeDefinitions.add(new AttributeDefinition("value", ScalarAttributeType.S));
                         final ProvisionedThroughput tableProvisionedThroughput = new ProvisionedThroughput()
-                                .withReadCapacityUnits((long) readThroughput).withWriteCapacityUnits(
-                                        (long) writeThroughput);
+                        .withReadCapacityUnits((long) readThroughput).withWriteCapacityUnits(
+                                (long) writeThroughput);
                         final CreateTableRequest createTableRequest = new CreateTableRequest()
-                                .withTableName(uniqueConstraintTableName)
-                                .withAttributeDefinitions(attributeDefinitions).withKeySchema(keySchema)
-                                .withProvisionedThroughput(tableProvisionedThroughput);
+                        .withTableName(uniqueConstraintTableName)
+                        .withAttributeDefinitions(attributeDefinitions).withKeySchema(keySchema)
+                        .withProvisionedThroughput(tableProvisionedThroughput);
                         createTable(createTableRequest, true);
                         tablesPendingCreation.add(uniqueConstraintTableName);
                     }
@@ -158,13 +158,13 @@ public class DynamoDbTemplateInfrastructureManager {
                 final String sequenceTableName = databaseSchemaHolder.schemaName() + "-sequences";
                 if (!isTableCreated(sequenceTableName)) {
                     final ProvisionedThroughput sequenceProvisionedThroughput = new ProvisionedThroughput()
-                            .withReadCapacityUnits((long) readThroughput)
-                            .withWriteCapacityUnits((long) writeThroughput);
+                    .withReadCapacityUnits((long) readThroughput)
+                    .withWriteCapacityUnits((long) writeThroughput);
                     final List<KeySchemaElement> keySchema = new ArrayList<>();
                     keySchema.add(new KeySchemaElement().withAttributeName("name").withKeyType(KeyType.HASH));
                     final List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
                     attributeDefinitions
-                            .add(new AttributeDefinition().withAttributeName("name").withAttributeType("S"));
+                    .add(new AttributeDefinition().withAttributeName("name").withAttributeType("S"));
                     final CreateTableRequest request = new CreateTableRequest().withTableName(sequenceTableName)
                             .withAttributeDefinitions(attributeDefinitions).withKeySchema(keySchema)
                             .withProvisionedThroughput(sequenceProvisionedThroughput);
