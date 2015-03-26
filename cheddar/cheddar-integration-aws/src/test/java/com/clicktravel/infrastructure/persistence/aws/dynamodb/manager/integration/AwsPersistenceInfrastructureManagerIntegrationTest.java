@@ -44,6 +44,7 @@ import com.amazonaws.services.dynamodbv2.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
 import com.clicktravel.common.random.Randoms;
 import com.clicktravel.infrastructure.integration.aws.AwsIntegration;
+import com.clicktravel.infrastructure.persistence.aws.dynamodb.AbstractDynamoDbTemplate;
 import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDbTemplate;
 import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubItem;
 import com.clicktravel.infrastructure.persistence.aws.dynamodb.manager.DynamoDbTemplateInfrastructureManager;
@@ -82,7 +83,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
                 itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);
@@ -113,7 +115,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
                 itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);
@@ -149,7 +152,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
                 itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);
@@ -187,7 +191,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
                 itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);
@@ -224,7 +229,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
                 itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);
@@ -264,7 +270,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
                 itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);
@@ -305,7 +312,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
                 sequenceConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);
@@ -346,7 +354,8 @@ public class AwsPersistenceInfrastructureManagerIntegrationTest {
         final DatabaseSchemaHolder databaseSchemaHolder = new DatabaseSchemaHolder(schemaName, itemConfigurations);
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
 
-        final Collection<DynamoDbTemplate> dynamodbTemplates = new ArrayList<>(Arrays.asList(dynamoDbTemplate));
+        final Collection<AbstractDynamoDbTemplate> dynamodbTemplates = new ArrayList<AbstractDynamoDbTemplate>(
+                Arrays.asList(dynamoDbTemplate));
         final DynamoDbTemplateInfrastructureManager persistenceManager = new DynamoDbTemplateInfrastructureManager(
                 amazonDynamoDbClient, readThroughput, writeThroughput);
         persistenceManager.setDynamoDbTemplates(dynamodbTemplates);

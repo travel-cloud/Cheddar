@@ -18,29 +18,30 @@ package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDbPropertyMarshaller;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.amazonaws.services.dynamodbv2.model.*;
-import com.clicktravel.cheddar.infrastructure.persistence.database.DocumentItem;
-import com.clicktravel.cheddar.infrastructure.persistence.database.DocumentStoreTemplate;
+import com.clicktravel.cheddar.infrastructure.persistence.database.GeneratedKeyHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.ItemConstraintViolationException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.SequenceKeyGenerator;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundPrimaryKeyDefinition;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.DatabaseSchemaHolder;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.ItemConfiguration;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.PrimaryKeyDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
-import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonUniqueResultException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
@@ -50,43 +51,24 @@ import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceR
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-//also BatchDocumentWrite??
-public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
+@Deprecated
+public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    private boolean initialized;
-    private AmazonDynamoDB amazonDynamoDbClient;
-    private DynamoDB dynamoDBClient;
-    private final DatabaseSchemaHolder databaseSchemaHolder;
-    private final HashMap<Class<? extends Item>, ItemConfiguration> itemConfigurationMap;
-    private final Set<String> sequenceConfigurations;
+    private DynamoDB dynamoDBClient = null;
 
     public DynamoDocumentStoreTemplate(final DatabaseSchemaHolder databaseSchemaHolder) {
-        this.databaseSchemaHolder = databaseSchemaHolder;
-        itemConfigurationMap = new HashMap<>();
-        for (final ItemConfiguration itemConfiguration : databaseSchemaHolder.itemConfigurations()) {
-            itemConfigurationMap.put(itemConfiguration.itemClass(), itemConfiguration);
-        }
-        sequenceConfigurations = new HashSet<>();
-        for (final SequenceConfiguration sequenceConfiguration : databaseSchemaHolder.sequenceConfigurations()) {
-            sequenceConfigurations.add(sequenceConfiguration.sequenceName());
-        }
-    }
-
-    public void initialize(final AmazonDynamoDB amazonDynamoDbClient) {
-        this.amazonDynamoDbClient = amazonDynamoDbClient;
-        dynamoDBClient = new DynamoDB(amazonDynamoDbClient);
-        initialized = true;
-    }
-
-    public DatabaseSchemaHolder databaseSchemaHolder() {
-        return databaseSchemaHolder;
+        super(databaseSchemaHolder);
     }
 
     @Override
-    public <T extends DocumentItem> T createDocument(final T item,
-            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public void initialize(final AmazonDynamoDB amazonDynamoDbClient) {
+        super.initialize(amazonDynamoDbClient);
+        dynamoDBClient = new DynamoDB(amazonDynamoDbClient);
+    }
+
+    @Override
+    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
                 itemConfiguration);
@@ -115,8 +97,7 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
     }
 
     @Override
-    public <T extends DocumentItem> T readDocument(final ItemId itemId, final Class<T> itemClass)
-            throws NonExistentItemException {
+    public <T extends Item> T read(final ItemId itemId, final Class<T> itemClass) throws NonExistentItemException {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
 
@@ -142,11 +123,10 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
     }
 
     @Override
-    public <T extends DocumentItem> T updateDocument(final T item,
-            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
 
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
-        final DocumentItem tmpItem = readDocument(itemConfiguration.getItemId(item), item.getClass());
+        final Item tmpItem = read(itemConfiguration.getItemId(item), item.getClass());
         if (tmpItem == null) {
             throw new NonExistentItemException(String.format("The document of type [%s] with id [%s] does not exist",
                     item.getClass().getName(), itemConfiguration.getItemId(item)));
@@ -164,8 +144,7 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
     }
 
     @Override
-    public <T extends DocumentItem> void deleteDocument(final T item,
-            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public void delete(final Item item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         final DeleteItemSpec deleteItemSpec = new DeleteItemSpec().withPrimaryKey(getPrimaryKey(
@@ -179,7 +158,7 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
     }
 
     @Override
-    public <T extends DocumentItem> Collection<T> fetchDocuments(final Query query, final Class<T> itemClass) {
+    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass) {
         final long startTimeMillis = System.currentTimeMillis();
         Collection<T> result;
         if (query instanceof AttributeQuery) {
@@ -192,7 +171,7 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
         return result;
     }
 
-    private <T extends DocumentItem> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass) {
+    private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
 
@@ -266,16 +245,6 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
         return scanSpec;
     }
 
-    @Override
-    public <T extends DocumentItem> T fetchUniqueDocument(final Query query, final Class<T> itemClass)
-            throws NonUniqueResultException {
-        final Collection<T> items = this.fetchDocuments(query, itemClass);
-        if (items.size() != 1) {
-            throw new NonUniqueResultException(itemClass, items);
-        }
-        return items.iterator().next();
-    }
-
     private PrimaryKey getPrimaryKey(final ItemId itemId, final ItemConfiguration itemConfiguration) {
         final PrimaryKeyDefinition primaryKeyDefinition = itemConfiguration.primaryKeyDefinition();
         final PrimaryKey key = new PrimaryKey(primaryKeyDefinition.propertyName(), itemId.value());
@@ -286,19 +255,9 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
         return key;
     }
 
-    private ItemConfiguration getItemConfiguration(final Class<? extends Item> itemClass) {
-        if (!initialized) {
-            throw new IllegalStateException("PersistenceTemplate not initialized.");
-        }
-        final ItemConfiguration itemConfiguration = itemConfigurationMap.get(itemClass);
-        if (itemConfiguration == null) {
-            throw new IllegalStateException("No ItemConfiguration for " + itemClass);
-        }
-        return itemConfiguration;
-    }
-
-    private <T extends DocumentItem> String itemToString(final T item) {
+    private <T extends Item> String itemToString(final T item) {
         final ObjectMapper mapper = new ObjectMapper();
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
         final StringBuilder value = new StringBuilder();
         try {
             value.append(mapper.writeValueAsString(item));
@@ -308,7 +267,7 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
         return value.toString();
     }
 
-    private <T extends DocumentItem> T stringToItem(final String item, final Class<T> valueType) {
+    private <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
         final ObjectMapper mapper = new ObjectMapper();
         T value = null;
         try {
@@ -319,105 +278,9 @@ public class DynamoDocumentStoreTemplate implements DocumentStoreTemplate {
         return value;
     }
 
-    private Collection<PropertyDescriptor> constraintPropertyDescriptors(final ItemConfiguration itemConfiguration) {
-        final Collection<PropertyDescriptor> contraintPropertyDescriptors = new HashSet<>();
-        for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
-            contraintPropertyDescriptors.add(uniqueConstraint.propertyDescriptor());
-        }
-        return contraintPropertyDescriptors;
-    }
-
-    private <T extends DocumentItem> Collection<PropertyDescriptor> createUniqueConstraintIndexes(final T item,
-            final ItemConfiguration itemConfiguration) {
-        return createUniqueConstraintIndexes(item, itemConfiguration, constraintPropertyDescriptors(itemConfiguration));
-    }
-
-    private <T extends DocumentItem> void deleteUniqueConstraintIndexes(final T item,
-            final ItemConfiguration itemConfiguration) {
-        deleteUniqueConstraintIndexes(item, itemConfiguration, constraintPropertyDescriptors(itemConfiguration));
-    }
-
-    private <T extends DocumentItem> Collection<PropertyDescriptor> createUniqueConstraintIndexes(final T item,
-            final ItemConfiguration itemConfiguration,
-            final Collection<PropertyDescriptor> constraintPropertyDescriptors) {
-        final Set<PropertyDescriptor> createdConstraintPropertyDescriptors = new HashSet<>();
-        ItemConstraintViolationException itemConstraintViolationException = null;
-        for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
-            final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
-            final PropertyDescriptor uniqueConstraintPropertyDescriptor = uniqueConstraint.propertyDescriptor();
-            if (constraintPropertyDescriptors.contains(uniqueConstraintPropertyDescriptor)) {
-                final AttributeValue uniqueConstraintAttributeValue = DynamoDbPropertyMarshaller.getValue(item,
-                        uniqueConstraintPropertyDescriptor);
-                if (uniqueConstraintAttributeValue == null) {
-                    continue;
-                }
-                if (uniqueConstraintAttributeValue.getS() != null) {
-                    uniqueConstraintAttributeValue.setS(uniqueConstraintAttributeValue.getS().toUpperCase());
-                }
-                final Map<String, AttributeValue> attributeMap = new HashMap<>();
-                attributeMap.put("property", new AttributeValue(uniqueConstraintPropertyName));
-                attributeMap.put("value", uniqueConstraintAttributeValue);
-                final Map<String, ExpectedAttributeValue> expectedResults = new HashMap<>();
-                expectedResults.put("value", new ExpectedAttributeValue(false));
-                final String indexTableName = databaseSchemaHolder.schemaName() + "-indexes."
-                        + itemConfiguration.tableName();
-                final PutItemRequest itemRequest = new PutItemRequest().withTableName(indexTableName)
-                        .withItem(attributeMap).withExpected(expectedResults);
-                try {
-                    amazonDynamoDbClient.putItem(itemRequest);
-                    createdConstraintPropertyDescriptors.add(uniqueConstraintPropertyDescriptor);
-                } catch (final ConditionalCheckFailedException e) {
-                    itemConstraintViolationException = new ItemConstraintViolationException(
-                            uniqueConstraintPropertyName, "Unique constraint violation on property '"
-                                    + uniqueConstraintPropertyName + "' ('" + uniqueConstraintAttributeValue
-                                    + "') of item " + item.getClass());
-                    break;
-                } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException(
-                            "Failure while attempting DynamoDb put (creating unique constraint index entry)", e);
-                }
-            }
-        }
-        if (itemConstraintViolationException != null) {
-            try {
-                deleteUniqueConstraintIndexes(item, itemConfiguration, createdConstraintPropertyDescriptors);
-            } catch (final Exception e) {
-                logger.error(e.getMessage(), e);
-            }
-            throw itemConstraintViolationException;
-        }
-        return createdConstraintPropertyDescriptors;
-    }
-
-    private <T extends DocumentItem> void deleteUniqueConstraintIndexes(final T item,
-            final ItemConfiguration itemConfiguration,
-            final Collection<PropertyDescriptor> constraintPropertyDescriptors) {
-        if (constraintPropertyDescriptors.isEmpty()) {
-            return;
-        }
-        for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
-            final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
-            final PropertyDescriptor uniqueConstraintPropertyDescriptor = uniqueConstraint.propertyDescriptor();
-            if (constraintPropertyDescriptors.contains(uniqueConstraintPropertyDescriptor)) {
-                final AttributeValue uniqueConstraintAttributeValue = DynamoDbPropertyMarshaller.getValue(item,
-                        uniqueConstraintPropertyDescriptor);
-                if (uniqueConstraintAttributeValue.getS() != null) {
-                    uniqueConstraintAttributeValue.setS(uniqueConstraintAttributeValue.getS().toUpperCase());
-                }
-                final Map<String, AttributeValue> key = new HashMap<>();
-                key.put("property", new AttributeValue(uniqueConstraintPropertyName));
-                key.put("value", uniqueConstraintAttributeValue);
-                final String indexTableName = databaseSchemaHolder.schemaName() + "-indexes."
-                        + itemConfiguration.tableName();
-                final DeleteItemRequest itemRequest = new DeleteItemRequest().withTableName(indexTableName)
-                        .withKey(key);
-                try {
-                    amazonDynamoDbClient.deleteItem(itemRequest);
-                } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException(
-                            "Failed while attempting to perform DynamoDb Delete (for unique constraints)", e);
-                }
-            }
-        }
+    @Override
+    public GeneratedKeyHolder generateKeys(final SequenceKeyGenerator sequenceKeyGenerator) {
+        // null implementation
+        return null;
     }
 }

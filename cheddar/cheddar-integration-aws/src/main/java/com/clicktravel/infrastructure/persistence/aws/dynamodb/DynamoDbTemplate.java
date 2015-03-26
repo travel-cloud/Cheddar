@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDbPropertyMarshaller;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.*;
@@ -38,7 +37,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.han
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
-public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchDatabaseTemplate {
+public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchDatabaseTemplate {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -47,42 +46,8 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
     private static final String SEQUENCE_NAME_ATTRIBUTE = "name";
     private static final String SEQUENCE_CURRENT_VALUE_ATTRIBUTE = "currentValue";
 
-    private boolean initialized;
-    private AmazonDynamoDB amazonDynamoDbClient;
-    private final DatabaseSchemaHolder databaseSchemaHolder;
-    private final HashMap<Class<? extends Item>, ItemConfiguration> itemConfigurationMap;
-    private final Set<String> sequenceConfigurations;
-
     public DynamoDbTemplate(final DatabaseSchemaHolder databaseSchemaHolder) {
-        this.databaseSchemaHolder = databaseSchemaHolder;
-        itemConfigurationMap = new HashMap<>();
-        for (final ItemConfiguration itemConfiguration : databaseSchemaHolder.itemConfigurations()) {
-            itemConfigurationMap.put(itemConfiguration.itemClass(), itemConfiguration);
-        }
-        sequenceConfigurations = new HashSet<>();
-        for (final SequenceConfiguration sequenceConfiguration : databaseSchemaHolder.sequenceConfigurations()) {
-            sequenceConfigurations.add(sequenceConfiguration.sequenceName());
-        }
-    }
-
-    public void initialize(final AmazonDynamoDB amazonDynamoDbClient) {
-        this.amazonDynamoDbClient = amazonDynamoDbClient;
-        initialized = true;
-    }
-
-    private ItemConfiguration getItemConfiguration(final Class<? extends Item> itemClass) {
-        if (!initialized) {
-            throw new IllegalStateException("PersistenceTemplate not initialized.");
-        }
-        final ItemConfiguration itemConfiguration = itemConfigurationMap.get(itemClass);
-        if (itemConfiguration == null) {
-            throw new IllegalStateException("No ItemConfiguration for " + itemClass);
-        }
-        return itemConfiguration;
-    }
-
-    public DatabaseSchemaHolder databaseSchemaHolder() {
-        return databaseSchemaHolder;
+        super(databaseSchemaHolder);
     }
 
     @Override
@@ -240,108 +205,6 @@ public class DynamoDbTemplate extends AbstractDatabaseTemplate implements BatchD
         }
         item.setVersion(1l);
         return item;
-    }
-
-    private <T extends Item> Collection<PropertyDescriptor> createUniqueConstraintIndexes(final T item,
-            final ItemConfiguration itemConfiguration) {
-        return createUniqueConstraintIndexes(item, itemConfiguration, constraintPropertyDescriptors(itemConfiguration));
-    }
-
-    private Collection<PropertyDescriptor> constraintPropertyDescriptors(final ItemConfiguration itemConfiguration) {
-        final Collection<PropertyDescriptor> contraintPropertyDescriptors = new HashSet<>();
-        for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
-            contraintPropertyDescriptors.add(uniqueConstraint.propertyDescriptor());
-        }
-        return contraintPropertyDescriptors;
-    }
-
-    private <T extends Item> Collection<PropertyDescriptor> createUniqueConstraintIndexes(final T item,
-            final ItemConfiguration itemConfiguration,
-            final Collection<PropertyDescriptor> constraintPropertyDescriptors) {
-        final Set<PropertyDescriptor> createdConstraintPropertyDescriptors = new HashSet<>();
-        ItemConstraintViolationException itemConstraintViolationException = null;
-        for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
-            final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
-            final PropertyDescriptor uniqueConstraintPropertyDescriptor = uniqueConstraint.propertyDescriptor();
-            if (constraintPropertyDescriptors.contains(uniqueConstraintPropertyDescriptor)) {
-                final AttributeValue uniqueConstraintAttributeValue = DynamoDbPropertyMarshaller.getValue(item,
-                        uniqueConstraintPropertyDescriptor);
-                if (uniqueConstraintAttributeValue == null) {
-                    continue;
-                }
-                if (uniqueConstraintAttributeValue.getS() != null) {
-                    uniqueConstraintAttributeValue.setS(uniqueConstraintAttributeValue.getS().toUpperCase());
-                }
-                final Map<String, AttributeValue> attributeMap = new HashMap<>();
-                attributeMap.put("property", new AttributeValue(uniqueConstraintPropertyName));
-                attributeMap.put("value", uniqueConstraintAttributeValue);
-                final Map<String, ExpectedAttributeValue> expectedResults = new HashMap<>();
-                expectedResults.put("value", new ExpectedAttributeValue(false));
-                final String indexTableName = databaseSchemaHolder.schemaName() + "-indexes."
-                        + itemConfiguration.tableName();
-                final PutItemRequest itemRequest = new PutItemRequest().withTableName(indexTableName)
-                        .withItem(attributeMap).withExpected(expectedResults);
-                try {
-                    amazonDynamoDbClient.putItem(itemRequest);
-                    createdConstraintPropertyDescriptors.add(uniqueConstraintPropertyDescriptor);
-                } catch (final ConditionalCheckFailedException e) {
-                    itemConstraintViolationException = new ItemConstraintViolationException(
-                            uniqueConstraintPropertyName, "Unique constraint violation on property '"
-                                    + uniqueConstraintPropertyName + "' ('" + uniqueConstraintAttributeValue
-                                    + "') of item " + item.getClass());
-                    break;
-                } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException(
-                            "Failure while attempting DynamoDb put (creating unique constraint index entry)", e);
-                }
-            }
-        }
-        if (itemConstraintViolationException != null) {
-            try {
-                deleteUniqueConstraintIndexes(item, itemConfiguration, createdConstraintPropertyDescriptors);
-            } catch (final Exception e) {
-                logger.error(e.getMessage(), e);
-            }
-            throw itemConstraintViolationException;
-        }
-        return createdConstraintPropertyDescriptors;
-    }
-
-    private <T extends Item> void deleteUniqueConstraintIndexes(final T item, final ItemConfiguration itemConfiguration) {
-        deleteUniqueConstraintIndexes(item, itemConfiguration, constraintPropertyDescriptors(itemConfiguration));
-
-    }
-
-    private <T extends Item> void deleteUniqueConstraintIndexes(final T item,
-            final ItemConfiguration itemConfiguration,
-            final Collection<PropertyDescriptor> constraintPropertyDescriptors) {
-        if (constraintPropertyDescriptors.isEmpty()) {
-            return;
-        }
-        for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
-            final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
-            final PropertyDescriptor uniqueConstraintPropertyDescriptor = uniqueConstraint.propertyDescriptor();
-            if (constraintPropertyDescriptors.contains(uniqueConstraintPropertyDescriptor)) {
-                final AttributeValue uniqueConstraintAttributeValue = DynamoDbPropertyMarshaller.getValue(item,
-                        uniqueConstraintPropertyDescriptor);
-                if (uniqueConstraintAttributeValue.getS() != null) {
-                    uniqueConstraintAttributeValue.setS(uniqueConstraintAttributeValue.getS().toUpperCase());
-                }
-                final Map<String, AttributeValue> key = new HashMap<>();
-                key.put("property", new AttributeValue(uniqueConstraintPropertyName));
-                key.put("value", uniqueConstraintAttributeValue);
-                final String indexTableName = databaseSchemaHolder.schemaName() + "-indexes."
-                        + itemConfiguration.tableName();
-                final DeleteItemRequest itemRequest = new DeleteItemRequest().withTableName(indexTableName)
-                        .withKey(key);
-                try {
-                    amazonDynamoDbClient.deleteItem(itemRequest);
-                } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException(
-                            "Failed while attempting to perform DynamoDb Delete (for unique constraints)", e);
-                }
-            }
-        }
     }
 
     private Map<String, AttributeValue> getAttributeMap(final Item item, final ItemConfiguration itemConfiguration,
