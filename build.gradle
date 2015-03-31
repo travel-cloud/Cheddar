@@ -122,4 +122,4 @@ task checkAndUploadAll { dependsOn { [checkAllWithIntegrationIfNeeded, uploadAll
 uploadAll.mustRunAfter checkAllWithIntegrationIfNeeded
 
 // Produce Gradle Wrapper scripts for running Gradle on machines that don't have Gradle installed
-task wrapper(type: Wrapper) { gradleVersion = '1.7' }
+task wrapper(type: Wrapper) { gradleVersion = '2.3' }

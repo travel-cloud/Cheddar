@@ -99,4 +99,23 @@ public class Operators {
         }
 
     };
+
+    public static final ComparisonOperator NOT_NULL = new ComparisonOperator() {
+
+        @Override
+        public boolean compare(final String value1, final String value2) {
+            throw new UnsupportedOperationException("compare() is not supported for Operators.NOT_NULL");
+        }
+
+        @Override
+        public boolean compare(final Collection<String> value1, final Collection<String> value2) {
+            throw new UnsupportedOperationException("compare() is not supported for Operators.NOT_NULL");
+        }
+
+        @Override
+        public String toString() {
+            return "ComparisonOperator.NOT_NULL";
+        }
+
+    };
 }
