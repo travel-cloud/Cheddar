@@ -33,10 +33,8 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.clicktravel.cheddar.infrastructure.persistence.database.GeneratedKeyHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
-import com.clicktravel.cheddar.infrastructure.persistence.database.SequenceKeyGenerator;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundPrimaryKeyDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.DatabaseSchemaHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.ItemConfiguration;
@@ -276,11 +274,5 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             throw new PersistenceResourceFailureException("Failure converting String to item", e);
         }
         return value;
-    }
-
-    @Override
-    public GeneratedKeyHolder generateKeys(final SequenceKeyGenerator sequenceKeyGenerator) {
-        // null implementation
-        return null;
     }
 }
