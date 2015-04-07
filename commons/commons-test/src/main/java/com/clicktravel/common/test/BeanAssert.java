@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.*;
 
-import org.joda.time.DateTime;
 import org.mockito.internal.util.collections.Sets;
 
 import com.clicktravel.common.random.Randoms;
@@ -107,7 +106,6 @@ public class BeanAssert {
         supportedPropertyTypes.put(Character.class, randomChar());
         supportedPropertyTypes.put(String.class, randomString(1000));
         supportedPropertyTypes.put(Date.class, new Date(randomDateTime().getMillis()));
-        supportedPropertyTypes.put(DateTime.class, randomDateTime());
         supportedPropertyTypes.put(Set.class, Sets.newSet(randomLong(), randomLong(), randomLong()));
         supportedPropertyTypes.put(BigDecimal.class, Randoms.randomBigDecimal(10000, randomInt(5)));
 
