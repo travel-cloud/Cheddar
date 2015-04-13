@@ -18,7 +18,10 @@ package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +33,6 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundPrimaryKeyDefinition;
@@ -81,7 +83,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
 
-        // max 100 keys per fetch so split in to lists of lists
+        // max 100 keys per fetch
         final List<List<ItemId>> split_ids = split(new ArrayList<ItemId>(query.itemIds()), 100);
         final List<T> fetchedItems = new ArrayList<T>();
 
@@ -90,25 +92,25 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             for (final ItemId id : ids) {
                 keys.addPrimaryKey(getPrimaryKey(id, itemConfiguration));
             }
-            BatchGetItemOutcome outcome = dynamoDBClient.batchGetItem(keys);
-            do {
-                final List<com.amazonaws.services.dynamodbv2.document.Item> items = outcome.getTableItems().get(
-                        tableName);
-                for (final com.amazonaws.services.dynamodbv2.document.Item item : items) {
-                    fetchedItems.add(stringToItem(item.toJSON(), itemClass));
-                }
-                // Check for unprocessed keys which could happen if you exceed provisioned
-                // throughput or reach the limit on response size.
-                final Map<String, KeysAndAttributes> unprocessedKeys = outcome.getUnprocessedKeys();
-                if (outcome.getUnprocessedKeys().size() == 0) {
-                    logger.debug("No unprocessed keys found");
-                } else {
-                    logger.debug("Retrieving the unprocessed keys");
-                    outcome = dynamoDBClient.batchGetItemUnprocessed(unprocessedKeys);
-                }
-            } while (outcome.getUnprocessedKeys().size() > 0);
+            processBatchRead(dynamoDBClient.batchGetItem(keys), fetchedItems, tableName, itemClass);
         }
         return fetchedItems;
+    }
+
+    private <T extends Item> void processBatchRead(final BatchGetItemOutcome outcome, final List<T> fetchedItems,
+            final String tableName, final Class<T> itemClass) {
+
+        final List<com.amazonaws.services.dynamodbv2.document.Item> items = outcome.getTableItems().get(tableName);
+        for (final com.amazonaws.services.dynamodbv2.document.Item item : items) {
+            fetchedItems.add(stringToItem(item.toJSON(), itemClass));
+        }
+        if (outcome.getUnprocessedKeys().size() == 0) {
+            logger.debug("All items fetched");
+        } else {
+            logger.debug("Still " + outcome.getUnprocessedKeys().size() + " to fetch");
+            processBatchRead(dynamoDBClient.batchGetItemUnprocessed(outcome.getUnprocessedKeys()), fetchedItems,
+                    tableName, itemClass);
+        }
     }
 
     @Override
