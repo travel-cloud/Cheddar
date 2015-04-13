@@ -18,10 +18,7 @@ package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +30,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundPrimaryKeyDefinition;
@@ -41,10 +39,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.configuration
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.PrimaryKeyDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.Query;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.UnsupportedQueryException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,6 +58,57 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     public void initialize(final AmazonDynamoDB amazonDynamoDbClient) {
         super.initialize(amazonDynamoDbClient);
         dynamoDBClient = new DynamoDB(amazonDynamoDbClient);
+    }
+
+    /**
+     * Simple method for splitting a list into a list of smaller lists of the supplied length
+     * 
+     * @param list
+     * @param length
+     * @return
+     */
+    private <T> List<List<T>> split(final List<T> list, final int length) {
+        final List<List<T>> parts = new ArrayList<List<T>>();
+        final int size = list.size();
+        for (int i = 0; i < size; i += length) {
+            parts.add(new ArrayList<T>(list.subList(i, Math.min(size, i + length))));
+        }
+        return parts;
+    }
+
+    private <T extends Item> List<T> executeQuery(final KeySetQuery query, final Class<T> itemClass) {
+
+        final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
+        final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
+
+        // max 100 keys per fetch so split in to lists of lists
+        final List<List<ItemId>> split_ids = split(new ArrayList<ItemId>(query.itemIds()), 100);
+        final List<T> fetchedItems = new ArrayList<T>();
+
+        for (final List<ItemId> ids : split_ids) {
+            final TableKeysAndAttributes keys = new TableKeysAndAttributes(tableName);
+            for (final ItemId id : ids) {
+                keys.addPrimaryKey(getPrimaryKey(id, itemConfiguration));
+            }
+            BatchGetItemOutcome outcome = dynamoDBClient.batchGetItem(keys);
+            do {
+                final List<com.amazonaws.services.dynamodbv2.document.Item> items = outcome.getTableItems().get(
+                        tableName);
+                for (final com.amazonaws.services.dynamodbv2.document.Item item : items) {
+                    fetchedItems.add(stringToItem(item.toJSON(), itemClass));
+                }
+                // Check for unprocessed keys which could happen if you exceed provisioned
+                // throughput or reach the limit on response size.
+                final Map<String, KeysAndAttributes> unprocessedKeys = outcome.getUnprocessedKeys();
+                if (outcome.getUnprocessedKeys().size() == 0) {
+                    logger.debug("No unprocessed keys found");
+                } else {
+                    logger.debug("Retrieving the unprocessed keys");
+                    outcome = dynamoDBClient.batchGetItemUnprocessed(unprocessedKeys);
+                }
+            } while (outcome.getUnprocessedKeys().size() > 0);
+        }
+        return fetchedItems;
     }
 
     @Override
@@ -161,6 +207,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         Collection<T> result;
         if (query instanceof AttributeQuery) {
             result = executeQuery((AttributeQuery) query, itemClass);
+        } else if (query instanceof KeySetQuery) {
+            result = executeQuery((KeySetQuery) query, itemClass);
         } else {
             throw new UnsupportedQueryException(query.getClass());
         }
