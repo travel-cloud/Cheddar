@@ -79,14 +79,11 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     private <T extends Item> List<T> executeQuery(final KeySetQuery query, final Class<T> itemClass) {
-
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-
         // max 100 keys per fetch
         final List<List<ItemId>> split_ids = split(new ArrayList<ItemId>(query.itemIds()), 100);
         final List<T> fetchedItems = new ArrayList<T>();
-
         for (final List<ItemId> ids : split_ids) {
             final TableKeysAndAttributes keys = new TableKeysAndAttributes(tableName);
             for (final ItemId id : ids) {
@@ -99,7 +96,6 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     private <T extends Item> void processBatchRead(final BatchGetItemOutcome outcome, final List<T> fetchedItems,
             final String tableName, final Class<T> itemClass) {
-
         final List<com.amazonaws.services.dynamodbv2.document.Item> items = outcome.getTableItems().get(tableName);
         for (final com.amazonaws.services.dynamodbv2.document.Item item : items) {
             fetchedItems.add(stringToItem(item.toJSON(), itemClass));
