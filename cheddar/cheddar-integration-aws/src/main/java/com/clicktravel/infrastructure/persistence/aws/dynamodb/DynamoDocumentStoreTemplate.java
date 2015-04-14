@@ -41,10 +41,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.configuration
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.PrimaryKeyDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.Query;
-import com.clicktravel.cheddar.infrastructure.persistence.database.query.UnsupportedQueryException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,6 +60,53 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     public void initialize(final AmazonDynamoDB amazonDynamoDbClient) {
         super.initialize(amazonDynamoDbClient);
         dynamoDBClient = new DynamoDB(amazonDynamoDbClient);
+    }
+
+    /**
+     * Simple method for splitting a list into a list of smaller lists of the supplied length
+     * 
+     * @param list
+     * @param length
+     * @return
+     */
+    private <T> List<List<T>> split(final List<T> list, final int length) {
+        final List<List<T>> parts = new ArrayList<List<T>>();
+        final int size = list.size();
+        for (int i = 0; i < size; i += length) {
+            parts.add(new ArrayList<T>(list.subList(i, Math.min(size, i + length))));
+        }
+        return parts;
+    }
+
+    private <T extends Item> List<T> executeQuery(final KeySetQuery query, final Class<T> itemClass) {
+        final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
+        final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
+        // max 100 keys per fetch
+        final List<List<ItemId>> split_ids = split(new ArrayList<ItemId>(query.itemIds()), 100);
+        final List<T> fetchedItems = new ArrayList<T>();
+        for (final List<ItemId> ids : split_ids) {
+            final TableKeysAndAttributes keys = new TableKeysAndAttributes(tableName);
+            for (final ItemId id : ids) {
+                keys.addPrimaryKey(getPrimaryKey(id, itemConfiguration));
+            }
+            processBatchRead(dynamoDBClient.batchGetItem(keys), fetchedItems, tableName, itemClass);
+        }
+        return fetchedItems;
+    }
+
+    private <T extends Item> void processBatchRead(final BatchGetItemOutcome outcome, final List<T> fetchedItems,
+            final String tableName, final Class<T> itemClass) {
+        final List<com.amazonaws.services.dynamodbv2.document.Item> items = outcome.getTableItems().get(tableName);
+        for (final com.amazonaws.services.dynamodbv2.document.Item item : items) {
+            fetchedItems.add(stringToItem(item.toJSON(), itemClass));
+        }
+        if (outcome.getUnprocessedKeys().size() == 0) {
+            logger.debug("All items fetched");
+        } else {
+            logger.debug("Still " + outcome.getUnprocessedKeys().size() + " to fetch");
+            processBatchRead(dynamoDBClient.batchGetItemUnprocessed(outcome.getUnprocessedKeys()), fetchedItems,
+                    tableName, itemClass);
+        }
     }
 
     @Override
@@ -161,6 +205,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         Collection<T> result;
         if (query instanceof AttributeQuery) {
             result = executeQuery((AttributeQuery) query, itemClass);
+        } else if (query instanceof KeySetQuery) {
+            result = executeQuery((KeySetQuery) query, itemClass);
         } else {
             throw new UnsupportedQueryException(query.getClass());
         }
