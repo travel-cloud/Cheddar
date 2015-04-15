@@ -652,6 +652,36 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
+    public void shouldFetch_withKeySetQueryFromDocumentStoreTemplate() {
+        // Given
+        // create 50 large objects to trigger multiple fetches
+        final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+        final KeySetQuery q = new KeySetQuery(new ArrayList<ItemId>());
+        final List<String> savedKeys = new ArrayList<String>();
+        final int itemsToCreate = 50;
+        for (int i = 0; i < itemsToCreate; i++) {
+            final StubItem item = new StubItem();
+            item.setId(Randoms.randomString());
+            final char[] chars = new char[100000];
+            Arrays.fill(chars, 'X');
+            item.setStringProperty(new String(chars));
+            dynamoDbTemplate.create(item);
+            savedKeys.add(item.getId());
+            q.itemIds().add(new ItemId(item.getId()));
+        }
+
+        // When
+        final Collection<StubItem> allItems = dynamoDbTemplate.fetch(q, StubItem.class);
+
+        // Then
+        assertEquals(itemsToCreate, allItems.size());
+        for (final StubItem i : allItems) {
+            assertTrue(savedKeys.contains(i.getId()));
+        }
+    }
+
+    @Test
     public void shouldFetch_withKeySetQueryWithMixedVariantsByParent() {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
