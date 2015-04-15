@@ -247,17 +247,18 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                     if (itemPropertyValue != null) {
                         matches.add(item);
                     }
-                } else if (String.class.isAssignableFrom(itemPropertyType) && values.size() == 1) {
-                    final String itemPropertyValueString = itemPropertyValue == null ? null
-                            : (String) itemPropertyValue;
-                    if (condition.getComparisonOperator().compare(itemPropertyValueString, values.iterator().next())) {
-                        matches.add(item);
-                    }
+
                 } else if (Collection.class.isAssignableFrom(itemPropertyType)) {
                     @SuppressWarnings("unchecked")
                     final Collection<String> itemPropertyValueStringCollection = itemPropertyValue == null ? null
                             : (Collection<String>) itemPropertyValue;
                     if (condition.getComparisonOperator().compare(itemPropertyValueStringCollection, values)) {
+                        matches.add(item);
+                    }
+                } else if (values.size() == 1) {
+                    final String itemPropertyValueString = itemPropertyValue == null ? null : String
+                            .valueOf(itemPropertyValue);
+                    if (condition.getComparisonOperator().compare(itemPropertyValueString, values.iterator().next())) {
                         matches.add(item);
                     }
                 }
