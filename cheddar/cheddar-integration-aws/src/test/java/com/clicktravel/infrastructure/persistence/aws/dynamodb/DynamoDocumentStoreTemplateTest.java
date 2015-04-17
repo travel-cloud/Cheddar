@@ -19,6 +19,7 @@ package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -33,9 +34,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -60,9 +59,6 @@ import com.clicktravel.common.random.Randoms;
 @PrepareForTest({ DynamoDocumentStoreTemplate.class })
 public class DynamoDocumentStoreTemplateTest {
 
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
     private DatabaseSchemaHolder mockDatabaseSchemaHolder;
     private String schemaName;
     private String tableName;
@@ -78,7 +74,7 @@ public class DynamoDocumentStoreTemplateTest {
         mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
         mockDynamoDBClient = mock(DynamoDB.class);
         whenNew(DynamoDB.class).withParameterTypes(AmazonDynamoDB.class).withArguments(eq(mockAmazonDynamoDbClient))
-                .thenReturn(mockDynamoDBClient);
+        .thenReturn(mockDynamoDBClient);
     }
 
     @SuppressWarnings("deprecation")
@@ -140,13 +136,17 @@ public class DynamoDocumentStoreTemplateTest {
         when(mockTableItem.toJSON()).thenReturn(dynamoDocumentStoreTemplate.itemToString(stubItem));
 
         doThrow(RuntimeException.class).when(mockTable).putItem(any(PutItemSpec.class));
-
-        exception.expect(RuntimeException.class);
+        RuntimeException thrownException = null;
 
         // When
-        dynamoDocumentStoreTemplate.create(stubItem);
+        try {
+            dynamoDocumentStoreTemplate.create(stubItem);
+        } catch (final RuntimeException runtimeException) {
+            thrownException = runtimeException;
+        }
 
         // Then
+        assertNotNull(thrownException);
     }
 
     @SuppressWarnings("deprecation")
@@ -208,12 +208,16 @@ public class DynamoDocumentStoreTemplateTest {
 
         when(mockTable.getItem(any(GetItemSpec.class))).thenReturn(null);
 
-        exception.expect(NonExistentItemException.class);
-
+        NonExistentItemException thrownException = null;
         // When
-        dynamoDocumentStoreTemplate.read(itemId, StubItem.class);
+        try {
+            dynamoDocumentStoreTemplate.read(itemId, StubItem.class);
+        } catch (final NonExistentItemException nonExistentItemException) {
+            thrownException = nonExistentItemException;
+        }
 
         // Then
+        assertNotNull(thrownException);
     }
 
     @SuppressWarnings("deprecation")
@@ -238,12 +242,16 @@ public class DynamoDocumentStoreTemplateTest {
 
         when(mockTableItem.toJSON()).thenReturn("");
 
-        exception.expect(NonExistentItemException.class);
-
+        NonExistentItemException thrownException = null;
         // When
-        dynamoDocumentStoreTemplate.read(itemId, StubItem.class);
+        try {
+            dynamoDocumentStoreTemplate.read(itemId, StubItem.class);
+        } catch (final NonExistentItemException nonExistentItemException) {
+            thrownException = nonExistentItemException;
+        }
 
         // Then
+        assertNotNull(thrownException);
     }
 
     @SuppressWarnings("deprecation")
@@ -306,12 +314,17 @@ public class DynamoDocumentStoreTemplateTest {
 
         doThrow(ConditionalCheckFailedException.class).when(mockTable).putItem(any(PutItemSpec.class));
 
-        exception.expect(OptimisticLockException.class);
+        OptimisticLockException thrownException = null;
 
         // When
-        dynamoDocumentStoreTemplate.update(stubItem);
+        try {
+            dynamoDocumentStoreTemplate.update(stubItem);
+        } catch (final OptimisticLockException optimisticLockException) {
+            thrownException = optimisticLockException;
+        }
 
         // Then
+        assertNotNull(thrownException);
     }
 
     @SuppressWarnings("deprecation")
