@@ -43,8 +43,6 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final String VERSION_ATTRIBUTE = "version";
-
     public DynamoDbTemplate(final DatabaseSchemaHolder databaseSchemaHolder) {
         super(databaseSchemaHolder);
     }

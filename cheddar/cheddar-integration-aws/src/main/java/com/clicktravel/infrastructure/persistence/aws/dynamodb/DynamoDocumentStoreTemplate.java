@@ -33,6 +33,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundPrimaryKeyDefinition;
@@ -40,6 +41,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.configuration
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.ItemConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.PrimaryKeyDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
@@ -64,7 +66,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     /**
      * Simple method for splitting a list into a list of smaller lists of the supplied length
-     * 
+     *
      * @param list
      * @param length
      * @return
@@ -111,6 +113,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     @Override
     public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+        item.setVersion(1l);
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
                 itemConfiguration);
@@ -134,7 +137,6 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 }
             }
         }
-        item.setVersion(1l);
         return item;
     }
 
@@ -166,22 +168,25 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     @Override
     public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
-
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
-        final Item tmpItem = read(itemConfiguration.getItemId(item), item.getClass());
-        if (tmpItem == null) {
-            throw new NonExistentItemException(String.format("The document of type [%s] with id [%s] does not exist",
-                    item.getClass().getName(), itemConfiguration.getItemId(item)));
+        if (item.getVersion() == null) {
+            return create(item);
         }
-        Long version = tmpItem.getVersion();
-        item.setVersion(version++);
+
+        final Expected expectedCondition = new Expected(VERSION_ATTRIBUTE).eq(item.getVersion());
+        final Long newVersion = item.getVersion() + 1l;
+        item.setVersion(newVersion);
 
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         final com.amazonaws.services.dynamodbv2.document.Item awsItem = com.amazonaws.services.dynamodbv2.document.Item
                 .fromJSON(itemToString(item));
-        final PutItemSpec putItemSpec = new PutItemSpec().withItem(awsItem);
+        final PutItemSpec putItemSpec = new PutItemSpec().withItem(awsItem).withExpected(expectedCondition);
 
-        dynamoDBClient.getTable(tableName).putItem(putItemSpec);
+        try {
+            dynamoDBClient.getTable(tableName).putItem(putItemSpec);
+        } catch (final ConditionalCheckFailedException e) {
+            throw new OptimisticLockException("Conflicting write detected while updating item");
+        }
         return item;
     }
 
@@ -299,7 +304,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         return key;
     }
 
-    private <T extends Item> String itemToString(final T item) {
+    <T extends Item> String itemToString(final T item) {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
         final StringBuilder value = new StringBuilder();
@@ -311,7 +316,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         return value.toString();
     }
 
-    private <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
+    <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
         final ObjectMapper mapper = new ObjectMapper();
         T value = null;
         try {

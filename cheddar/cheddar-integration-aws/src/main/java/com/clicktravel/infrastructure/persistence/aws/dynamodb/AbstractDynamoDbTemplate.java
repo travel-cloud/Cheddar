@@ -49,6 +49,8 @@ public abstract class AbstractDynamoDbTemplate extends AbstractDatabaseTemplate 
     private static final String SEQUENCE_NAME_ATTRIBUTE = "name";
     private static final String SEQUENCE_CURRENT_VALUE_ATTRIBUTE = "currentValue";
 
+    protected static final String VERSION_ATTRIBUTE = "version";
+
     public AbstractDynamoDbTemplate(final DatabaseSchemaHolder databaseSchemaHolder) {
         this.databaseSchemaHolder = databaseSchemaHolder;
         itemConfigurationMap = new HashMap<>();
