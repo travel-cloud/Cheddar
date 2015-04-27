@@ -16,11 +16,14 @@
  */
 package com.clicktravel.infrastructure.messaging.aws.sns;
 
+import com.amazonaws.AmazonClientException;
 import com.clicktravel.cheddar.infrastructure.messaging.Exchange;
 import com.clicktravel.cheddar.infrastructure.messaging.Message;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
 
 /**
- * AWS SNS implementation for an {@link Exchange}
+ * AWS SNS implementation for an {@link Exchange}. This class is implemented as an adapter for a
+ * {@link SnsTopicResource}.
  * @param <T> message type accepted by this exchange
  */
 public abstract class SnsExchange<T extends Message> implements Exchange<T> {
@@ -34,11 +37,15 @@ public abstract class SnsExchange<T extends Message> implements Exchange<T> {
     abstract protected SnsSubjectAndMessage toSnsSubjectAndMessage(T message);
 
     @Override
-    public void route(final T message) {
+    public void route(final T message) throws MessagePublishException {
         final SnsSubjectAndMessage snsSubjectAndMessage = toSnsSubjectAndMessage(message);
         final String subject = snsSubjectAndMessage.getSubject();
         final String snsMessage = snsSubjectAndMessage.getMessage();
-        snsTopicResource.publish(subject, snsMessage);
+        try {
+            snsTopicResource.publish(subject, snsMessage);
+        } catch (final AmazonClientException e) {
+            throw new MessagePublishException("Could not publish to SNS: [" + snsTopicResource.getTopicName() + "]", e);
+        }
     }
 
     @Override

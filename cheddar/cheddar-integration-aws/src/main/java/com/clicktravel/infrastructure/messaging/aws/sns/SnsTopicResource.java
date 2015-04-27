@@ -19,12 +19,12 @@ package com.clicktravel.infrastructure.messaging.aws.sns;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
 import com.amazonaws.services.sns.model.SubscribeRequest;
-import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
 import com.clicktravel.infrastructure.messaging.aws.sqs.SqsQueueResource;
 
 /**
@@ -50,32 +50,30 @@ public class SnsTopicResource {
      * Publish a message with subject to the AWS SNS topic.
      * @param subject "Subject" line of message to publish
      * @param message Content of message to publish
+     * @throws AmazonClientException
      */
-    public void publish(final String subject, final String message) {
-        try {
-            amazonSnsClient.publish(new PublishRequest().withTopicArn(topicArn).withSubject(subject)
-                    .withMessage(message));
-            logger.debug("Successfully published message; subject:[" + subject + "] message:[" + message
-                    + "] snsName:[" + topicName + "]");
-        } catch (final Exception e) {
-            throw new MessagePublishException("Could not publish to SNS: [" + topicName + "]", e);
-        }
+    public void publish(final String subject, final String message) throws AmazonClientException {
+        amazonSnsClient.publish(new PublishRequest().withTopicArn(topicArn).withSubject(subject).withMessage(message));
+        logger.debug("Successfully published message; subject:[" + subject + "] message:[" + message + "] snsName:["
+                + topicName + "]");
     }
 
     /**
      * Adds an AWS SQS subscription to the AWS SNS topic.
      * @param sqsQueueResource {@link SqsQueueResource} representative of AWS SQS queue subscribing to the AWS SNS
      *            topic.
+     * @throws AmazonClientException
      */
-    public void subscribe(final SqsQueueResource sqsQueueResource) {
+    public void subscribe(final SqsQueueResource sqsQueueResource) throws AmazonClientException {
         amazonSnsClient.subscribe(new SubscribeRequest(topicArn, "sqs", sqsQueueResource.queueArn()));
     }
 
     /**
      * Sets the {@link Policy} of the AWS SNS topic
      * @param policy {@link Policy} to set
+     * @throws AmazonClientException
      */
-    public void setPolicy(final Policy policy) {
+    public void setPolicy(final Policy policy) throws AmazonClientException {
         amazonSnsClient.setTopicAttributes(new SetTopicAttributesRequest(topicArn, TOPIC_POLICY_ATTRIBUTE, policy
                 .toJson()));
     }

@@ -27,18 +27,12 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.*;
-import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 
 /**
  * Represents an actual AWS SQS queue that exists in the AWS environment. Provides some convenience methods for working
  * with the actual AWS SQS queue.
  */
 public class SqsQueueResource {
-
-    /**
-     * Time to pause SQS request has service error (5xx) response, in milliseconds
-     */
-    private static final long SQS_SERVICE_ERROR_PAUSE_MILLIS = 500;
 
     private static final String AWS_POLICY_ATTRIBUTE = QueueAttributeName.Policy.toString();
     private static final String SQS_QUEUE_ARN_ATTRIBUTE = QueueAttributeName.QueueArn.toString();
@@ -59,7 +53,7 @@ public class SqsQueueResource {
      * Sends a message to the AWS SQS queue
      * @param messageBody Body of the message to send
      */
-    public void sendMessage(final String messageBody) {
+    public void sendMessage(final String messageBody) throws AmazonClientException {
         final SendMessageRequest sendMessageRequest = new SendMessageRequest(queueUrl, messageBody);
         doSendRequest(sendMessageRequest);
     }
@@ -69,30 +63,26 @@ public class SqsQueueResource {
      * @param messageBody Body of the message to send
      * @param delaySeconds Number of seconds to delay visibility of the sent message
      */
-    public void sendDelayedMessage(final String messageBody, final int delaySeconds) {
+    public void sendDelayedMessage(final String messageBody, final int delaySeconds) throws AmazonClientException {
         final SendMessageRequest sendMessageRequest = new SendMessageRequest(queueUrl, messageBody)
                 .withDelaySeconds(delaySeconds);
         doSendRequest(sendMessageRequest);
     }
 
-    private void doSendRequest(final SendMessageRequest sendMessageRequest) {
-        try {
-            amazonSqsClient.sendMessage(sendMessageRequest);
-            logger.trace("Successfully sent message: Payload=" + sendMessageRequest.getMessageBody()
-                    + "] to SQS queue: [" + queueName + "]");
-        } catch (final Exception e) {
-            throw new MessageSendException("Could not send message to SQS queue " + queueName, e);
-        }
+    private void doSendRequest(final SendMessageRequest sendMessageRequest) throws AmazonClientException {
+        amazonSqsClient.sendMessage(sendMessageRequest);
+        logger.trace("Successfully sent message: Payload=" + sendMessageRequest.getMessageBody() + "] to SQS queue: ["
+                + queueName + "]");
     }
 
     /**
-     * Receive up to 10 messages from the AWS SQS queue, using short polling.
+     * Receive up to 10 messages from the AWS SQS queue, using short polling. If an error occurs performing the SQS
+     * ReceiveMessageRequest, the request is retried until it succeeds.
      * @return {@code List<com.amazonaws.services.sqs.model.Message>} received messages
      * @throws InterruptedException
      */
-    public List<com.amazonaws.services.sqs.model.Message> receiveMessages() throws InterruptedException {
-        final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl);
-        return doReceiveRequest(receiveMessageRequest);
+    public List<Message> receiveMessages() throws AmazonClientException {
+        return doReceiveRequest(new ReceiveMessageRequest(queueUrl));
     }
 
     /**
@@ -103,31 +93,23 @@ public class SqsQueueResource {
      * @return {@code List<com.amazonaws.services.sqs.model.Message>} received messages
      * @throws InterruptedException
      */
-    public List<com.amazonaws.services.sqs.model.Message> receiveMessages(final int waitTimeSeconds,
-            final int maxMessages) throws InterruptedException {
+    public List<Message> receiveMessages(final int waitTimeSeconds, final int maxMessages) throws AmazonClientException {
         final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(
                 waitTimeSeconds).withMaxNumberOfMessages(maxMessages);
         return doReceiveRequest(receiveMessageRequest);
     }
 
-    private List<com.amazonaws.services.sqs.model.Message> doReceiveRequest(
-            final ReceiveMessageRequest receiveMessageRequest) throws InterruptedException {
-        while (true) {
-            try {
-                return amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
-            } catch (final AmazonClientException amazonClientException) {
-                logger.error("Error receiving SQS messages on queue:[" + queueName + "]", amazonClientException);
-                // Ignore all amazon specific errors and hope SQS recovers
-                Thread.sleep(SQS_SERVICE_ERROR_PAUSE_MILLIS);
-            }
-        }
+    private List<Message> doReceiveRequest(final ReceiveMessageRequest receiveMessageRequest)
+            throws AmazonClientException {
+        return amazonSqsClient.receiveMessage(receiveMessageRequest).getMessages();
     }
 
     /**
-     * Delete a previously received message from the AWS SQS queue.
-     * @param receiptHandle Identifier given with receipt of message
+     * Delete a previously received message from the AWS SQS queue. Up to {@link #MAX_SQS_DELETE_MESSAGE_ATTEMPTS}
+     * attempts are made to perform the SQS {@link DeleteMessageRequest}.
+     * @param receiptHandle Identifier of message to delete, given with receipt of the message
      */
-    public void deleteMessage(final String receiptHandle) {
+    public void deleteMessage(final String receiptHandle) throws AmazonClientException {
         final DeleteMessageRequest deleteMessageRequest = new DeleteMessageRequest(queueUrl, receiptHandle);
         amazonSqsClient.deleteMessage(deleteMessageRequest);
     }
@@ -136,7 +118,7 @@ public class SqsQueueResource {
      * Sets the {@link Policy} of the AWS SQS queue
      * @param policy {@link Policy} to set
      */
-    public void setPolicy(final Policy policy) {
+    public void setPolicy(final Policy policy) throws AmazonClientException {
         final Map<String, String> queueAttributes = Collections.singletonMap(AWS_POLICY_ATTRIBUTE, policy.toJson());
         amazonSqsClient.setQueueAttributes(new SetQueueAttributesRequest(queueUrl, queueAttributes));
     }
@@ -144,7 +126,7 @@ public class SqsQueueResource {
     /**
      * @return The ARN of the AWS SQS queue
      */
-    public String queueArn() {
+    public String queueArn() throws AmazonClientException {
         if (queueArn == null) {
             final GetQueueAttributesRequest request = new GetQueueAttributesRequest(queueUrl)
                     .withAttributeNames(SQS_QUEUE_ARN_ATTRIBUTE);

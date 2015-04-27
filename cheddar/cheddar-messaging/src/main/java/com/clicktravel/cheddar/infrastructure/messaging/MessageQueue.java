@@ -18,6 +18,8 @@ package com.clicktravel.cheddar.infrastructure.messaging;
 
 import java.util.List;
 
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageDeleteException;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageReceiveException;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 
 /**
@@ -50,25 +52,28 @@ public interface MessageQueue<T extends Message> {
      * Receives any number of messages on this queue, but does not delete them. No order or priority of messages is
      * guaranteed.
      * @return List of received {@code Message}s
-     * @throws InterruptedException
+     * @throws MessageReceiveException
      */
-    List<T> receive() throws InterruptedException;
+    List<T> receive() throws MessageReceiveException;
 
     /**
-     * Receives any number of messages on this queue up to the maximum specified, but does not delete them. This call
-     * will spend up to the wait time given for a message to arrive in the queue before returning.
+     * Receives any number of messages on this queue up to the maximum specified, but does not delete them. No order or
+     * priority of messages is guaranteed. This call will spend up to the wait time given for a message to arrive in the
+     * queue before returning.
      * @param waitTimeSeconds The duration (in seconds) for which the call will wait for a message to arrive in the
      *            queue before returning. If a message is available, the call will return sooner.
      * @param maxMessages The maximum number of messages to return. Will never return more messages than this value but
      *            may return fewer. Values can be from 1 to 10.
-     * @return
+     * @return List of received {@code Message}s
+     * @throws MessageReceiveException
      */
-    List<T> receive(int waitTimeSeconds, int maxMessages) throws InterruptedException;
+    List<T> receive(int waitTimeSeconds, int maxMessages) throws MessageReceiveException;
 
     /**
      * Deletes a message previously received from this queue.
      * @param typedMessage {@code Message} to delete
+     * @throws MessageDeleteException
      */
-    void delete(T message);
+    void delete(T message) throws MessageDeleteException;
 
 }

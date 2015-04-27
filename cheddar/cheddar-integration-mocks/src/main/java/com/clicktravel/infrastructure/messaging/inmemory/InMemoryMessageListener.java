@@ -25,7 +25,6 @@ import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageQueue;
-import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageListenerException;
 
 /**
  * Simple mock {@link MessageListener} that uses in-memory queues.<br />
@@ -53,11 +52,7 @@ public abstract class InMemoryMessageListener<T extends Message> implements Mess
     public boolean receiveAndHandleMessages() {
         boolean didReceiveMessage = false;
         List<T> messages;
-        try {
-            messages = messageQueue.receive();
-        } catch (final InterruptedException e) {
-            throw new IllegalStateException(e);
-        }
+        messages = messageQueue.receive();
         for (final T message : messages) {
             didReceiveMessage = true;
             final MessageHandler<T> messageHandler = getHandlerForMessage(message);
@@ -72,13 +67,14 @@ public abstract class InMemoryMessageListener<T extends Message> implements Mess
             } else {
                 logger.debug("No handler for received message [" + message + "]");
             }
+
             messageQueue.delete(message);
         }
         return didReceiveMessage;
     }
 
     @Override
-    public void start() throws MessageListenerException {
+    public void start() {
         // Nothing to do
     }
 

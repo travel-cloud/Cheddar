@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging;
 
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessagePublishException;
+
 /**
  * An exchange routes messages to all subscribers. Otherwise known as a topic.
  */
@@ -24,8 +26,9 @@ public interface Exchange<T extends Message> {
     /**
      * Routes a message to all subscribers for this exchange
      * @param message Message to be routed
+     * @throws MessagePublishException
      */
-    public void route(T message);
+    public void route(T message) throws MessagePublishException;
 
     /**
      * @return The name of this exchange
