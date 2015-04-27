@@ -43,7 +43,11 @@ public class MessageHandlerWorker<T extends Message> implements Runnable {
         } catch (final Exception e) {
             logger.error("Error handling message: " + message, e);
         } finally {
-            pooledMessageListener.completeMessageProcessing(message);
+            try {
+                pooledMessageListener.completeMessageProcessing(message);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

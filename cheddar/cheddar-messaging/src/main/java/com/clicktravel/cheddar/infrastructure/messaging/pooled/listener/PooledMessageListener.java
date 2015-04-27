@@ -29,6 +29,8 @@ import com.clicktravel.cheddar.infrastructure.messaging.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageQueue;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageDeleteException;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageReceiveException;
 import com.clicktravel.common.concurrent.RateLimiter;
 
 public abstract class PooledMessageListener<T extends Message> implements MessageListener, Runnable {
@@ -72,6 +74,21 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
      * Maximum time (in seconds) to wait for executor to complete termination
      */
     private static final int TERMINATION_TIMEOUT_SECONDS = 300;
+
+    /**
+     * Time (in milliseconds) to pause when receive message request returns an error
+     */
+    private static final long RECEIVE_MESSAGE_ERROR_PAUSE_MILLIS = 500;
+
+    /**
+     * Maximum number of attempts to delete message from queue
+     */
+    private static final int MAX_DELETE_MESSAGE_ATTEMPTS = 3;
+
+    /**
+     * Time (in milliseconds) to pause when delete message request returns an error
+     */
+    private static final long DELETE_MESSAGE_ERROR_PAUSE_MILLIS = 500;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final MessageQueue<T> messageQueue;
@@ -124,15 +141,21 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
     }
 
     private void processMessagesUntilShutdownRequested() throws InterruptedException {
-        while (!(shutdownRequested || shutdownWhenQueueDrainedRequested && queueDrained())) {
-            // Block until there is capacity to handle up to MAX_RECEIVED_MESSAGES
+        while (!(shutdownRequested || (shutdownWhenQueueDrainedRequested && queueDrained()))) {
+            // Block until there is capacity to handle up to maxReceivedMessages
             semaphore.acquire(maxReceivedMessages);
             List<T> messages = Collections.emptyList();
             try {
                 if (!shutdownRequested) {
                     final int pollSeconds = shutdownRequestImminent ? SHORT_POLL_DURATION_SECONDS
                             : LONG_POLL_DURATION_SECONDS;
-                    messages = messageQueue.receive(pollSeconds, maxReceivedMessages);
+                    try {
+                        messages = messageQueue.receive(pollSeconds, maxReceivedMessages);
+                    } catch (final MessageReceiveException e) {
+                        logger.error("Error receiving messages on queue:[" + queueName() + "]", e);
+                        Thread.sleep(RECEIVE_MESSAGE_ERROR_PAUSE_MILLIS);
+                    }
+
                     if (shutdownWhenQueueDrainedRequested) {
                         noReceivedMessagesCount = messages.isEmpty() ? (noReceivedMessagesCount + 1) : 0;
                     }
@@ -153,7 +176,7 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
      * is deleted from the queue and the associated permit is released.
      * @param message {@link Message} to process
      */
-    private void processMessage(final T message) {
+    private void processMessage(final T message) throws InterruptedException {
         boolean workerAssigned = false;
         try {
             final MessageHandler<T> messageHandler = getHandlerForMessage(message);
@@ -175,9 +198,22 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
      * Completes message processing by deleting it from the queue and releasing the associated permit.
      * @param message {@link Message} to complete processing
      */
-    public void completeMessageProcessing(final T message) {
-        messageQueue.delete(message);
+    public void completeMessageProcessing(final T message) throws InterruptedException {
+        deleteMessage(message);
         semaphore.release();
+    }
+
+    private void deleteMessage(final T message) throws InterruptedException {
+        for (int attempts = 0; attempts < MAX_DELETE_MESSAGE_ATTEMPTS; attempts++) {
+            try {
+                messageQueue.delete(message);
+                return;
+            } catch (final MessageDeleteException e) {
+                logger.warn("Failed attempt to delete message from queue:[" + queueName() + "]", e);
+                Thread.sleep(DELETE_MESSAGE_ERROR_PAUSE_MILLIS);
+            }
+        }
+        logger.error("Failed all attempts to delete message from queue:[" + queueName() + "]");
     }
 
     private void applyRateLimiter() {

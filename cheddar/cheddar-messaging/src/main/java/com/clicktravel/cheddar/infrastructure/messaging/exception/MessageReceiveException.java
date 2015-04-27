@@ -14,24 +14,14 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.infrastructure.messaging;
+package com.clicktravel.cheddar.infrastructure.messaging.exception;
 
+public class MessageReceiveException extends MessagingException {
 
-/**
- * Controls the lifecycle of listening for messages on a queue and handling them.
- */
-public interface MessageListener {
+    private static final long serialVersionUID = 3670259800731462098L;
 
-    void start();
-
-    void shutdown();
-
-    void prepareForShutdown();
-
-    void shutdownAfterQueueDrained();
-
-    boolean hasTerminated();
-
-    void awaitTermination();
+    public MessageReceiveException(final String message, final Throwable e) {
+        super(message, e);
+    }
 
 }
