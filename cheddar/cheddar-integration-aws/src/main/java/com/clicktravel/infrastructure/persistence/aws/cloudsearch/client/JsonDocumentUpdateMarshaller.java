@@ -39,9 +39,10 @@ public class JsonDocumentUpdateMarshaller {
 
     private JsonDocumentUpdateMarshaller() {
         mapper = new ObjectMapper();
-        final SimpleModule jodaDateTimeModule = new SimpleModule();
-        jodaDateTimeModule.addSerializer(DateTime.class, new JodaDateTimeSerializer());
-        mapper.registerModule(jodaDateTimeModule);
+        final SimpleModule module = new SimpleModule();
+        module.addSerializer(DateTime.class, new JodaDateTimeSerializer());
+        module.addSerializer(Boolean.class, new BooleanLiteralSerializer());
+        mapper.registerModule(module);
         mapper.setPropertyNamingStrategy(new LowerCasePropertyNamingStrategy());
     }
 

@@ -176,8 +176,8 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     private UploadDocumentsRequest uploadDocumentsRequest(final BatchDocumentUpdateRequest batchDocumentUpdateRequest) {
         final UploadDocumentsRequest uploadDocumentsRequest = new UploadDocumentsRequest();
         final byte[] documentUpdatesJsonBytes;
-        documentUpdatesJsonBytes = JsonDocumentUpdateMarshaller.marshall(
-                batchDocumentUpdateRequest.getDocumentUpdates()).getBytes(Charset.forName("UTF-8"));
+        final String documentUpdatesJson = JsonDocumentUpdateMarshaller.marshall(batchDocumentUpdateRequest.getDocumentUpdates());
+        documentUpdatesJsonBytes = documentUpdatesJson.getBytes(Charset.forName("UTF-8"));
         final InputStream documents = new ByteArrayInputStream(documentUpdatesJsonBytes);
         uploadDocumentsRequest.setDocuments(documents);
         uploadDocumentsRequest.setContentLength((long) documentUpdatesJsonBytes.length);
