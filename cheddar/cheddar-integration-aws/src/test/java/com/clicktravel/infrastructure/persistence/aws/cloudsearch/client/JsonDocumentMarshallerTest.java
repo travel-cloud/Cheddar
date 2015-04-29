@@ -16,6 +16,7 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch.client;
 
+import static com.clicktravel.common.random.Randoms.randomBoolean;
 import static com.clicktravel.common.random.Randoms.randomDateTime;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
@@ -52,7 +53,10 @@ public class JsonDocumentMarshallerTest {
         final String fieldName2b = randomString(10);
         final String fieldValue2b = randomString();
         final Field field2b = new Field(fieldName2b, fieldValue2b);
-        final Collection<Field> fields2 = Arrays.asList(field2a, field2b);
+        final String fieldName2c = randomString(10);
+        final boolean fieldValue2c = randomBoolean();
+        final Field field2c = new Field(fieldName2c, fieldValue2c);
+        final Collection<Field> fields2 = Arrays.asList(field2a, field2b, field2c);
         documentUpdate2.withFields(fields2);
         final String documentId3 = randomString(10);
         final DocumentUpdate documentUpdate3 = new DocumentUpdate(Type.DELETE, documentId3);
@@ -63,8 +67,8 @@ public class JsonDocumentMarshallerTest {
                 + fieldName1a.toLowerCase() + "\":\"" + fieldValue1a + "\",\"" + fieldName1b.toLowerCase() + "\":\""
                 + fieldValue1b + "\"}},{\"id\":\"" + documentId2 + "\",\"type\":\"add\",\"fields\":{\""
                 + fieldName2a.toLowerCase() + "\":\"" + ISODateTimeFormat.dateTime().withZoneUTC().print(fieldValue2a)
-                + "\",\"" + fieldName2b.toLowerCase() + "\":\"" + fieldValue2b + "\"}},{\"id\":\"" + documentId3
-                + "\",\"type\":\"delete\"}]";
+                + "\",\"" + fieldName2b.toLowerCase() + "\":\"" + fieldValue2b + "\",\"" + fieldName2c.toLowerCase()
+                + "\":\"" + fieldValue2c + "\"}},{\"id\":\"" + documentId3 + "\",\"type\":\"delete\"}]";
 
         // When
         final String jsonString = JsonDocumentUpdateMarshaller.marshall(documentUpdates);
