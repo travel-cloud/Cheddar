@@ -18,6 +18,8 @@ package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -28,10 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.*;
-import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.*;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
@@ -228,20 +227,50 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
         final List<T> totalItems = new ArrayList<>();
 
-        logger.warn("Performing table scan");
+        if (itemConfiguration.hasIndexOn(query.getAttributeName())
+                && query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
+            final Index index = table.getIndex(query.getAttributeName() + "_idx");
 
-        final ScanSpec scanSpec = generateScanSpec(query);
-        final ItemCollection<ScanOutcome> scanOutcome = table.scan(scanSpec);
+            final QuerySpec querySpec = generateQuerySpec(query);
+            final ItemCollection<QueryOutcome> queryOutcome = index.query(querySpec);
 
-        final Iterator<com.amazonaws.services.dynamodbv2.document.Item> iterator = scanOutcome.iterator();
-        while (iterator.hasNext()) {
-            final com.amazonaws.services.dynamodbv2.document.Item item = iterator.next();
-            totalItems.add(stringToItem(item.toJSON(), itemClass));
+            final Iterator<com.amazonaws.services.dynamodbv2.document.Item> iterator = queryOutcome.iterator();
+            while (iterator.hasNext()) {
+                final com.amazonaws.services.dynamodbv2.document.Item item = iterator.next();
+                totalItems.add(stringToItem(item.toJSON(), itemClass));
+            }
+        } else {
+            logger.warn("Performing table scan");
+            ScanSpec scanSpec = null;
+            try {
+                scanSpec = generateScanSpec(query, itemClass);
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                throw new PersistenceResourceFailureException("Could not create ScanSpec for query: " + query, e);
+            }
+            final ItemCollection<ScanOutcome> scanOutcome = table.scan(scanSpec);
+
+            final Iterator<com.amazonaws.services.dynamodbv2.document.Item> iterator = scanOutcome.iterator();
+            while (iterator.hasNext()) {
+                final com.amazonaws.services.dynamodbv2.document.Item item = iterator.next();
+                totalItems.add(stringToItem(item.toJSON(), itemClass));
+            }
         }
+
         return totalItems;
     }
 
-    private ScanSpec generateScanSpec(final AttributeQuery query) {
+    private QuerySpec generateQuerySpec(final AttributeQuery query) {
+        final QuerySpec querySpec = new QuerySpec().withHashKey(query.getAttributeName(), query.getCondition()
+                .getValues().iterator().next());
+        return querySpec;
+    }
+
+    private <T extends Item> ScanSpec generateScanSpec(final AttributeQuery query, final Class<T> tableItemType)
+            throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+            NoSuchMethodException, SecurityException {
+        final Class<?> clazz = getScanSpecOperandType(query.getAttributeName(), tableItemType);
+
         ScanSpec scanSpec = new ScanSpec();
 
         final StringBuilder filterExpression = new StringBuilder();
@@ -259,7 +288,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 final Iterator<String> valueIterator = query.getCondition().getValues().iterator();
                 while (valueIterator.hasNext()) {
                     filterExpression.append(":").append(valueMapCount);
-                    valueMap.withString(":" + valueMapCount, valueIterator.next());
+                    valueMap.with(":" + valueMapCount, valueIterator.next());
                     valueMapCount++;
                     if (valueIterator.hasNext()) {
                         filterExpression.append(",");
@@ -269,7 +298,9 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             } else if (query.getCondition().getComparisonOperator().equals(Operators.LESS_THAN_OR_EQUALS)) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" <= ").append(":").append(valueMapCount);
-                    valueMap.withString(":" + valueMapCount, query.getCondition().getValues().iterator().next());
+                    final Object valueInstance = clazz.getConstructor(String.class).newInstance(
+                            query.getCondition().getValues().iterator().next());
+                    valueMap.with(":" + valueMapCount, valueInstance);
                     valueMapCount++;
                 } else {
                     // throw exeption??
@@ -277,7 +308,9 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             } else if (query.getCondition().getComparisonOperator().equals(Operators.GREATER_THAN_OR_EQUALS)) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" >= ").append(":").append(valueMapCount);
-                    valueMap.withString(":" + valueMapCount, query.getCondition().getValues().iterator().next());
+                    final Object valueInstance = clazz.getConstructor(String.class).newInstance(
+                            query.getCondition().getValues().iterator().next());
+                    valueMap.with(":" + valueMapCount, valueInstance);
                     valueMapCount++;
                 } else {
                     // throw exeption??
@@ -292,6 +325,17 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             scanSpec = scanSpec.withValueMap(valueMap);
         }
         return scanSpec;
+    }
+
+    private <T extends Item> Class<?> getScanSpecOperandType(final String fieldName, final Class<T> itemClass) {
+        Class<?> returnType = null;
+        final Field[] fieldArray = itemClass.getDeclaredFields();
+        for (final Field field : fieldArray) {
+            if (fieldName.equals(field.getName())) {
+                returnType = field.getType();
+            }
+        }
+        return returnType;
     }
 
     private PrimaryKey getPrimaryKey(final ItemId itemId, final ItemConfiguration itemConfiguration) {

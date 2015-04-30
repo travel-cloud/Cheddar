@@ -36,9 +36,9 @@ import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubWithRangeItem
 
 public class DynamoDbDataGenerator {
 
-    static final String UNIT_TEST_SCHEMA_NAME = "unittest";
-    static final String STUB_ITEM_TABLE_NAME = "stub_item_" + randomString(10);
-    static final String STUB_ITEM_WITH_RANGE_TABLE_NAME = "stub_item_with_range_" + randomString(10);
+    private final String unitTestSchemaName = "unittest";
+    private final String stubItemTableName = "stub_item_" + randomString(10);
+    private final String stubItemWithRangeTableName = "stub_item_with_range_" + randomString(10);
 
     public final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -50,8 +50,24 @@ public class DynamoDbDataGenerator {
         this.amazonDynamoDbClient = amazonDynamoDbClient;
     }
 
+    String getUnitTestSchemaName() {
+        return unitTestSchemaName;
+    }
+
+    String getStubItemTableName() {
+        return stubItemTableName;
+    }
+
+    String getStubItemWithRangeTableName() {
+        return stubItemWithRangeTableName;
+    }
+
+    Collection<String> getCreatedItemIds() {
+        return createdItemIds;
+    }
+
     void createStubItemTable() throws Exception {
-        final String tableName = UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_TABLE_NAME;
+        final String tableName = unitTestSchemaName + "." + stubItemTableName;
         boolean tableCreated = false;
         try {
             final DescribeTableResult result = amazonDynamoDbClient.describeTable(tableName);
@@ -81,7 +97,7 @@ public class DynamoDbDataGenerator {
     }
 
     void createStubItemWithRangeTable() throws Exception {
-        final String tableName = UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_WITH_RANGE_TABLE_NAME;
+        final String tableName = unitTestSchemaName + "." + stubItemWithRangeTableName;
         boolean tableCreated = false;
         try {
             final DescribeTableResult result = amazonDynamoDbClient.describeTable(tableName);
@@ -122,7 +138,7 @@ public class DynamoDbDataGenerator {
             final Map<String, AttributeValue> key = new HashMap<>();
             key.put("id", new AttributeValue(id));
             final DeleteItemRequest deleteItemRequest = new DeleteItemRequest().withTableName(
-                    UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_TABLE_NAME).withKey(key);
+                    unitTestSchemaName + "." + stubItemTableName).withKey(key);
             try {
                 amazonDynamoDbClient.deleteItem(deleteItemRequest);
             } catch (final Exception e) {
@@ -180,7 +196,7 @@ public class DynamoDbDataGenerator {
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
         itemMap.put("discriminator", new AttributeValue().withS("a"));
         final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_TABLE_NAME).withItem(itemMap);
+                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
@@ -204,7 +220,7 @@ public class DynamoDbDataGenerator {
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
         itemMap.put("discriminator", new AttributeValue().withS("b"));
         final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_TABLE_NAME).withItem(itemMap);
+                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
@@ -231,7 +247,7 @@ public class DynamoDbDataGenerator {
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
         final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_WITH_RANGE_TABLE_NAME).withItem(itemMap);
+                unitTestSchemaName + "." + stubItemWithRangeTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
@@ -258,7 +274,7 @@ public class DynamoDbDataGenerator {
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
         final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_TABLE_NAME).withItem(itemMap);
+                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
@@ -281,18 +297,18 @@ public class DynamoDbDataGenerator {
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
         final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_TABLE_NAME).withItem(itemMap);
+                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
     }
 
     public void deleteStubItemTable() {
-        amazonDynamoDbClient.deleteTable(UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_TABLE_NAME);
+        amazonDynamoDbClient.deleteTable(unitTestSchemaName + "." + stubItemTableName);
     }
 
     public void deleteStubItemWithRangeTable() {
-        amazonDynamoDbClient.deleteTable(UNIT_TEST_SCHEMA_NAME + "." + STUB_ITEM_WITH_RANGE_TABLE_NAME);
+        amazonDynamoDbClient.deleteTable(unitTestSchemaName + "." + stubItemWithRangeTableName);
     }
 
 }
