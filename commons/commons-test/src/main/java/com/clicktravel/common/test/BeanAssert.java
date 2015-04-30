@@ -17,6 +17,7 @@
 package com.clicktravel.common.test;
 
 import static com.clicktravel.common.random.Randoms.*;
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
 import java.beans.BeanInfo;
@@ -107,6 +108,7 @@ public class BeanAssert {
         supportedPropertyTypes.put(String.class, randomString(1000));
         supportedPropertyTypes.put(Date.class, new Date(randomDateTime().getMillis()));
         supportedPropertyTypes.put(Set.class, Sets.newSet(randomLong(), randomLong(), randomLong()));
+        supportedPropertyTypes.put(List.class, newList(randomLong(), randomLong(), randomLong()));
         supportedPropertyTypes.put(BigDecimal.class, Randoms.randomBigDecimal(10000, randomInt(5)));
 
         if (supportedPropertyTypes.containsKey(propertyClass)) {
@@ -131,16 +133,6 @@ public class BeanAssert {
             } else if (char.class.equals(propertyClass)) {
                 return supportedPropertyTypes.get(Character.class);
             }
-        }
-
-        if (propertyClass.equals(List.class)) {
-            final List<String> list = new ArrayList<String>();
-
-            for (int i = 0; i < randomInt(10) + 1; i++) {
-                list.add(randomString(10));
-            }
-
-            return list;
         }
 
         try {
@@ -270,5 +262,14 @@ public class BeanAssert {
             propertyDescriptors.add(propertyDescriptor);
         }
         return propertyDescriptors;
+    }
+
+    @SafeVarargs
+    private static <T> List<T> newList(final T... elements) {
+        if (elements == null) {
+            throw new IllegalArgumentException("Expected an array of elements (or empty array) but received a null.");
+        }
+
+        return new ArrayList<T>(asList(elements));
     }
 }
