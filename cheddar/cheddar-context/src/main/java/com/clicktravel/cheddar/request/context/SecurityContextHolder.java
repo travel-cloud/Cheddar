@@ -40,7 +40,7 @@ public class SecurityContextHolder {
      * @deprecated Use SecurityContextHolder.get().principal();
      */
     @Deprecated
-    public String getPrincipal() {
+    public static String getPrincipal() {
         final SecurityContext securityContext = get();
         if (securityContext == null) {
             return null;
@@ -52,7 +52,7 @@ public class SecurityContextHolder {
      * @deprecated Use SecurityContextHolder.set(SecurityContext)
      */
     @Deprecated
-    public void setPrincipal(final String principal) {
+    public static void setPrincipal(final String principal) {
         if (principal == null) {
             clear();
         } else {
