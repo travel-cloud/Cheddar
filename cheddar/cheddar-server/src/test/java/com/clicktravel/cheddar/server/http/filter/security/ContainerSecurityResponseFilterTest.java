@@ -47,6 +47,6 @@ public class ContainerSecurityResponseFilterTest {
 
         // Then
         verifyStatic();
-        SecurityContextHolder.clearPrincipal();
+        SecurityContextHolder.clear();
     }
 }

@@ -16,23 +16,23 @@
  */
 package com.clicktravel.cheddar.request.context;
 
-/**
- * Retains the security context for the scope of a request.
- */
-public class SecurityContextHolder {
+public class AgentSecurityContext implements SecurityContext {
 
-    private final static ThreadLocal<SecurityContext> SECURITY_CONTEXT = new ThreadLocal<SecurityContext>() {
-    };
+    private final String effectivePrincipal;
+    private final String agent;
 
-    public static void set(final SecurityContext securityContext) {
-        SECURITY_CONTEXT.set(securityContext);
+    public AgentSecurityContext(final String effectivePrincipal, final String agent) {
+        this.effectivePrincipal = effectivePrincipal;
+        this.agent = agent;
     }
 
-    public static SecurityContext get() {
-        return SECURITY_CONTEXT.get();
+    @Override
+    public String principal() {
+        return effectivePrincipal;
     }
 
-    public static void clear() {
-        SECURITY_CONTEXT.remove();
+    public String agent() {
+        return agent;
     }
+
 }

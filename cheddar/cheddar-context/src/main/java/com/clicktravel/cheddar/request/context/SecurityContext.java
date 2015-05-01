@@ -16,23 +16,8 @@
  */
 package com.clicktravel.cheddar.request.context;
 
-/**
- * Retains the security context for the scope of a request.
- */
-public class SecurityContextHolder {
+public interface SecurityContext {
 
-    private final static ThreadLocal<SecurityContext> SECURITY_CONTEXT = new ThreadLocal<SecurityContext>() {
-    };
+    String principal();
 
-    public static void set(final SecurityContext securityContext) {
-        SECURITY_CONTEXT.set(securityContext);
-    }
-
-    public static SecurityContext get() {
-        return SECURITY_CONTEXT.get();
-    }
-
-    public static void clear() {
-        SECURITY_CONTEXT.remove();
-    }
 }

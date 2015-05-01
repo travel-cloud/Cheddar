@@ -16,6 +16,7 @@
  */
 package com.clicktravel.cheddar.application.security;
 
+import com.clicktravel.cheddar.request.context.SecurityContext;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 
 public class SecurityChecker {
@@ -26,7 +27,8 @@ public class SecurityChecker {
      * @param principal
      */
     public static void checkPrincipal(final String principal) {
-        final String currentPrincipal = SecurityContextHolder.getPrincipal();
+        final SecurityContext securityContext = SecurityContextHolder.get();
+        final String currentPrincipal = securityContext == null ? null : securityContext.principal();
         if (currentPrincipal == null) {
             throw new CredentialsMissingException();
         }
@@ -39,7 +41,7 @@ public class SecurityChecker {
      * Checks that there is a principal in the current context i.e. a user is authenticated
      */
     public static void checkAuthenticated() {
-        if (SecurityContextHolder.getPrincipal() == null) {
+        if (SecurityContextHolder.get() == null) {
             throw new CredentialsMissingException();
         }
     }

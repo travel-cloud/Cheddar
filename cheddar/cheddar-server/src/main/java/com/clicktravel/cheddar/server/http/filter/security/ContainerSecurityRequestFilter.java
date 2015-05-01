@@ -26,6 +26,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
+import com.clicktravel.cheddar.request.context.AgentSecurityContext;
+import com.clicktravel.cheddar.request.context.BasicSecurityContext;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 
 /**
@@ -36,19 +38,32 @@ import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 @Priority(Priorities.AUTHENTICATION)
 public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
 
-    private static final String AUTHORIZATION_HEADER_VALUE_PREFIX = "clickplatform ";
+    private static final String PRINCIPAL_HEADER_VALUE_PREFIX = "clickplatform";
+    private static final String AGENT_HEADER_VALUE_PREFIX = "clickplatform-agent";
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
         final MultivaluedMap<String, String> headersMap = requestContext.getHeaders();
+        String principal = null;
+        String agent = null;
         if (headersMap.containsKey(HttpHeaders.AUTHORIZATION)) {
             for (final String headerValue : headersMap.get(HttpHeaders.AUTHORIZATION)) {
-                if (headerValue.startsWith(AUTHORIZATION_HEADER_VALUE_PREFIX)) {
-                    SecurityContextHolder
-                            .setPrincipal(headerValue.substring(AUTHORIZATION_HEADER_VALUE_PREFIX.length()));
-                    return;
+                final String[] headerValueParts = headerValue.split(" ");
+                if (headerValueParts.length == 2) {
+                    if (PRINCIPAL_HEADER_VALUE_PREFIX.equals(headerValueParts[0])) {
+                        principal = headerValueParts[1];
+                    } else if (AGENT_HEADER_VALUE_PREFIX.equals(headerValueParts[0])) {
+                        agent = headerValueParts[1];
+                    }
                 }
             }
+        }
+        if (principal != null && agent != null) {
+            SecurityContextHolder.set(new AgentSecurityContext(principal, agent));
+        } else if (principal != null) {
+            SecurityContextHolder.set(new BasicSecurityContext(principal));
+        } else {
+            SecurityContextHolder.clear();
         }
     }
 }

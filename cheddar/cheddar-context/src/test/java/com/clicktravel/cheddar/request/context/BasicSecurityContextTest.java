@@ -16,23 +16,24 @@
  */
 package com.clicktravel.cheddar.request.context;
 
-/**
- * Retains the security context for the scope of a request.
- */
-public class SecurityContextHolder {
+import static com.clicktravel.common.random.Randoms.randomId;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
-    private final static ThreadLocal<SecurityContext> SECURITY_CONTEXT = new ThreadLocal<SecurityContext>() {
-    };
+import org.junit.Test;
 
-    public static void set(final SecurityContext securityContext) {
-        SECURITY_CONTEXT.set(securityContext);
+public class BasicSecurityContextTest {
+
+    @Test
+    public void shouldCreateSecurityContext_withPrincipal() {
+        // Given
+        final String principal = randomId();
+
+        // When
+        final BasicSecurityContext securityContext = new BasicSecurityContext(principal);
+
+        // Then
+        assertThat(securityContext.principal(), is(principal));
     }
 
-    public static SecurityContext get() {
-        return SECURITY_CONTEXT.get();
-    }
-
-    public static void clear() {
-        SECURITY_CONTEXT.remove();
-    }
 }
