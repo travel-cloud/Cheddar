@@ -32,7 +32,7 @@ import com.clicktravel.common.random.Randoms;
 
 /**
  * Allows the testing of simple beans: no arg constructor and getter/setter pairs
- *
+ * 
  * Ensures that equals and hash code are implemented properly. Only works for sub-set of property types defined in
  * SUPPORTED_PROPERTY_TYPES
  */
@@ -107,11 +107,13 @@ public class BeanAssert {
         supportedPropertyTypes.put(String.class, randomString(1000));
         supportedPropertyTypes.put(Date.class, new Date(randomDateTime().getMillis()));
         supportedPropertyTypes.put(Set.class, Sets.newSet(randomLong(), randomLong(), randomLong()));
+        supportedPropertyTypes.put(List.class, Arrays.asList(new Long[] { randomLong(), randomLong(), randomLong() }));
         supportedPropertyTypes.put(BigDecimal.class, Randoms.randomBigDecimal(10000, randomInt(5)));
 
         if (supportedPropertyTypes.containsKey(propertyClass)) {
             return supportedPropertyTypes.get(propertyClass);
         }
+
         if (propertyClass.isPrimitive()) {
             if (byte.class.equals(propertyClass)) {
                 return supportedPropertyTypes.get(Byte.class);
@@ -137,56 +139,110 @@ public class BeanAssert {
         } catch (final Exception e) {
             throw new IllegalStateException("Cannot create random property for type: " + propertyClass, e);
         }
-
     }
 
     private static <T> void assertValidEqualsAndHashCodeMethod(final Class<T> beanClass) {
         T bean1 = null;
         T bean2 = null;
+
         try {
             bean1 = beanClass.newInstance();
             bean2 = beanClass.newInstance();
+
+            // this ensures that hashCode's match when all attributes are null / initial values
+            validateHashCode(bean1, bean2, "(null atts.)");
+
+            // this ensures that objects are equal when all attributes are null / initial values
+            validateEquals(bean1, bean2, "(null atts.)");
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
+
         for (final PropertyDescriptor propertyDescriptor : getPropertyDescriptors(beanClass)) {
             final Method writeMethod = propertyDescriptor.getWriteMethod();
-            final Object startingPropertyValue = getPropertyValue(propertyDescriptor.getPropertyType());
+            final Method readMethod = propertyDescriptor.getReadMethod();
+
+            Object startingPropertyValue;
+
             try {
-                writeMethod.invoke(bean1, startingPropertyValue);
+                final Object initialValue = readMethod.invoke(bean2);
+
+                do {
+                    startingPropertyValue = getPropertyValue(propertyDescriptor.getPropertyType());
+                } while (startingPropertyValue.equals(initialValue));
+
                 writeMethod.invoke(bean2, startingPropertyValue);
+
+                // this ensures that objects are not equal when bean1 attributes are null / initial values, bean2
+                // attributes are not
+                validateNotEquals(bean1, bean2, "(null vs not null atts.)");
+
+                writeMethod.invoke(bean1, startingPropertyValue);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }
+
             Object newPropertyValue;
+
             do {
                 newPropertyValue = getPropertyValue(propertyDescriptor.getPropertyType());
             } while (newPropertyValue.equals(startingPropertyValue));
 
             // Throw error if they are still equal after changing one
             try {
-                writeMethod.invoke(bean1, newPropertyValue);
-            } catch (final Exception e) {
-                throw new IllegalStateException(e);
-            }
-            if (bean1.equals(bean2) || bean2.equals(bean1)) {
-                throw new AssertionError("Equals method not properly implemented");
-            }
-            // Throw error if there are not now equal
-            try {
                 writeMethod.invoke(bean2, newPropertyValue);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }
-            if ((bean1.equals(bean2) && bean2.equals(bean1)) == false) {
-                throw new AssertionError("Equals method not properly implemented (reverse)");
-            }
-            if (bean1.hashCode() != bean2.hashCode()) {
-                throw new AssertionError("Hashcode method not properly implemented");
+
+            validateNotEquals(bean1, bean2, "");
+
+            // Throw error if there are not now equal
+            try {
+                writeMethod.invoke(bean1, newPropertyValue);
+            } catch (final Exception e) {
+                throw new IllegalStateException(e);
             }
 
+            validateEquals(bean1, bean2, "(reverse)");
+
+            validateHashCode(bean1, bean2, " (non null atts.)");
         }
 
+        // this ensures that an object is equal to itself
+        if (!(bean1.equals(bean1))) {
+            throw new AssertionError("Equals method not properly implemented (this == obj)");
+        }
+
+        // this ensures that an object is not equal to null
+        if ((bean1.equals(null))) {
+            throw new AssertionError("Equals method not properly implemented (obj == null)");
+        }
+
+        // this ensures that an object is not equal to an object of a different class
+        if ((bean1.equals(""))) {
+            throw new AssertionError("Equals method not properly implemented (getClass() != obj.getClass())");
+        }
+    }
+
+    private static <T> void validateNotEquals(final T bean1, final T bean2, final String errorInfo)
+            throws AssertionError {
+        if ((bean1.equals(bean2) || (bean2.equals(bean1)))) {
+            throw new AssertionError("Equals method not properly implemented " + errorInfo);
+        }
+    }
+
+    private static <T> void validateEquals(final T bean1, final T bean2, final String errorInfo) throws AssertionError {
+        if (!(bean1.equals(bean2) && bean2.equals(bean1))) {
+            throw new AssertionError("Equals method not properly implemented " + errorInfo);
+        }
+    }
+
+    private static <T> void validateHashCode(final T bean1, final T bean2, final String errorInfo)
+            throws AssertionError {
+        if (bean1.hashCode() != bean2.hashCode()) {
+            throw new AssertionError("Hashcode method not properly implemented " + errorInfo);
+        }
     }
 
     private static <T> Collection<PropertyDescriptor> getPropertyDescriptors(final Class<T> beanClass) {
