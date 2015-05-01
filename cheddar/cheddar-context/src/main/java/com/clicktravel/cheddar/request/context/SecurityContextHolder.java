@@ -35,4 +35,28 @@ public class SecurityContextHolder {
     public static void clear() {
         SECURITY_CONTEXT.remove();
     }
+
+    /**
+     * @deprecated Use SecurityContextHolder.get().principal();
+     */
+    @Deprecated
+    public String getPrincipal() {
+        final SecurityContext securityContext = get();
+        if (securityContext == null) {
+            return null;
+        }
+        return securityContext.principal();
+    }
+
+    /**
+     * @deprecated Use SecurityContextHolder.set(SecurityContext)
+     */
+    @Deprecated
+    public void setPrincipal(final String principal) {
+        if (principal == null) {
+            clear();
+        } else {
+            set(new BasicSecurityContext(principal));
+        }
+    }
 }
