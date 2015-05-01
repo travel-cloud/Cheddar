@@ -59,4 +59,13 @@ public class SecurityContextHolder {
             set(new BasicSecurityContext(principal));
         }
     }
+
+    /**
+     * @deprecated Use SecurityContextHolder.clear()
+     */
+    @Deprecated
+    public static void clearPrincipal() {
+        clear();
+    }
+
 }
