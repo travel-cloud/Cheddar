@@ -17,7 +17,8 @@
 package com.clicktravel.cheddar.request.context;
 
 /**
- * Obtains the currently authenticated principal's user id when an agent acts on behalf of the authenticated user.
+ * Identifies an effective principal as the principal in the security context, and a supporting agent principal. This is
+ * used when an agent acts on behalf of (i.e. impersonates) a supported user.
  *
  * @see BasicSecurityContext
  */
