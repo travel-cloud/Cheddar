@@ -16,63 +16,61 @@
  */
 package com.clicktravel.cheddar.request.context;
 
-import static com.clicktravel.common.random.Randoms.randomId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
-
-import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 
 public class SecurityContextHolderTest {
 
     @Test
     public void shouldSetSecurityContext_withOneThread() {
         // Given
-        final String principal = randomId();
+        final SecurityContext securityContext = mock(SecurityContext.class);
 
         // When
-        SecurityContextHolder.setPrincipal(principal);
-        final String resultPrincipal = SecurityContextHolder.getPrincipal();
+        SecurityContextHolder.set(securityContext);
+        final SecurityContext resultSecurityContext = SecurityContextHolder.get();
 
         // Then
-        assertNotNull(resultPrincipal);
-        assertEquals(principal, resultPrincipal);
+        assertNotNull(resultSecurityContext);
+        assertEquals(securityContext, resultSecurityContext);
     }
 
     @Test
     public void shouldSetSecurityContext_withTwoThreads() throws Exception {
         // Given
-        final String principal1 = randomId();
-        final String principal2 = randomId();
+        final SecurityContext securityContext1 = mock(SecurityContext.class);
+        final SecurityContext securityContext2 = mock(SecurityContext.class);
 
         // When
-        final ContextTestThread thread1 = new ContextTestThread(principal1);
-        final ContextTestThread thread2 = new ContextTestThread(principal2);
+        final ContextTestThread thread1 = new ContextTestThread(securityContext1);
+        final ContextTestThread thread2 = new ContextTestThread(securityContext2);
         thread1.start();
         thread2.start();
         thread2.carryOn();
         Thread.sleep(1000);
         thread1.carryOn();
         Thread.sleep(1000);
-        final String resultPrincipal1 = thread1.getResultPrincipal();
-        final String resultPrincipal2 = thread2.getResultPrincipal();
+        final SecurityContext resultSecurityContext1 = thread1.getResultSecurityContext();
+        final SecurityContext resultSecurityContext2 = thread2.getResultSecurityContext();
 
         // Then
-        assertNotNull(resultPrincipal1);
-        assertEquals(principal1, resultPrincipal1);
-        assertNotNull(resultPrincipal2);
-        assertEquals(principal2, resultPrincipal2);
+        assertNotNull(resultSecurityContext1);
+        assertEquals(securityContext1, resultSecurityContext1);
+        assertNotNull(resultSecurityContext2);
+        assertEquals(securityContext2, resultSecurityContext2);
     }
 
     private static class ContextTestThread extends Thread {
 
-        private final String principal;
-        private String resultPrincipal;
+        private final SecurityContext securityContext;
+        private SecurityContext resultSecurityContext;
         private boolean notRunning = true;
 
-        public ContextTestThread(final String principal) {
-            this.principal = principal;
+        public ContextTestThread(final SecurityContext securityContext) {
+            this.securityContext = securityContext;
         }
 
         public void carryOn() {
@@ -81,7 +79,7 @@ public class SecurityContextHolderTest {
 
         @Override
         public void run() {
-            SecurityContextHolder.setPrincipal(principal);
+            SecurityContextHolder.set(securityContext);
             while (notRunning) {
                 try {
                     // Give the other thread time to process
@@ -89,11 +87,11 @@ public class SecurityContextHolderTest {
                 } catch (final InterruptedException e) {
                 }
             }
-            resultPrincipal = SecurityContextHolder.getPrincipal();
+            resultSecurityContext = SecurityContextHolder.get();
         }
 
-        public String getResultPrincipal() {
-            return resultPrincipal;
+        public SecurityContext getResultSecurityContext() {
+            return resultSecurityContext;
         }
 
     }

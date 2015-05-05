@@ -19,6 +19,7 @@ package com.clicktravel.cheddar.application.security;
 import static com.clicktravel.common.random.Randoms.randomId;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -27,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.clicktravel.cheddar.request.context.SecurityContext;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 
 @RunWith(PowerMockRunner.class)
@@ -37,8 +39,10 @@ public class SecurityCheckerTest {
     public void shouldNotPassPrincipalCheck_withNullCheckPrincipal() {
         // Given
         final String principal = randomId();
+        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+        when(mockSecurityContext.principal()).thenReturn(principal);
         mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.getPrincipal()).thenReturn(principal);
+        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
 
         // When
         SecurityConstraintViolationException expectedException = null;
@@ -56,7 +60,7 @@ public class SecurityCheckerTest {
     public void shouldNotPassPrincipalCheck_withNullStoredPrincipal() {
         // Given
         mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.getPrincipal()).thenReturn(null);
+        when(SecurityContextHolder.get()).thenReturn(null);
         final String principal = randomId();
 
         // When
@@ -75,8 +79,10 @@ public class SecurityCheckerTest {
     public void shouldPassAutheticatedCheck_withPrincipal() {
         // Given
         final String principal = randomId();
+        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+        when(mockSecurityContext.principal()).thenReturn(principal);
         mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.getPrincipal()).thenReturn(principal);
+        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
 
         // When
         CredentialsMissingException unexpectedException = null;
@@ -94,7 +100,7 @@ public class SecurityCheckerTest {
     public void shouldNotPassAutheticatedCheck_withNoPrincipal() {
         // Given
         mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.getPrincipal()).thenReturn(null);
+        when(SecurityContextHolder.get()).thenReturn(null);
 
         // When
         CredentialsMissingException expectedException = null;

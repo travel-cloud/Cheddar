@@ -16,31 +16,56 @@
  */
 package com.clicktravel.cheddar.request.context;
 
-import com.clicktravel.common.functional.Equals;
-
 /**
- * Retains security credentials for the scope of a request. The principal is the actor that initiated the request. In
- * the case of users, the principal is identified by the user account Id.
+ * Retains the security context for the scope of a request.
  */
 public class SecurityContextHolder {
 
-    private final static ThreadLocal<String> context = new ThreadLocal<String>() {
+    private final static ThreadLocal<SecurityContext> SECURITY_CONTEXT = new ThreadLocal<SecurityContext>() {
     };
 
+    public static void set(final SecurityContext securityContext) {
+        SECURITY_CONTEXT.set(securityContext);
+    }
+
+    public static SecurityContext get() {
+        return SECURITY_CONTEXT.get();
+    }
+
+    public static void clear() {
+        SECURITY_CONTEXT.remove();
+    }
+
+    /**
+     * @deprecated Use SecurityContextHolder.get().principal();
+     */
+    @Deprecated
+    public static String getPrincipal() {
+        final SecurityContext securityContext = get();
+        if (securityContext == null) {
+            return null;
+        }
+        return securityContext.principal();
+    }
+
+    /**
+     * @deprecated Use SecurityContextHolder.set(SecurityContext)
+     */
+    @Deprecated
     public static void setPrincipal(final String principal) {
-        if (Equals.isNullOrBlank(principal)) {
-            clearPrincipal();
+        if (principal == null) {
+            clear();
         } else {
-            context.set(principal);
+            set(new BasicSecurityContext(principal));
         }
     }
 
+    /**
+     * @deprecated Use SecurityContextHolder.clear()
+     */
+    @Deprecated
     public static void clearPrincipal() {
-        context.remove();
-    }
-
-    public static String getPrincipal() {
-        return context.get();
+        clear();
     }
 
 }

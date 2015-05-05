@@ -34,6 +34,6 @@ public class ContainerSecurityResponseFilter implements ContainerResponseFilter 
     @Override
     public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
             throws IOException {
-        SecurityContextHolder.clearPrincipal();
+        SecurityContextHolder.clear();
     }
 }
