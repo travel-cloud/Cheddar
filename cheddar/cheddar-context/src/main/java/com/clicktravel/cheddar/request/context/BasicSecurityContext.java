@@ -17,7 +17,8 @@
 package com.clicktravel.cheddar.request.context;
 
 /**
- * Obtains the currently authenticated principal's user id when the principal acts on their own behalf without an agent.
+ * Identifies the currently authenticated user as the principal in the security context. This is used when the user acts
+ * on their own behalf without an agent.
  *
  * @see AgentSecurityContext
  */
