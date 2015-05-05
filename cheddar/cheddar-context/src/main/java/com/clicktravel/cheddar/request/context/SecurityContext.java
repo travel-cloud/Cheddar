@@ -23,6 +23,10 @@ package com.clicktravel.cheddar.request.context;
  */
 public interface SecurityContext {
 
+    /**
+     * @return The user ID of the principal in the security context. Domain actions (final commands or queries) are
+     *         performed 'as' this user. This is the actor which any authorisation checks should be performed against.
+     */
     String principal();
 
 }
