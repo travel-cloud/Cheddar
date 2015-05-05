@@ -16,6 +16,11 @@
  */
 package com.clicktravel.cheddar.request.context;
 
+/**
+ * Interface defining the minimum security information associated with the current thread of execution.
+ *
+ * @see {@link BasicSecurityContext} and {@link AgentSecurityContext}
+ */
 public interface SecurityContext {
 
     String principal();

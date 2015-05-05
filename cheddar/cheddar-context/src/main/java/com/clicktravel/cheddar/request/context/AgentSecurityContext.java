@@ -16,6 +16,11 @@
  */
 package com.clicktravel.cheddar.request.context;
 
+/**
+ * Obtains the currently authenticated principal's user id when an agent acts on behalf of the authenticated user.
+ *
+ * @see BasicSecurityContext
+ */
 public class AgentSecurityContext implements SecurityContext {
 
     private final String effectivePrincipal;
@@ -31,6 +36,10 @@ public class AgentSecurityContext implements SecurityContext {
         return effectivePrincipal;
     }
 
+    /**
+     * Returns the agent's user id who is acting on behalf of the principal
+     * @return
+     */
     public String agent() {
         return agent;
     }
