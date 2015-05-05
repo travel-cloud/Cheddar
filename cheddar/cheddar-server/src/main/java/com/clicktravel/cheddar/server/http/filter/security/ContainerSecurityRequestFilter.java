@@ -38,6 +38,7 @@ import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 @Priority(Priorities.AUTHENTICATION)
 public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
 
+    private static final String PROXY_AUTHORIZATION = "Proxy-Authorization";
     private static final String PRINCIPAL_HEADER_VALUE_PREFIX = "clickplatform";
     private static final String AGENT_HEADER_VALUE_PREFIX = "clickplatform-agent";
 
@@ -52,7 +53,15 @@ public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
                 if (headerValueParts.length == 2) {
                     if (PRINCIPAL_HEADER_VALUE_PREFIX.equals(headerValueParts[0])) {
                         principal = headerValueParts[1];
-                    } else if (AGENT_HEADER_VALUE_PREFIX.equals(headerValueParts[0])) {
+                    }
+                }
+            }
+        }
+        if (headersMap.containsKey(PROXY_AUTHORIZATION)) {
+            for (final String headerValue : headersMap.get(PROXY_AUTHORIZATION)) {
+                final String[] headerValueParts = headerValue.split(" ");
+                if (headerValueParts.length == 2) {
+                    if (AGENT_HEADER_VALUE_PREFIX.equals(headerValueParts[0])) {
                         agent = headerValueParts[1];
                     }
                 }

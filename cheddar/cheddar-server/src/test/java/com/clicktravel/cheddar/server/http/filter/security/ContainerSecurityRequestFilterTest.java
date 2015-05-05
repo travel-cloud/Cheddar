@@ -77,7 +77,7 @@ public class ContainerSecurityRequestFilterTest {
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final MultivaluedMap<String, String> headersMap = new MultivaluedHashMap<>();
         headersMap.add(HttpHeaders.AUTHORIZATION, PRINCIPAL_HEADER_VALUE_PREFIX + " " + principal);
-        headersMap.add(HttpHeaders.AUTHORIZATION, AGENT_HEADER_VALUE_PREFIX + " " + agent);
+        headersMap.add("Proxy-Authorization", AGENT_HEADER_VALUE_PREFIX + " " + agent);
         when(mockContainerRequestContext.getHeaders()).thenReturn(headersMap);
         final ContainerSecurityRequestFilter containerSecurityRequestFilter = new ContainerSecurityRequestFilter();
 
