@@ -18,6 +18,7 @@ package com.clicktravel.cheddar.server.http.filter.status;
 
 import java.io.IOException;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -28,6 +29,7 @@ import com.clicktravel.cheddar.server.application.status.RestAdapterStatusHolder
 
 @Provider
 @PreMatching
+@Priority(500)
 public class RestAdapterStatusRequestFilter implements ContainerRequestFilter {
 
     private final RestAdapterStatusHolder restAdapterStatusHolder;

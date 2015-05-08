@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,8 +40,10 @@ public class RestAdapterStatusHolder {
     private static final Set<LifecycleStatus> LIFECYCLE_STATES_FOR_ACCEPTING_REQUESTS = new HashSet<>(Arrays.asList(
             LifecycleStatus.PAUSED, LifecycleStatus.RUNNING, LifecycleStatus.HALTING_LOW_PRIORITY_EVENTS));
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final AtomicInteger numRestRequestsInProgress = new AtomicInteger();
     private final LifecycleStatusHolder lifecycleStatusHolder;
+    private boolean loggedCountError;
 
     @Autowired
     public RestAdapterStatusHolder(final LifecycleStatusHolder lifecycleStatusHolder) {
@@ -52,8 +56,9 @@ public class RestAdapterStatusHolder {
 
     public void requestProcessingFinished() {
         final int count = numRestRequestsInProgress.decrementAndGet();
-        if (count < 0) {
-            throw new IllegalStateException("Error counting number of REST requests in progress");
+        if (count < 0 && !loggedCountError) {
+            loggedCountError = true;
+            logger.warn("Error counting number of REST requests in progress");
         }
     }
 
