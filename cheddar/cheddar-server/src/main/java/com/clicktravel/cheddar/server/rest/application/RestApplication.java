@@ -29,7 +29,7 @@ public class RestApplication {
 
     /**
      * Starts the RestServer to listen on the given port and address combination
-     *
+     * 
      * @param args String arguments, {@code [context [service-port [status-port [bind-address] ] ] ]} where
      *            <ul>
      *            <li>{@code context} - Name of application, defaults to {@code UNKNOWN}</li>
@@ -38,7 +38,7 @@ public class RestApplication {
      *            {@code /status/healthCheck}), defaults to {@code service-port + 100}</li>
      *            <li>{@code bind-address} - Local IP address to bind server to, defaults to {@code 0.0.0.0}</li>
      *            </ul>
-     *
+     * 
      * @throws Exception
      */
     public static void main(final String... args) throws Exception {
@@ -47,6 +47,7 @@ public class RestApplication {
         final int statusPort = args.length > 2 ? Integer.parseInt(args[2]) : servicePort + 100;
         final String bindAddress = args.length > 3 ? args[3] : "0.0.0.0";
         MDC.put("context", context);
+        MDC.put("hostId", System.getProperty("host.id", "UNKNOWN"));
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
         final Logger logger = LoggerFactory.getLogger(RestApplication.class);
