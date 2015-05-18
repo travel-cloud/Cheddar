@@ -16,26 +16,40 @@
  */
 package com.clicktravel.cheddar.server.runtime.config;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import com.clicktravel.cheddar.domain.feature.toggle.FeatureRegistry;
 
 public abstract class PropertiesConfigurationBuilder {
 
-    public static PropertySourcesPlaceholderConfigurer configurer(final String servicePropertiesName,
-            final Environment environment) {
-        final String environmentPropertiesLocation = "com.clicktravel.services.env.properties";
-        FeatureRegistry.init(environmentPropertiesLocation);
+    public static PropertySourcesPlaceholderConfigurer configurer(final boolean isDevProfileActive,
+            final String servicePropertiesPath) {
+        final String environmentPropertiesPath = "com.clicktravel.services.env.properties";
+        FeatureRegistry.init(environmentPropertiesPath);
         final PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-        final ClassPathResource envProperties = new ClassPathResource(environmentPropertiesLocation);
-        final ClassPathResource serverProperties = new ClassPathResource("com.clicktravel.cheddar.server.properties");
-        final ClassPathResource serviceProperties = new ClassPathResource(
-                (RuntimeConfiguration.isLocalOrDevEnvironment(environment) ? "local-" : "") + servicePropertiesName);
-        // Note : Later property resources in this array override earlier ones
-        configurer.setLocations(new ClassPathResource[] { serviceProperties, serverProperties, envProperties });
+        configurer.setIgnoreResourceNotFound(true);
+
+        // Note : Later property resources in this list override earlier ones
+        final List<Resource> resources = new LinkedList<>();
+        if (isDevProfileActive) {
+            addResource(resources, "local-" + servicePropertiesPath); // TODO Remove when migrated to dev
+            addResource(resources, "dev-" + servicePropertiesPath);
+        } else {
+            addResource(resources, servicePropertiesPath);
+        }
+        addResource(resources, "com.clicktravel.cheddar.server.properties");
+        addResource(resources, environmentPropertiesPath);
+
+        configurer.setLocations(resources.toArray(new Resource[0]));
         return configurer;
     }
 
+    private static void addResource(final List<Resource> resources, final String path) {
+        resources.add(new ClassPathResource(path));
+    }
 }
