@@ -31,10 +31,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.server.rest.resource.config.RestResourceConfig;
+import com.wordnik.swagger.jaxrs.config.BeanConfig;
+import com.wordnik.swagger.models.Info;
+import com.wordnik.swagger.models.Swagger;
+import com.wordnik.swagger.models.auth.OAuth2Definition;
+import com.wordnik.swagger.models.parameters.HeaderParameter;
 
 /**
  * HTTP server which exposes JAX-RS resources
- *
+ * 
  * Deployment is done via GrizzlyHttpServer and scans various packages for candidates for JAX-RS Resources and
  * Providers. The Spring container is also initialised.
  */
@@ -56,11 +61,48 @@ public class RestServer {
     public RestServer(final int servicePort, final int statusPort, final String bindAddress) {
         this.servicePort = servicePort;
         this.statusPort = statusPort;
-        final ResourceConfig resourceConfig = new RestResourceConfig();
-        logger.info("Registering resources has finished");
+
+        final ResourceConfig restResourceConfig = new RestResourceConfig();
+
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
+
+        logger.info("Registering resources has finished");
         logger.info("Configuring REST server on: " + baseUri.toString());
-        httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
+        httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, restResourceConfig, false);
+
+        final String localApplicationGatewayEndpiont = "http://localhost:80";
+
+        // The main scanner class used to scan the classes for swagger + jax-rs annoatations
+        final BeanConfig beanConfig = new BeanConfig();
+        // Could not get the try base path to work with swagger 2.0 as it is matched by contains in
+        // 'com.wordnik.swagger.jaxrs.config.BeanConfig.classes')'
+        beanConfig.setResourcePackage("com.clicktravel.services,com.clicktravel.services.iam.rest.resource");
+        // This affects the path that is generated in each resource adapter code so setting it to "" allows the correct
+        // paths to be appended
+        beanConfig.setBasePath("");
+        final Info info = new Info();
+        info.setVersion("1.0.0");
+        beanConfig.setInfo(info);
+
+        // The follow sets up the security schemes so they can be referenced later (doesn't affect codegen methods!)
+        final Swagger swaggerConfiguration = beanConfig.getSwagger();
+        final OAuth2Definition oauth2ImplicitDefinition = new OAuth2Definition();
+        final String authorizationUrl = String.format("%s/authorize", localApplicationGatewayEndpiont);
+
+        oauth2ImplicitDefinition.implicit(authorizationUrl);
+        oauth2ImplicitDefinition.addScope("Default", "The default scope for Oauth authentication");
+        swaggerConfiguration.addSecurityDefinition("implicit", oauth2ImplicitDefinition);
+
+        // This adds a global reference-able parameter to the spec (doesn't affect codegen methods!)
+        final HeaderParameter headerParameter = new HeaderParameter();
+        headerParameter.name("Authorization");
+        headerParameter.setRequired(true);
+        swaggerConfiguration.addParameter("authorization", headerParameter);
+
+        beanConfig.configure(swaggerConfiguration);
+        // This method sets the vales on the scanner and goes and scans the classes that fit the resource package
+        beanConfig.setScan(true);
+
         configureThreadPools(httpServer.getListener("grizzly"), SERVICE_POOL_NAME_PREFIX, SERVICE_WORKER_THREADS,
                 SERVICE_KERNEL_THREADS);
         logger.info("Configuring REST status resources on port " + statusPort);
