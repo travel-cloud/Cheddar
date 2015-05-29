@@ -140,7 +140,6 @@ public class IntercomMetricCollector implements MetricCollector {
         company.setCompanyID(companyID);
         company.setName(name);
         try {
-
             Company.create(company);
         } catch (final Exception e) {
             logger.debug("Error creating/updating a Intercom company - " + company + " - " + e.getLocalizedMessage());
