@@ -16,12 +16,20 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
+import io.intercom.api.Event;
+import io.intercom.api.Intercom;
+
 import com.clicktravel.cheddar.metrics.Metric;
 import com.clicktravel.cheddar.metrics.MetricCollector;
 import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
 
 public class IntercomMetricCollector implements MetricCollector {
+    public IntercomMetricCollector(final String appId, final String apiKey) {
+        Intercom.setAppID(appId);
+        Intercom.setApiKey(apiKey);
+
+    }
 
     @Override
     public void createOrganisation(final MetricOrganisation metricOrganisation) {
@@ -49,8 +57,38 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void sendMetric(final Metric metric) {
-        // TODO Auto-generated method stub
+
+        final Event event = new Event().setEventName(metric.name()).setUserID(metric.userId())
+                .setCreatedAt(System.currentTimeMillis());
+
+        if (metric.metaData() != null) {
+            for (final String key : metric.metaData().keySet()) {
+                if (metric.metaData().get(key).getClass().equals(String.class)) {
+                    event.putMetadata(key, (String) metric.metaData().get(key));
+                }
+                if (metric.metaData().get(key).getClass().equals(boolean.class)
+                        || metric.metaData().get(key).getClass().equals(Boolean.class)) {
+                    event.putMetadata(key, (Boolean) metric.metaData().get(key));
+                }
+                if (metric.metaData().get(key).getClass().equals(double.class)
+                        || metric.metaData().get(key).getClass().equals(Double.class)) {
+                    event.putMetadata(key, (Double) metric.metaData().get(key));
+                }
+                if (metric.metaData().get(key).getClass().equals(float.class)
+                        || metric.metaData().get(key).getClass().equals(Float.class)) {
+                    event.putMetadata(key, (Float) metric.metaData().get(key));
+                }
+                if (metric.metaData().get(key).getClass().equals(int.class)
+                        || metric.metaData().get(key).getClass().equals(Integer.class)) {
+                    event.putMetadata(key, (Integer) metric.metaData().get(key));
+                }
+                if (metric.metaData().get(key).getClass().equals(long.class)
+                        || metric.metaData().get(key).getClass().equals(Long.class)) {
+                    event.putMetadata(key, (Long) metric.metaData().get(key));
+                }
+            }
+        }
+        Event.create(event);
 
     }
-
 }
