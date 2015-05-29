@@ -1,6 +1,3 @@
-package com.clicktravel.cheddar.metrics.intercom;
-
-import com.clicktravel.cheddar.metrics.Metric;
 /*
  * Copyright 2014 Click Travel Ltd
  *
@@ -17,6 +14,10 @@ import com.clicktravel.cheddar.metrics.Metric;
  * limitations under the License.
  *
  */
+
+package com.clicktravel.cheddar.metrics.intercom;
+
+import com.clicktravel.cheddar.metrics.Metric;
 import com.clicktravel.cheddar.metrics.MetricCollector;
 import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
