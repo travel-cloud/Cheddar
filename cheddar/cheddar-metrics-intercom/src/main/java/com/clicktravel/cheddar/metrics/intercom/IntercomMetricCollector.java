@@ -124,7 +124,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.create(intercomUser);
         } catch (final Exception e) {
-            logger.warn("Error creating/updating a Intercom user - " + intercomUser + " - " + e.getLocalizedMessage());
+            logger.debug("Error creating/updating a Intercom user - " + intercomUser + " - " + e.getLocalizedMessage());
         }
     }
 
@@ -143,7 +143,7 @@ public class IntercomMetricCollector implements MetricCollector {
 
             Company.create(company);
         } catch (final Exception e) {
-            logger.warn("Error creating/updating a Intercom company - " + company + " - " + e.getLocalizedMessage());
+            logger.debug("Error creating/updating a Intercom company - " + company + " - " + e.getLocalizedMessage());
         }
     }
 }
