@@ -42,7 +42,7 @@ public class MetricUser {
         return name;
     }
 
-    public void emailAddress(final String emailAddress) {
+    public void setEmailAddress(final String emailAddress) {
         this.emailAddress = emailAddress;
     }
 
