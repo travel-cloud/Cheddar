@@ -64,6 +64,7 @@ public class IntercomMetricCollector implements MetricCollector {
     public void sendMetric(final Metric metric) {
         if (metric == null) {
             return;
+
         }
 
         try {
@@ -74,26 +75,23 @@ public class IntercomMetricCollector implements MetricCollector {
                 for (final String key : metric.metaData().keySet()) {
                     if (metric.metaData().get(key).getClass().equals(String.class)) {
                         event.putMetadata(key, (String) metric.metaData().get(key));
-                    }
-                    if (metric.metaData().get(key).getClass().equals(boolean.class)
+                    } else if (metric.metaData().get(key).getClass().equals(boolean.class)
                             || metric.metaData().get(key).getClass().equals(Boolean.class)) {
                         event.putMetadata(key, (Boolean) metric.metaData().get(key));
-                    }
-                    if (metric.metaData().get(key).getClass().equals(double.class)
+                    } else if (metric.metaData().get(key).getClass().equals(double.class)
                             || metric.metaData().get(key).getClass().equals(Double.class)) {
                         event.putMetadata(key, (Double) metric.metaData().get(key));
-                    }
-                    if (metric.metaData().get(key).getClass().equals(float.class)
+                    } else if (metric.metaData().get(key).getClass().equals(float.class)
                             || metric.metaData().get(key).getClass().equals(Float.class)) {
                         event.putMetadata(key, (Float) metric.metaData().get(key));
-                    }
-                    if (metric.metaData().get(key).getClass().equals(int.class)
+                    } else if (metric.metaData().get(key).getClass().equals(int.class)
                             || metric.metaData().get(key).getClass().equals(Integer.class)) {
                         event.putMetadata(key, (Integer) metric.metaData().get(key));
-                    }
-                    if (metric.metaData().get(key).getClass().equals(long.class)
+                    } else if (metric.metaData().get(key).getClass().equals(long.class)
                             || metric.metaData().get(key).getClass().equals(Long.class)) {
                         event.putMetadata(key, (Long) metric.metaData().get(key));
+                    } else {
+                        event.putMetadata(key, String.valueOf(metric.metaData().get(key)));
                     }
                 }
             }
