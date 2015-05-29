@@ -21,6 +21,7 @@ import io.intercom.api.Event;
 import io.intercom.api.Intercom;
 import io.intercom.api.User;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +32,11 @@ import com.clicktravel.cheddar.metrics.MetricUser;
 import com.clicktravel.common.functional.Equals;
 
 public class IntercomMetricCollector implements MetricCollector {
-
     Logger logger = LoggerFactory.getLogger(getClass());
 
     public IntercomMetricCollector(final String appId, final String apiKey) {
         Intercom.setAppID(appId);
         Intercom.setApiKey(apiKey);
-
     }
 
     @Override
@@ -66,39 +65,45 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void sendMetric(final Metric metric) {
+        if (metric == null) {
+            return;
+        }
 
-        final Event event = new Event().setEventName(metric.name()).setUserID(metric.userId())
-                .setCreatedAt(System.currentTimeMillis());
+        try {
+            final Event event = new Event().setEventName(metric.name()).setUserID(metric.userId())
+                    .setCreatedAt(DateTime.now().getMillis() / 1000);
 
-        if (metric.metaData() != null) {
-            for (final String key : metric.metaData().keySet()) {
-                if (metric.metaData().get(key).getClass().equals(String.class)) {
-                    event.putMetadata(key, (String) metric.metaData().get(key));
-                }
-                if (metric.metaData().get(key).getClass().equals(boolean.class)
-                        || metric.metaData().get(key).getClass().equals(Boolean.class)) {
-                    event.putMetadata(key, (Boolean) metric.metaData().get(key));
-                }
-                if (metric.metaData().get(key).getClass().equals(double.class)
-                        || metric.metaData().get(key).getClass().equals(Double.class)) {
-                    event.putMetadata(key, (Double) metric.metaData().get(key));
-                }
-                if (metric.metaData().get(key).getClass().equals(float.class)
-                        || metric.metaData().get(key).getClass().equals(Float.class)) {
-                    event.putMetadata(key, (Float) metric.metaData().get(key));
-                }
-                if (metric.metaData().get(key).getClass().equals(int.class)
-                        || metric.metaData().get(key).getClass().equals(Integer.class)) {
-                    event.putMetadata(key, (Integer) metric.metaData().get(key));
-                }
-                if (metric.metaData().get(key).getClass().equals(long.class)
-                        || metric.metaData().get(key).getClass().equals(Long.class)) {
-                    event.putMetadata(key, (Long) metric.metaData().get(key));
+            if (metric.metaData() != null) {
+                for (final String key : metric.metaData().keySet()) {
+                    if (metric.metaData().get(key).getClass().equals(String.class)) {
+                        event.putMetadata(key, (String) metric.metaData().get(key));
+                    }
+                    if (metric.metaData().get(key).getClass().equals(boolean.class)
+                            || metric.metaData().get(key).getClass().equals(Boolean.class)) {
+                        event.putMetadata(key, (Boolean) metric.metaData().get(key));
+                    }
+                    if (metric.metaData().get(key).getClass().equals(double.class)
+                            || metric.metaData().get(key).getClass().equals(Double.class)) {
+                        event.putMetadata(key, (Double) metric.metaData().get(key));
+                    }
+                    if (metric.metaData().get(key).getClass().equals(float.class)
+                            || metric.metaData().get(key).getClass().equals(Float.class)) {
+                        event.putMetadata(key, (Float) metric.metaData().get(key));
+                    }
+                    if (metric.metaData().get(key).getClass().equals(int.class)
+                            || metric.metaData().get(key).getClass().equals(Integer.class)) {
+                        event.putMetadata(key, (Integer) metric.metaData().get(key));
+                    }
+                    if (metric.metaData().get(key).getClass().equals(long.class)
+                            || metric.metaData().get(key).getClass().equals(Long.class)) {
+                        event.putMetadata(key, (Long) metric.metaData().get(key));
+                    }
                 }
             }
+            Event.create(event);
+        } catch (final Exception e) {
+            logger.debug("Failed to send metric via Intercom", e);
         }
-        Event.create(event);
-
     }
 
     private void createOrUpdateIntercomUser(final MetricUser user) {
