@@ -4,6 +4,7 @@ include (
     "commons:commons-httpclient",
     "commons:commons-test",
     
+    "cheddar:cheddar-metrics",
     "cheddar:cheddar-rest",
     "cheddar:cheddar-domain",
     "cheddar:cheddar-application",
