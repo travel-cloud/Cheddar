@@ -14,17 +14,31 @@
  * limitations under the License.
  *
  */
+package com.clicktravel.cheddar.metrics;
 
-public interface MetricCollector {
+public class MetricUser {
 
-    void createOrganisation(MetricOrganisation metricOrganisation);
+    private final String id;
+    private final String organisationId;
+    private final String name;
 
-    void updateOrganisation(MetricOrganisation metricOrganisation);
+    public MetricUser(final String id, final String organisationId, final String name) {
+        super();
+        this.id = id;
+        this.organisationId = organisationId;
+        this.name = name;
+    }
 
-    void createUser(MetricUser user);
+    public String id() {
+        return id;
+    }
 
-    void updateUser(MetricUser user);
+    public String organisationId() {
+        return organisationId;
+    }
 
-    void sendMetric(Metric metric);
+    public String name() {
+        return name;
+    }
 
 }

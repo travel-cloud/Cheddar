@@ -14,26 +14,20 @@
  * limitations under the License.
  *
  */
+package com.clicktravel.cheddar.metrics;
 
-public class MetricUser {
+public class MetricOrganisation {
 
-    private final String id;
-    private final String organisationId;
-    private final String name;
+    public String id;
+    public String name;
 
-    public MetricUser(final String id, final String organisationId, final String name) {
-        super();
+    public MetricOrganisation(final String id, final String name) {
         this.id = id;
-        this.organisationId = organisationId;
         this.name = name;
     }
 
     public String id() {
         return id;
-    }
-
-    public String organisationId() {
-        return organisationId;
     }
 
     public String name() {
