@@ -1,5 +1,4 @@
 apply from: '../../test.gradle'
 
 dependencies {
-	compile 'io.intercom:intercom-java:1.1.1'
 }
