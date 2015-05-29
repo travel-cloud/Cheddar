@@ -1,3 +1,4 @@
+package com.clicktravel.cheddar.metrics;
 import java.util.HashMap;
 import java.util.Map;
 

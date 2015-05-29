@@ -1,3 +1,4 @@
+package com.clicktravel.cheddar.metrics;
 public class MetricUser {
 
     private final String id;

@@ -1,3 +1,4 @@
+package com.clicktravel.cheddar.metrics;
 public interface MetricCollector {
 
     void createOrganisation(MetricOrganisation metricOrganisation);
