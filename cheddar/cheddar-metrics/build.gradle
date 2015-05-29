@@ -1,0 +1,3 @@
+dependencies {
+	compile 'com.github.oohira:intercom-java:0.0.3'
+}
