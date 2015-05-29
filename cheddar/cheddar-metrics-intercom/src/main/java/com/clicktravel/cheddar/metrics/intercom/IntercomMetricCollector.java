@@ -114,7 +114,10 @@ public class IntercomMetricCollector implements MetricCollector {
         final User intercomUser = new User();
         intercomUser.setUserId(user.id());
         intercomUser.setName(user.name());
-        intercomUser.setEmail(user.emailAddress());
+
+        if (!Equals.isNullOrBlank(user.emailAddress())) {
+            intercomUser.setEmail(user.emailAddress());
+        }
 
         if (!Equals.isNullOrBlank(user.organisationId())) {
             final Company company = new Company();
