@@ -25,12 +25,10 @@ import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
 
 public class IntercomMetricCollector implements MetricCollector {
-    private final String APP_ID;
-    private final String API_KEY;
-
     public IntercomMetricCollector(final String appId, final String apiKey) {
-        APP_ID = appId;
-        API_KEY = apiKey;
+        Intercom.setAppID(appId);
+        Intercom.setApiKey(apiKey);
+
     }
 
     @Override
@@ -59,8 +57,6 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void sendMetric(final Metric metric) {
-        Intercom.setAppID(APP_ID);
-        Intercom.setApiKey(API_KEY);
 
         final Event event = new Event().setEventName(metric.name()).setUserID(metric.userId())
                 .setCreatedAt(System.currentTimeMillis());
