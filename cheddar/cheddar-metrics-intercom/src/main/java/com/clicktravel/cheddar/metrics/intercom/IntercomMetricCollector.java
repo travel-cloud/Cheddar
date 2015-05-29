@@ -25,13 +25,12 @@ import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
 
 public class IntercomMetricCollector implements MetricCollector {
-    private static String APP_ID;
-
-    private static String API_KEY;
+    private final String APP_ID;
+    private final String API_KEY;
 
     public IntercomMetricCollector(final String appId, final String apiKey) {
-        IntercomMetricCollector.APP_ID = appId;
-        IntercomMetricCollector.API_KEY = apiKey;
+        APP_ID = appId;
+        API_KEY = apiKey;
     }
 
     @Override
