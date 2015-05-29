@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-
 package com.clicktravel.cheddar.metrics.intercom;
 
 import com.clicktravel.cheddar.metrics.Metric;

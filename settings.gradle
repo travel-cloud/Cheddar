@@ -5,6 +5,7 @@ include (
     "commons:commons-test",
     
     "cheddar:cheddar-metrics",
+    "cheddar:cheddar-metrics-intercom",
     "cheddar:cheddar-rest",
     "cheddar:cheddar-domain",
     "cheddar:cheddar-application",
