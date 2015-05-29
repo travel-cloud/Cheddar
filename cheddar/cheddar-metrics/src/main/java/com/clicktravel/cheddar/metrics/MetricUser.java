@@ -21,12 +21,14 @@ public class MetricUser {
     private final String id;
     private final String organisationId;
     private final String name;
+    private final String emailAddress;
 
-    public MetricUser(final String id, final String organisationId, final String name) {
+    public MetricUser(final String id, final String organisationId, final String name, final String emailAddress) {
         super();
         this.id = id;
         this.organisationId = organisationId;
         this.name = name;
+        this.emailAddress = emailAddress;
     }
 
     public String id() {
@@ -41,4 +43,7 @@ public class MetricUser {
         return name;
     }
 
+    public String emailAddress() {
+        return emailAddress;
+    }
 }

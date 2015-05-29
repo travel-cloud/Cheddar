@@ -16,15 +16,24 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
+import io.intercom.api.Company;
 import io.intercom.api.Event;
 import io.intercom.api.Intercom;
+import io.intercom.api.User;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.metrics.Metric;
 import com.clicktravel.cheddar.metrics.MetricCollector;
 import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
+import com.clicktravel.common.functional.Equals;
 
 public class IntercomMetricCollector implements MetricCollector {
+
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     public IntercomMetricCollector(final String appId, final String apiKey) {
         Intercom.setAppID(appId);
         Intercom.setApiKey(apiKey);
@@ -45,13 +54,13 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void createUser(final MetricUser user) {
-        // TODO Auto-generated method stub
+        createOrUpdateIntercomUser(user);
 
     }
 
     @Override
     public void updateUser(final MetricUser user) {
-        // TODO Auto-generated method stub
+        createOrUpdateIntercomUser(user);
 
     }
 
@@ -90,5 +99,28 @@ public class IntercomMetricCollector implements MetricCollector {
         }
         Event.create(event);
 
+    }
+
+    private void createOrUpdateIntercomUser(final MetricUser user) {
+        if (user == null) {
+            return;
+        }
+
+        final User intercomUser = new User();
+        intercomUser.setUserId(user.id());
+        intercomUser.setName(user.name());
+        intercomUser.setEmail(user.emailAddress());
+
+        if (!Equals.isNullOrBlank(user.organisationId())) {
+            final Company company = new Company();
+            company.setCompanyID(user.organisationId());
+            intercomUser.addCompany(company);
+        }
+
+        try {
+            User.create(intercomUser);
+        } catch (final Exception e) {
+            logger.warn("Error creating/updating a Intercom user - " + intercomUser + " - " + e.getLocalizedMessage());
+        }
     }
 }
