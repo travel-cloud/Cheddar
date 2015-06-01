@@ -16,7 +16,9 @@
  */
 package com.clicktravel.cheddar.event;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -29,7 +31,7 @@ import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageHandlin
 public class EventMessageHandler<E extends Event> implements MessageHandler<TypedMessage> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Map<String, EventHandler<E>> eventHandlers;
+    private final Map<String, Set<EventHandler<E>>> eventHandlers;
 
     public EventMessageHandler() {
         eventHandlers = new ConcurrentHashMap<>();
@@ -40,20 +42,26 @@ public class EventMessageHandler<E extends Event> implements MessageHandler<Type
         try {
             final String messageType = typedMessage.getType();
             logger.debug("Handling: " + messageType);
-            final EventHandler<E> eventHandler = eventHandlers.get(messageType);
-            final E event = AbstractEvent.newEvent(eventHandler.getEventClass(), typedMessage.getPayload());
-            if (!eventHandler.getEventClass().isAssignableFrom(event.getClass())) {
-                throw new IllegalStateException("Event of type " + event.getClass() + " is not compatible with "
-                        + eventHandler.getEventClass() + " in event handler");
+            for (final EventHandler<E> eventHandler : eventHandlers.get(messageType)) {
+                final E event = AbstractEvent.newEvent(eventHandler.getEventClass(), typedMessage.getPayload());
+                if (!eventHandler.getEventClass().isAssignableFrom(event.getClass())) {
+                    throw new IllegalStateException("Event of type " + event.getClass() + " is not compatible with "
+                            + eventHandler.getEventClass() + " in event handler");
+                }
+                eventHandler.handle(event);
             }
-            eventHandler.handle(event);
         } catch (final Exception e) {
             throw new MessageHandlingException(e.getMessage(), e);
         }
     }
 
     public void registerEventHandler(final String eventType, final EventHandler<E> eventHandler) {
-        eventHandlers.put(eventType, eventHandler);
+        Set<EventHandler<E>> eventHandlersForType = eventHandlers.get(eventType);
+        if (eventHandlersForType == null) {
+            eventHandlersForType = new HashSet<>();
+            eventHandlers.put(eventType, eventHandlersForType);
+        }
+        eventHandlersForType.add(eventHandler);
     }
 
 }

@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.event;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -63,4 +64,37 @@ public class EventMessageHandlerTest {
         assertEquals("testType", domainEventCaptor.getValue().type());
     }
 
+    @Test
+    public void shouldRegsisterAndInvokeMultipleHandlers_withMessage() throws Exception {
+        // Given
+        final String testValue = Randoms.randomString(5);
+        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectNode rootNode = mapper.createObjectNode();
+        rootNode.put("testValue", testValue);
+        final String serializedEvent = mapper.writeValueAsString(rootNode);
+
+        final TypedMessage message = mock(TypedMessage.class);
+        final String eventType = Randoms.randomString(5);
+        when(message.getType()).thenReturn(eventType);
+        when(message.getPayload()).thenReturn(serializedEvent);
+
+        final TestConcreteEventHandler mockDomainEventHandler1 = mock(TestConcreteEventHandler.class);
+        final TestConcreteEventHandler concreteDomainEventHandler = new TestConcreteEventHandler();
+        doReturn(concreteDomainEventHandler.getEventClass()).when(mockDomainEventHandler1).getEventClass();
+
+        final TestOtherConcreteEventHandler mockDomainEventHandler2 = mock(TestOtherConcreteEventHandler.class);
+        final TestOtherConcreteEventHandler concreteOtherDomainEventHandler = new TestOtherConcreteEventHandler();
+        doReturn(concreteOtherDomainEventHandler.getEventClass()).when(mockDomainEventHandler2).getEventClass();
+
+        final EventMessageHandler<Event> eventMessageHandler = new EventMessageHandler<>();
+        eventMessageHandler.registerEventHandler(eventType, mockDomainEventHandler1);
+        eventMessageHandler.registerEventHandler(eventType, mockDomainEventHandler2);
+
+        // When
+        eventMessageHandler.handle(message);
+
+        // Then
+        verify(mockDomainEventHandler1).handle(any(TestConcreteEvent.class));
+        verify(mockDomainEventHandler2).handle(any(TestConcreteEvent.class));
+    }
 }
