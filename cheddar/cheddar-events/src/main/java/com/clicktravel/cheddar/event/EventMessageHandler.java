@@ -43,12 +43,16 @@ public class EventMessageHandler<E extends Event> implements MessageHandler<Type
             final String messageType = typedMessage.getType();
             logger.debug("Handling: " + messageType);
             for (final EventHandler<E> eventHandler : eventHandlers.get(messageType)) {
-                final E event = AbstractEvent.newEvent(eventHandler.getEventClass(), typedMessage.getPayload());
-                if (!eventHandler.getEventClass().isAssignableFrom(event.getClass())) {
-                    throw new IllegalStateException("Event of type " + event.getClass() + " is not compatible with "
-                            + eventHandler.getEventClass() + " in event handler");
+                try {
+                    final E event = AbstractEvent.newEvent(eventHandler.getEventClass(), typedMessage.getPayload());
+                    if (!eventHandler.getEventClass().isAssignableFrom(event.getClass())) {
+                        throw new IllegalStateException("Event of type " + event.getClass()
+                                + " is not compatible with " + eventHandler.getEventClass() + " in event handler");
+                    }
+                    eventHandler.handle(event);
+                } catch (final Exception e) {
+                    logger.error("Error handling message: " + typedMessage, e);
                 }
-                eventHandler.handle(event);
             }
         } catch (final Exception e) {
             throw new MessageHandlingException(e.getMessage(), e);
