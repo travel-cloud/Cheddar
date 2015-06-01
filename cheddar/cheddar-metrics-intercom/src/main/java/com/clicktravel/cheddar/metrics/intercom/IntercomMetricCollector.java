@@ -40,15 +40,13 @@ public class IntercomMetricCollector implements MetricCollector {
     }
 
     @Override
-    public void createOrganisation(final MetricOrganisation metricOrganisation) {
-        // TODO Auto-generated method stub
-
+    public void createOrganisation(final MetricOrganisation organisation) {
+        createOrUpdateIntercomCompany(organisation);
     }
 
     @Override
-    public void updateOrganisation(final MetricOrganisation metricOrganisation) {
-        // TODO Auto-generated method stub
-
+    public void updateOrganisation(final MetricOrganisation organisation) {
+        createOrUpdateIntercomCompany(organisation);
     }
 
     @Override
@@ -126,7 +124,25 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.create(intercomUser);
         } catch (final Exception e) {
-            logger.warn("Error creating/updating a Intercom user - " + intercomUser + " - " + e.getLocalizedMessage());
+            logger.debug("Error creating/updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+        }
+    }
+
+    private void createOrUpdateIntercomCompany(final MetricOrganisation organisation) {
+        if (organisation == null) {
+            return;
+        }
+        final Company company = new Company();
+
+        final String companyId = organisation.id;
+        final String name = organisation.name;
+
+        company.setCompanyID(companyId);
+        company.setName(name);
+        try {
+            Company.create(company);
+        } catch (final Exception e) {
+            logger.debug("Error creating/updating a Intercom company: " + company + " - " + e.getMessage());
         }
     }
 }
