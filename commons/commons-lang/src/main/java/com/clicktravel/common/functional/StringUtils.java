@@ -18,6 +18,7 @@ package com.clicktravel.common.functional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class StringUtils {
 
@@ -62,7 +63,7 @@ public class StringUtils {
      * Parses a single enum name from a string. Case is ignored, spaces are changed to '_'
      * @param s The string to scan
      * @param enumClass The class of enum constants
-     * @return Enum constant, or <code>null</code> if input string is blank
+     * @return Enum constant, or {@code null} if input string is blank
      */
     public static <E extends Enum<E>> E parseEnum(final String s, final Class<E> enumClass) {
         final String t = s.trim().toUpperCase().replace(' ', '_');
@@ -98,4 +99,25 @@ public class StringUtils {
     public static String join(final List<String> substrings) {
         return join(substrings, ", ");
     }
+
+    /**
+     * Return {@code true} if string contains a specified regex pattern
+     * @param string String to test
+     * @param pattern Regex pattern to find in string
+     * @return {@code true} if string contains regex pattern
+     */
+    public static boolean containsPattern(final String string, final String pattern) {
+        return containsPattern(string, Pattern.compile(pattern));
+    }
+
+    /**
+     * Return {@code true} if string contains a specified {@link Pattern}
+     * @param string String to test
+     * @param pattern Pattern to find in string
+     * @return {@code true} if string contains pattern
+     */
+    public static boolean containsPattern(final String string, final Pattern pattern) {
+        return pattern.matcher(string).find();
+    }
+
 }
