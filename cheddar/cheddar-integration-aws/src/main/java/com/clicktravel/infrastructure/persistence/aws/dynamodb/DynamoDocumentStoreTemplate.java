@@ -240,7 +240,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 totalItems.add(stringToItem(item.toJSON(), itemClass));
             }
         } else {
-            logger.debug("Performing table scan");
+            logger.debug("Performing table scan with query: " + query);
             ScanSpec scanSpec = null;
             try {
                 scanSpec = generateScanSpec(query, itemClass);
