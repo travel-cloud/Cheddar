@@ -65,7 +65,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     /**
      * Simple method for splitting a list into a list of smaller lists of the supplied length
-     *
+     * 
      * @param list
      * @param length
      * @return
@@ -240,7 +240,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 totalItems.add(stringToItem(item.toJSON(), itemClass));
             }
         } else {
-            logger.warn("Performing table scan");
+            logger.debug("Performing table scan");
             ScanSpec scanSpec = null;
             try {
                 scanSpec = generateScanSpec(query, itemClass);

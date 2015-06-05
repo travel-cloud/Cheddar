@@ -440,7 +440,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             } while (lastEvaluatedKey != null);
 
         } else {
-            logger.warn("Performing table scan with query:" + query);
+            logger.debug("Performing table scan with query:" + query);
             do {
                 final ScanRequest scanRequest = new ScanRequest().withTableName(tableName).withScanFilter(conditions)
                         .withExclusiveStartKey(lastEvaluatedKey);
