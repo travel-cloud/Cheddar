@@ -9,6 +9,7 @@ dependencies {
     compile project(':cheddar:cheddar-tx')
 
     compile "org.springframework:spring-context:${springVersion}"
+    compile 'com.thoughtworks.xstream:xstream:1.4.8'
     compile 'org.slf4j:slf4j-api:1.7.5'
 }
 

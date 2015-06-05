@@ -14,13 +14,16 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.application.pending.result;
 
-public class ContinuationException extends RuntimeException {
+/**
+ * Accessor for value (or rethrown exception) returned by a {@link PendingResult}
+ */
+interface Result {
 
-    private static final long serialVersionUID = -202899174951885943L;
-
-    public ContinuationException(final String message) {
-        super(message);
-    }
+    /**
+     * @return Value returned by {@link PendingResult}
+     * @throws Exception if exception was thrown
+     */
+    Object getValue() throws Exception;
 }

@@ -14,25 +14,29 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.application.pending.result;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
-public class ContinueResultAspectTest {
+public class ExceptionResultTest {
 
     @Test
-    public void shouldOfferMethodResult_onMethodReturn() {
+    public void shouldThrowException_onGetValue() {
         // Given
-        final ContinuationHandler mockContinuationHandler = mock(ContinuationHandler.class);
-        final ContinueResultAspect continueResultAspect = new ContinueResultAspect(mockContinuationHandler);
+        final Exception exception = new Exception();
+        final ExceptionResult exceptionResult = new ExceptionResult(exception);
 
         // When
-        continueResultAspect.returnMethodResult();
+        Exception thrownException = null;
+        try {
+            exceptionResult.getValue();
+        } catch (final Exception e) {
+            thrownException = e;
+        }
 
         // Then
-        verify(mockContinuationHandler).offerMethodResult();
+        assertSame(exception, thrownException);
     }
 }
