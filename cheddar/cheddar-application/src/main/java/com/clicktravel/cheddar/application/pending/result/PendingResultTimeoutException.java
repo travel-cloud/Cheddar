@@ -14,23 +14,13 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.application.pending.result;
 
-class SimpleResult implements MethodResult {
+public class PendingResultTimeoutException extends RuntimeException {
 
-    private final Object result;
+    private static final long serialVersionUID = -8242439000690526767L;
 
-    public SimpleResult(final Object result) {
-        this.result = result;
-    }
-
-    @Override
-    public Object getReturnValue() {
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "SimpleResult; result:[" + result + "]";
+    public PendingResultTimeoutException() {
+        super();
     }
 }
