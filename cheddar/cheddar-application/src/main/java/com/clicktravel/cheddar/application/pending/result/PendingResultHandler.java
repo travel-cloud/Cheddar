@@ -94,7 +94,7 @@ public class PendingResultHandler {
     }
 
     private void offerResult(final String pendingResultId, final Result result) {
-        final PendingResultSetEvent event = new PendingResultSetEvent();
+        final PendingResultOfferedEvent event = new PendingResultOfferedEvent();
         event.setTargetApplicationName(applicationName);
         event.setPendingResultId(pendingResultId);
         event.setResultXml(toCompactXml(result));

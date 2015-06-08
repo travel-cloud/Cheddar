@@ -32,9 +32,9 @@ import org.mockito.ArgumentCaptor;
 import com.clicktravel.cheddar.system.event.SystemEvent;
 import com.thoughtworks.xstream.XStream;
 
-public class PendingResultSetEventHandlerTest {
+public class PendingResultOfferedEventHandlerTest {
 
-    private PendingResultSetEventHandler pendingResultSetEventHandler;
+    private PendingResultOfferedEventHandler pendingResultOfferedEventHandler;
     private PendingResultsHolder mockPendingResultsHolder;
     private String applicationName;
     private String applicationVersion;
@@ -44,7 +44,7 @@ public class PendingResultSetEventHandlerTest {
         applicationName = randomString(10);
         applicationVersion = randomString(10);
         mockPendingResultsHolder = mock(PendingResultsHolder.class);
-        pendingResultSetEventHandler = new PendingResultSetEventHandler(applicationName, applicationVersion,
+        pendingResultOfferedEventHandler = new PendingResultOfferedEventHandler(applicationName, applicationVersion,
                 mockPendingResultsHolder);
     }
 
@@ -55,14 +55,14 @@ public class PendingResultSetEventHandlerTest {
         final Result result = new SimpleResult(value);
         final String resultXml = new XStream().toXML(result);
         final String pendingResultId = randomId();
-        final PendingResultSetEvent event = mock(PendingResultSetEvent.class);
+        final PendingResultOfferedEvent event = mock(PendingResultOfferedEvent.class);
         when(event.getPendingResultId()).thenReturn(pendingResultId);
         when(event.getResultXml()).thenReturn(resultXml);
         final PendingResult mockPendingResult = mock(PendingResult.class);
         when(mockPendingResultsHolder.get(pendingResultId)).thenReturn(mockPendingResult);
 
         // When
-        pendingResultSetEventHandler.handleSystemEvent(event);
+        pendingResultOfferedEventHandler.handleSystemEvent(event);
 
         // Then
         final ArgumentCaptor<Result> captor = ArgumentCaptor.forClass(Result.class);
@@ -76,13 +76,13 @@ public class PendingResultSetEventHandlerTest {
     public void shouldDoNothing_onHandleEventForUnknownPendingResult() {
         // Given
         final String pendingResultId = randomId();
-        final PendingResultSetEvent event = mock(PendingResultSetEvent.class);
+        final PendingResultOfferedEvent event = mock(PendingResultOfferedEvent.class);
         when(event.getPendingResultId()).thenReturn(pendingResultId);
 
         // When
         Exception thrownException = null;
         try {
-            pendingResultSetEventHandler.handleSystemEvent(event);
+            pendingResultOfferedEventHandler.handleSystemEvent(event);
         } catch (final Exception e) {
             thrownException = e;
         }
@@ -94,9 +94,9 @@ public class PendingResultSetEventHandlerTest {
     @Test
     public void shouldReturnEventClass() {
         // When
-        final Class<? extends SystemEvent> eventClass = pendingResultSetEventHandler.getEventClass();
+        final Class<? extends SystemEvent> eventClass = pendingResultOfferedEventHandler.getEventClass();
 
         // Then
-        assertEquals(PendingResultSetEvent.class, eventClass);
+        assertEquals(PendingResultOfferedEvent.class, eventClass);
     }
 }

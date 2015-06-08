@@ -22,7 +22,7 @@ import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
  * System event indicating a {@link Result} has been offered to a {@link PendingResult}. The result is serialised as XML
  * to enable any Java type to be returned.
  */
-public class PendingResultSetEvent extends AbstractSystemEvent {
+public class PendingResultOfferedEvent extends AbstractSystemEvent {
 
     private String pendingResultId;
     private String resultXml;

@@ -25,17 +25,17 @@ import com.clicktravel.cheddar.system.event.handler.AbstractSystemEventHandler;
 import com.thoughtworks.xstream.XStream;
 
 /**
- * Handles a {@link PendingResultSetEvent} by offering the {@link Result} to the specified {@link PendingResult} if it
+ * Handles a {@link PendingResultOfferedEvent} by offering the {@link Result} to the specified {@link PendingResult} if it
  * is stored on this application instance.
  */
 @Component
-public class PendingResultSetEventHandler extends AbstractSystemEventHandler {
+public class PendingResultOfferedEventHandler extends AbstractSystemEventHandler {
 
     private final PendingResultsHolder pendingResultsHolder;
     private final XStream xStream = new XStream();
 
     @Autowired
-    public PendingResultSetEventHandler(@Value("${server.application.name}") final String applicationName,
+    public PendingResultOfferedEventHandler(@Value("${server.application.name}") final String applicationName,
             @Value("${server.application.version}") final String applicationVersion,
             final PendingResultsHolder pendingResultsHolder) {
         super(applicationName, applicationVersion);
@@ -44,7 +44,7 @@ public class PendingResultSetEventHandler extends AbstractSystemEventHandler {
 
     @Override
     protected void handleSystemEvent(final SystemEvent systemEvent) {
-        final PendingResultSetEvent event = (PendingResultSetEvent) systemEvent;
+        final PendingResultOfferedEvent event = (PendingResultOfferedEvent) systemEvent;
         final PendingResult pendingResult = pendingResultsHolder.get(event.getPendingResultId());
         if (pendingResult != null) {
             final Result result = (Result) xStream.fromXML(event.getResultXml());
@@ -54,7 +54,7 @@ public class PendingResultSetEventHandler extends AbstractSystemEventHandler {
 
     @Override
     public Class<? extends SystemEvent> getEventClass() {
-        return PendingResultSetEvent.class;
+        return PendingResultOfferedEvent.class;
     }
 
 }

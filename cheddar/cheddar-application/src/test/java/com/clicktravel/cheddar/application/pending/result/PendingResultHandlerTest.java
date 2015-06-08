@@ -70,9 +70,9 @@ public class PendingResultHandlerTest {
         pendingResultHandler.offerValue(pendingResultId, testValue);
 
         // Then
-        final ArgumentCaptor<PendingResultSetEvent> captor = ArgumentCaptor.forClass(PendingResultSetEvent.class);
+        final ArgumentCaptor<PendingResultOfferedEvent> captor = ArgumentCaptor.forClass(PendingResultOfferedEvent.class);
         verify(mockSystemEventPublisher).publishEvent(captor.capture());
-        final PendingResultSetEvent event = captor.getValue();
+        final PendingResultOfferedEvent event = captor.getValue();
         assertEquals(applicationName, event.getTargetApplicationName());
         assertNull(event.getTargetApplicationVersion());
         assertEquals(pendingResultId, event.getPendingResultId());
@@ -91,9 +91,9 @@ public class PendingResultHandlerTest {
         pendingResultHandler.offerValue(pendingResultId, value);
 
         // Then
-        final ArgumentCaptor<PendingResultSetEvent> captor = ArgumentCaptor.forClass(PendingResultSetEvent.class);
+        final ArgumentCaptor<PendingResultOfferedEvent> captor = ArgumentCaptor.forClass(PendingResultOfferedEvent.class);
         verify(mockSystemEventPublisher).publishEvent(captor.capture());
-        final PendingResultSetEvent event = captor.getValue();
+        final PendingResultOfferedEvent event = captor.getValue();
         assertEquals(applicationName, event.getTargetApplicationName());
         assertNull(event.getTargetApplicationVersion());
         assertEquals(pendingResultId, event.getPendingResultId());
@@ -112,9 +112,9 @@ public class PendingResultHandlerTest {
         pendingResultHandler.offerException(pendingResultId, exception);
 
         // Then
-        final ArgumentCaptor<PendingResultSetEvent> captor = ArgumentCaptor.forClass(PendingResultSetEvent.class);
+        final ArgumentCaptor<PendingResultOfferedEvent> captor = ArgumentCaptor.forClass(PendingResultOfferedEvent.class);
         verify(mockSystemEventPublisher).publishEvent(captor.capture());
-        final PendingResultSetEvent event = captor.getValue();
+        final PendingResultOfferedEvent event = captor.getValue();
         assertEquals(applicationName, event.getTargetApplicationName());
         assertNull(event.getTargetApplicationVersion());
         assertEquals(pendingResultId, event.getPendingResultId());
