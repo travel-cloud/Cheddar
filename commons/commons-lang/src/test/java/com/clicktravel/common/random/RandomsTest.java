@@ -20,8 +20,8 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.Map.Entry;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -30,7 +30,6 @@ import org.joda.time.LocalTime;
 import org.junit.Test;
 
 import com.boxbe.pub.email.EmailAddress;
-import com.clicktravel.common.validation.ValidationException;
 
 public class RandomsTest {
 
@@ -182,8 +181,8 @@ public class RandomsTest {
     @Test
     public void shouldReturnRandomIntInRange_givenFromLessThanTo() {
         final Set<Integer> randomInts = new HashSet<>();
-        final int lowerBound = -Randoms.randomInt(100); // negative lower bound
-        final int upperBound = Randoms.randomInt(100);
+        final int lowerBound = Randoms.randomInt(200) - 100;
+        final int upperBound = lowerBound + 1 + Randoms.randomInt(200);
         for (int n = 0; n < 100; n++) {
             final int randomInt = Randoms.randomIntInRange(lowerBound, upperBound);
             assertTrue(randomInt >= lowerBound && randomInt < upperBound);
@@ -195,29 +194,23 @@ public class RandomsTest {
     }
 
     @Test
-    public void shouldNotReturnRandomIntInRange_asFromAndToAreTheSame() {
+    public void shouldReturnRandomIntInRange_givenFromAndToAreTheSame() {
         final int bounds = Randoms.randomInt(100);
-        ValidationException validationException = null;
-        try {
-            Randoms.randomIntInRange(bounds, bounds);
-
-        } catch (final ValidationException e) {
-            validationException = e;
-        }
-        assertNotNull(validationException);
+        final int randomInt = Randoms.randomIntInRange(bounds, bounds);
+        assertTrue(bounds == randomInt);
     }
 
     @Test
     public void shouldNotReturnRandomIntInRange_asFromGreaterThanTo() {
         final int bounds = Randoms.randomInt(100);
-        ValidationException validationException = null;
+        IllegalArgumentException illegalArgumentException = null;
         try {
             Randoms.randomIntInRange(bounds + 1, bounds);
 
-        } catch (final ValidationException e) {
-            validationException = e;
+        } catch (final IllegalArgumentException e) {
+            illegalArgumentException = e;
         }
-        assertNotNull(validationException);
+        assertNotNull(illegalArgumentException);
     }
 
     @Test
@@ -343,5 +336,23 @@ public class RandomsTest {
             randomCards.add(randomcardNumber);
         }
         assertEquals("Random sample Credit Cards should be unique", SAMPLE_SIZE, randomCards.size());
+    }
+
+    @Test
+    public void shouldGetCheckDigit() {
+        final Map<String, Integer> knownCheckDigits = new HashMap<String, Integer>();
+        knownCheckDigits.put("37144963539843", Integer.valueOf(1)); // AMEX
+        knownCheckDigits.put("3434343434343", Integer.valueOf(4)); // AMEX
+        knownCheckDigits.put("401288888888188", Integer.valueOf(1)); // VISA
+        knownCheckDigits.put("411111111111111", Integer.valueOf(1)); // VISA
+        knownCheckDigits.put("545454545454545", Integer.valueOf(4)); // MASTERCARD
+        knownCheckDigits.put("540400000000006", Integer.valueOf(8)); // MASTERCARD
+        knownCheckDigits.put("675964982643845", Integer.valueOf(3)); // MAESTRO
+        knownCheckDigits.put("679999010000000001", Integer.valueOf(9)); // MAESTRO
+
+        for (final Entry<String, Integer> entry : knownCheckDigits.entrySet()) {
+            final int checkDigit = Randoms.getCreditCardCheckDigit(entry.getKey());
+            assertEquals("Check digit not as expected", entry.getValue(), Integer.valueOf(checkDigit));
+        }
     }
 }

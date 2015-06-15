@@ -23,9 +23,6 @@ import java.util.regex.Pattern;
 
 import org.joda.time.*;
 
-import com.clicktravel.common.validation.Check;
-import com.clicktravel.common.validation.ValidationException;
-
 public class Randoms {
 
     private static final String CHARSET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -244,12 +241,15 @@ public class Randoms {
      * @return a random int
      */
     public static int randomIntInRange(final int from, final int to) {
+        int returnValue;
         if (from > to) {
-            throw new ValidationException(String.format("From (%d) must be less than to (%d)", from, to), "from", "to");
+            throw new IllegalArgumentException(String.format("From (%d) must be less than to (%d)", from, to));
         } else if (from == to) {
-            throw new ValidationException(String.format("From (%d) must be different to (%d)", from, to), "from", "to");
+            returnValue = from;
+        } else {
+            returnValue = from + Randoms.randomInt(to - from);
         }
-        return from + Randoms.randomInt(to - from);
+        return returnValue;
     }
 
     /**
@@ -263,7 +263,10 @@ public class Randoms {
      */
     public static String randomCreditCardNumber(final String prefix) {
 
-        Check.matchesPattern("prefix", prefix, CARD_PREFIX_PATTERN);
+        if (!CARD_PREFIX_PATTERN.matcher(prefix).matches()) {
+            throw new IllegalArgumentException(String.format("Invalid card prefix: %s", prefix));
+        }
+
         final int length = randomIntInRange(13, 19);
         // The number of random digits that we need to generate is equal to the
         // total length of the card number minus the start digits given by the
@@ -277,7 +280,7 @@ public class Randoms {
         }
 
         // Do the Luhn algorithm to generate the check digit.
-        final int checkDigit = getCheckDigit(buffer.toString());
+        final int checkDigit = getCreditCardCheckDigit(buffer.toString());
         buffer.append(checkDigit);
 
         return buffer.toString();
@@ -291,7 +294,7 @@ public class Randoms {
      * @param number The credit card number for which to generate the check digit.
      * @return The check digit required to make the given credit card number valid.
      */
-    private static int getCheckDigit(final String number) {
+    static int getCreditCardCheckDigit(final String number) {
 
         // Get the sum of all the digits, however we need to replace the value
         // of every other digit with the same digit multiplied by 2. If this
@@ -314,7 +317,7 @@ public class Randoms {
             if ((i % 2) == remainder) {
                 digit = digit * 2;
                 if (digit > 9) {
-                    digit = (digit / 10) + (digit % 10);
+                    digit -= 9;
                 }
             }
             sum += digit;
