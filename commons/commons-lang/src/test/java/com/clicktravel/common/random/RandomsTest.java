@@ -195,7 +195,7 @@ public class RandomsTest {
     }
 
     @Test
-    public void shouldReturnRandomIntInRange_givenFromAndToAreTheSame() {
+    public void shouldNotReturnRandomIntInRange_asFromAndToAreTheSame() {
         final int bounds = Randoms.randomInt(100);
         ValidationException validationException = null;
         try {
@@ -208,7 +208,7 @@ public class RandomsTest {
     }
 
     @Test
-    public void shouldReturnRandomIntInRange_givenFromGreaterThanTo() {
+    public void shouldNotReturnRandomIntInRange_asFromGreaterThanTo() {
         final int bounds = Randoms.randomInt(100);
         ValidationException validationException = null;
         try {
