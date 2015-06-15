@@ -30,6 +30,7 @@ import org.joda.time.LocalTime;
 import org.junit.Test;
 
 import com.boxbe.pub.email.EmailAddress;
+import com.clicktravel.common.validation.ValidationException;
 
 public class RandomsTest {
 
@@ -179,6 +180,47 @@ public class RandomsTest {
     }
 
     @Test
+    public void shouldReturnRandomIntInRange_givenFromLessThanTo() {
+        final Set<Integer> randomInts = new HashSet<>();
+        final int lowerBound = -Randoms.randomInt(100); // negative lower bound
+        final int upperBound = Randoms.randomInt(100);
+        for (int n = 0; n < 100; n++) {
+            final int randomInt = Randoms.randomIntInRange(lowerBound, upperBound);
+            assertTrue(randomInt >= lowerBound && randomInt < upperBound);
+            randomInts.add(randomInt);
+        }
+
+        assertTrue("100 random samples should not all be same int: " + randomInts.iterator().next(),
+                randomInts.size() > 1);
+    }
+
+    @Test
+    public void shouldReturnRandomIntInRange_givenFromAndToAreTheSame() {
+        final int bounds = Randoms.randomInt(100);
+        ValidationException validationException = null;
+        try {
+            Randoms.randomIntInRange(bounds, bounds);
+
+        } catch (final ValidationException e) {
+            validationException = e;
+        }
+        assertNotNull(validationException);
+    }
+
+    @Test
+    public void shouldReturnRandomIntInRange_givenFromGreaterThanTo() {
+        final int bounds = Randoms.randomInt(100);
+        ValidationException validationException = null;
+        try {
+            Randoms.randomIntInRange(bounds + 1, bounds);
+
+        } catch (final ValidationException e) {
+            validationException = e;
+        }
+        assertNotNull(validationException);
+    }
+
+    @Test
     public void shouldReturnZero_givenRandomIntMaxZero() {
         // Given
         final int max = 0;
@@ -292,4 +334,14 @@ public class RandomsTest {
         assertEquals("Random sample ids should be unique", SAMPLE_SIZE, randomIds.size());
     }
 
+    @Test
+    public void shouldReturnRandomCreditCardNumber() {
+        final Set<String> randomCards = new HashSet<>();
+        for (int n = 0; n < SAMPLE_SIZE; n++) {
+            final int prefix = Randoms.randomIntInRange(3, 7);
+            final String randomcardNumber = Randoms.randomCreditCardNumber(Integer.toString(prefix));
+            randomCards.add(randomcardNumber);
+        }
+        assertEquals("Random sample Credit Cards should be unique", SAMPLE_SIZE, randomCards.size());
+    }
 }
