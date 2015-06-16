@@ -19,6 +19,7 @@ package com.clicktravel.common.random;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.joda.time.*;
 
@@ -28,6 +29,7 @@ public class Randoms {
     private static final int MIN_RANDOM_STRING_LENGTH = 20;
     private static final int MAX_RANDOM_STRING_LENGTH = 40;
     private static final long DAY_MILLIS = 24 * 60 * 60 * 1000;
+    private static final Pattern CARD_PREFIX_PATTERN = Pattern.compile("\\d+");
 
     /**
      * Returns a random string value of specified length
@@ -226,6 +228,105 @@ public class Randoms {
                 .subtract(BigInteger.ONE);
         return BigDecimal.valueOf(Randoms.randomInt(maxiumValue.intValue()), precision).add(
                 BigDecimal.valueOf(BigInteger.ONE.intValue(), precision));
+    }
+
+    /**
+     * Return an int in the range <code>from</code> to <code>to</code> inclusive of from but exclusive of to e.g.
+     * randomIntInRange(1,20) could return an int from 1 to 19 inclusive. Negative numbers are also supported by this
+     * method e.g. randomIntInRange(-10,10) could return an int from -10 to 9 inclusive
+     *
+     * @param from the start of the range (inclusive)
+     * @param to the end of the range (exclusive)
+     *
+     * @return a random int
+     */
+    public static int randomIntInRange(final int from, final int to) {
+        int returnValue;
+        if (from > to) {
+            throw new IllegalArgumentException(String.format("From (%d) must be less than to (%d)", from, to));
+        } else { // from <= to
+            returnValue = from + Randoms.randomInt(to - from);
+        }
+        return returnValue;
+    }
+
+    /**
+     * Generates a random valid credit card number.
+     *
+     * Code taken from a public Gist created by Josef Galea https://gist.github.com/josefeg/5781824
+     *
+     * @param prefix, used to identify the bank that is issuing the credit card, this should be a positive number
+     *
+     * @return A randomly generated, valid, credit card number.
+     */
+    public static String randomCreditCardNumber(final String prefix) {
+
+        if (!CARD_PREFIX_PATTERN.matcher(prefix).matches()) {
+            throw new IllegalArgumentException(String.format("Invalid card prefix: %s", prefix));
+        }
+
+        final int length = randomIntInRange(13, 19);
+        // The number of random digits that we need to generate is equal to the
+        // total length of the card number minus the start digits given by the
+        // user, minus the check digit at the end.
+        final int randomNumberLength = length - (prefix.length() + 1);
+
+        final StringBuffer buffer = new StringBuffer(prefix);
+        for (int i = 0; i < randomNumberLength; i++) {
+            final int digit = Randoms.randomInt(10);
+            buffer.append(digit);
+        }
+
+        // Do the Luhn algorithm to generate the check digit.
+        final int checkDigit = getCreditCardCheckDigit(buffer.toString());
+        buffer.append(checkDigit);
+
+        return buffer.toString();
+    }
+
+    /**
+     * Generates the check digit required to make the given credit card number valid (i.e. pass the Luhn check)
+     *
+     * Code taken from a public Gist created by Josef Galea https://gist.github.com/josefeg/5781824
+     *
+     * @param number The credit card number for which to generate the check digit.
+     * @return The check digit required to make the given credit card number valid.
+     */
+    static int getCreditCardCheckDigit(final String number) {
+
+        // Get the sum of all the digits, however we need to replace the value
+        // of every other digit with the same digit multiplied by 2. If this
+        // multiplication yields a number greater than 9, then add the two
+        // digits together to get a single digit number.
+        //
+        // The digits we need to replace will be those in an even position for
+        // card numbers whose length is an even number, or those is an odd
+        // position for card numbers whose length is an odd number. This is
+        // because the Luhn algorithm reverses the card number, and doubles
+        // every other number starting from the second number from the last
+        // position.
+        int sum = 0;
+        final int remainder = (number.length() + 1) % 2;
+        for (int i = 0; i < number.length(); i++) {
+
+            // Get the digit at the current position.
+            int digit = Integer.parseInt(number.substring(i, (i + 1)));
+
+            if ((i % 2) == remainder) {
+                digit = digit * 2;
+                if (digit > 9) {
+                    digit -= 9;
+                }
+            }
+            sum += digit;
+        }
+
+        // The check digit is the number required to make the sum a multiple of
+        // 10.
+        final int mod = sum % 10;
+        final int checkDigit = ((mod == 0) ? 0 : 10 - mod);
+
+        return checkDigit;
     }
 
     /**
