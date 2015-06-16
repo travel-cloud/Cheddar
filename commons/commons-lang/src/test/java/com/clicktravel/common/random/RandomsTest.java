@@ -182,13 +182,12 @@ public class RandomsTest {
     public void shouldReturnRandomIntInRange_givenFromLessThanTo() {
         final Set<Integer> randomInts = new HashSet<>();
         final int lowerBound = Randoms.randomInt(200) - 100;
-        final int upperBound = lowerBound + 1 + Randoms.randomInt(200);
+        final int upperBound = lowerBound + 50 + Randoms.randomInt(200);
         for (int n = 0; n < 100; n++) {
             final int randomInt = Randoms.randomIntInRange(lowerBound, upperBound);
             assertTrue(randomInt >= lowerBound && randomInt < upperBound);
             randomInts.add(randomInt);
         }
-
         assertTrue("100 random samples should not all be same int: " + randomInts.iterator().next(),
                 randomInts.size() > 1);
     }
@@ -341,14 +340,14 @@ public class RandomsTest {
     @Test
     public void shouldGetCheckDigit() {
         final Map<String, Integer> knownCheckDigits = new HashMap<String, Integer>();
-        knownCheckDigits.put("37144963539843", Integer.valueOf(1)); // AMEX
-        knownCheckDigits.put("3434343434343", Integer.valueOf(4)); // AMEX
-        knownCheckDigits.put("401288888888188", Integer.valueOf(1)); // VISA
-        knownCheckDigits.put("411111111111111", Integer.valueOf(1)); // VISA
-        knownCheckDigits.put("545454545454545", Integer.valueOf(4)); // MASTERCARD
-        knownCheckDigits.put("540400000000006", Integer.valueOf(8)); // MASTERCARD
-        knownCheckDigits.put("675964982643845", Integer.valueOf(3)); // MAESTRO
-        knownCheckDigits.put("679999010000000001", Integer.valueOf(9)); // MAESTRO
+        knownCheckDigits.put("37144963539843", Integer.valueOf(1)); // AMEX (371449635398431)
+        knownCheckDigits.put("3434343434343", Integer.valueOf(4)); // AMEX (34343434343434)
+        knownCheckDigits.put("401288888888188", Integer.valueOf(1)); // VISA (4012888888881881)
+        knownCheckDigits.put("411111111111111", Integer.valueOf(1)); // VISA (4111111111111111)
+        knownCheckDigits.put("545454545454545", Integer.valueOf(4)); // MASTERCARD (5454545454545454)
+        knownCheckDigits.put("540400000000006", Integer.valueOf(8)); // MASTERCARD (5404000000000068)
+        knownCheckDigits.put("675964982643845", Integer.valueOf(3)); // MAESTRO (6759649826438453)
+        knownCheckDigits.put("679999010000000001", Integer.valueOf(9)); // MAESTRO (6799990100000000019)
 
         for (final Entry<String, Integer> entry : knownCheckDigits.entrySet()) {
             final int checkDigit = Randoms.getCreditCardCheckDigit(entry.getKey());

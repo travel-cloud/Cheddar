@@ -244,9 +244,7 @@ public class Randoms {
         int returnValue;
         if (from > to) {
             throw new IllegalArgumentException(String.format("From (%d) must be less than to (%d)", from, to));
-        } else if (from == to) {
-            returnValue = from;
-        } else {
+        } else { // from <= to
             returnValue = from + Randoms.randomInt(to - from);
         }
         return returnValue;
