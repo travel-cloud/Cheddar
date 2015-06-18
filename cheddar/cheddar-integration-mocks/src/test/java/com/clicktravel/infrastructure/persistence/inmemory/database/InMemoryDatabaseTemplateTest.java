@@ -63,7 +63,7 @@ public class InMemoryDatabaseTemplateTest {
         itemConfigurations.add(stubParentItemConfiguration);
         itemConfigurations.add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantItem.class, "a"));
         itemConfigurations
-                .add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantTwoItem.class, "b"));
+        .add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantTwoItem.class, "b"));
         itemConfigurations.add(stubItemWithRangeConfiguration);
         databaseSchemaHolder = new DatabaseSchemaHolder(InMemoryDbDataGenerator.UNIT_TEST_SCHEMA_NAME,
                 itemConfigurations);
@@ -738,7 +738,7 @@ public class InMemoryDatabaseTemplateTest {
     }
 
     @Test
-    public void shoudNotSaveItem_withAlreadyExsitingUniqueConstraintValue() {
+    public void shoudNotSaveItem_withAlreadyExistingUniqueConstraintValue() {
         // Given
         final StubItem stubItem = dataGenerator.randomStubItem();
         final StubItem secondItem = dataGenerator.randomStubItem();
@@ -754,6 +754,38 @@ public class InMemoryDatabaseTemplateTest {
 
         databaseTemplate.create(stubItem);
         secondItem.setStringProperty(stubItemIndexAttributeValue);
+
+        // When
+        ItemConstraintViolationException actualException = null;
+
+        try {
+            databaseTemplate.create(secondItem);
+        } catch (final ItemConstraintViolationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+        assertEquals(stubItem, databaseTemplate.read(new ItemId(stubItem.getId()), stubItem.getClass()));
+    }
+
+    @Test
+    public void shoudNotSaveItem_withAlreadyExistingUniqueConstraintValueButDifferentCase() {
+        // Given
+        final StubItem stubItem = dataGenerator.randomStubItem();
+        final StubItem secondItem = dataGenerator.randomStubItem();
+        final String uniqueConstraintAttributeName = "stringProperty";
+        final String stubItemIndexAttributeValue = stubItem.getStringProperty();
+        final ItemConfiguration stubItemConfigurationWithUniqueConstratints = new ItemConfiguration(
+                stubItem.getClass(), "stubTable");
+        stubItemConfigurationWithUniqueConstratints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
+                uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstratints);
+        final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
+                databaseSchemaHolderWithUniqueConstraints);
+
+        databaseTemplate.create(stubItem);
+        secondItem.setStringProperty(stubItemIndexAttributeValue.toUpperCase());
 
         // When
         ItemConstraintViolationException actualException = null;
