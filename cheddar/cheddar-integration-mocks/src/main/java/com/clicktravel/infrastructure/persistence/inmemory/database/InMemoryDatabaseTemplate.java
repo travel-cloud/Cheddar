@@ -111,6 +111,10 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
         deleteUniqueConstraints(item);
     }
 
+    private String uniqueConstraintPropertyValue(final Object propertyValue) {
+        return String.valueOf(propertyValue).toUpperCase();
+    }
+
     private void createUniqueConstraints(final Item item) {
         final Class<? extends Item> itemClass = item.getClass();
         final String tableName = getItemTableName(itemClass);
@@ -126,11 +130,12 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 throw new IllegalStateException("Could not invoke read method", e);
             }
             if (propertyValue != null) {
-                final ItemId existingItemId = uniqueValues.get(propertyValue);
+                final String uniqueConstraintPropertyValue = uniqueConstraintPropertyValue(propertyValue);
+                final ItemId existingItemId = uniqueValues.get(uniqueConstraintPropertyValue);
                 if (existingItemId != null) {
                     throw new ItemConstraintViolationException(propertyName, "Already is use");
                 }
-                uniqueConstraints.get(uniqueConstraintKey).put((String) propertyValue, getItemId(item));
+                uniqueConstraints.get(uniqueConstraintKey).put(uniqueConstraintPropertyValue, getItemId(item));
             }
         }
     }
@@ -149,9 +154,10 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 throw new IllegalStateException("Could not invoke read method", e);
             }
             if (propertyValue != null) {
-                final ItemId itemId = uniqueValues.get(propertyValue);
+                final String uniqueConstraintPropertyValue = uniqueConstraintPropertyValue(propertyValue);
+                final ItemId itemId = uniqueValues.get(uniqueConstraintPropertyValue);
                 if (itemId.equals(getItemId(item))) {
-                    uniqueConstraints.get(uniqueConstraintKey).remove(propertyValue);
+                    uniqueConstraints.get(uniqueConstraintKey).remove(uniqueConstraintPropertyValue);
                 }
             }
         }
