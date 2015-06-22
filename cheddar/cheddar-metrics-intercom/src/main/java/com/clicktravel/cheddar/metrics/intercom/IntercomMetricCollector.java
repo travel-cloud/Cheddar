@@ -51,14 +51,23 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void createUser(final MetricUser user) {
-        createOrUpdateIntercomUser(user);
-
+        final User intercomUser = getIntercomUser(user);
+        intercomUser.setSignedUpAt(DateTime.now().getMillis() / 1000);
+        try {
+            User.create(intercomUser);
+        } catch (final Exception e) {
+            logger.debug("Error creating a Intercom user: " + intercomUser + " - " + e.getMessage());
+        }
     }
 
     @Override
     public void updateUser(final MetricUser user) {
-        createOrUpdateIntercomUser(user);
-
+        final User intercomUser = getIntercomUser(user);
+        try {
+            User.update(intercomUser);
+        } catch (final Exception e) {
+            logger.debug("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+        }
     }
 
     @Override
@@ -102,9 +111,9 @@ public class IntercomMetricCollector implements MetricCollector {
         }
     }
 
-    private void createOrUpdateIntercomUser(final MetricUser user) {
+    private User getIntercomUser(final MetricUser user) {
         if (user == null) {
-            return;
+            return null;
         }
 
         final User intercomUser = new User();
@@ -121,11 +130,7 @@ public class IntercomMetricCollector implements MetricCollector {
             intercomUser.addCompany(company);
         }
 
-        try {
-            User.create(intercomUser);
-        } catch (final Exception e) {
-            logger.debug("Error creating/updating a Intercom user: " + intercomUser + " - " + e.getMessage());
-        }
+        return intercomUser;
     }
 
     private void createOrUpdateIntercomCompany(final MetricOrganisation organisation) {
