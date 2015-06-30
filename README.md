@@ -73,7 +73,7 @@ Each bounded context is packaged as a standalone Java application. It can be dep
 
 ### Testing
 
-![Test Pyramid](http://googledrive.com/host/0B3KE77--Zs7eVHBUUkhBa0QzbU0/ "Test Pyramid"
+![Test Pyramid](http://googledrive.com/host/0B3KE77--Zs7eVHBUUkhBa0QzbU0/ "Test Pyramid")
  
 The [_Test Pyramid_](http://martinfowler.com/bliki/TestPyramid.html) shows categories of automated tests for a system. As we move up the pyramid, the tests increase in scope but decrease in number as each test has a higher maintenance cost. Typically [Junit](http://junit.org/) or [TestNG](http://testng.org/) is used for unit tests, individual or small groups of individual class. For service and end-to-end (e2e) tests, acceptance test tools such as [JBehave](http://jbehave.org/) or [Concordion](http://concordion.org/) would be used. Service tests focus on a single bounded context, whereas e2e tests are executed against the system as a whole.
 
