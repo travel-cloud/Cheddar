@@ -64,9 +64,18 @@ The adapter layer maps between data types present in the APIs and a _canonical d
 
 ### Event-driven architecture
 
-![Event-driven architecture diagram](https://googledrive.com/host/0B3KE77--Zs7eTjZ5MXlNM1RSN3c/ "Event-driven architecture")
+![Event-driven architecture diagram](http://googledrive.com/host/0B3KE77--Zs7eTjZ5MXlNM1RSN3c/ "Event-driven architecture")
 
 The bounded contexts are integrated using a loosely coupled event-driven architecture. The adapter layer supports this integration by implementing event messaging via SQS and SNS.
 
 ### Cheddar software stack
-Each bounded context is packaged as a standalone Java application, and should be deployed on a dedicated [AWS EC2](http://aws.amazon.com/ec2/) instance (groups of multiple EC2 instances for each application will be supported in future). [Grizzly](https://grizzly.java.net/) and [Jersey](https://jersey.java.net/) are used as the basis for the REST HTTP server application.  Cheddar provides a driver package for application clients (currently only Java is supported), but any client capable of consuming REST services can easily work with Cheddar applications.
+Each bounded context is packaged as a standalone Java application. It can be deployed on any number of [AWS EC2](http://aws.amazon.com/ec2/) instances according to scaling needs. [Grizzly](https://grizzly.java.net/) and [Jersey](https://jersey.java.net/) are used as the basis for the REST HTTP server application. Any client capable of consuming REST services can easily work with Cheddar applications.
+
+### Testing
+
+![Test Pyramid](http://googledrive.com/host/0B3KE77--Zs7eVHBUUkhBa0QzbU0/ "Test Pyramid")
+ 
+The [_Test Pyramid_](http://martinfowler.com/bliki/TestPyramid.html) shows categories of automated tests for a system. As we move up the pyramid, the tests increase in scope but decrease in number as each test has a higher maintenance cost. Typically [Junit](http://junit.org/) or [TestNG](http://testng.org/) is used for unit testing of individual or small groups of classes. For service and end-to-end (e2e) tests, acceptance test tools such as [JBehave](http://jbehave.org/) or [Concordion](http://concordion.org/) would be used. Service tests focus on a single bounded context, whereas e2e tests are executed against the system as a whole.
+
+#### Service testing support
+Cheddar has explicit support for in-process [service testing](http://martinfowler.com/articles/microservice-testing/). All services external to the service under test are replaced by [test doubles](http://www.martinfowler.com/bliki/TestDouble.html) which serve to isolate the service under test. Cheddar includes test doubles of common AWS services; DynamoDB, SQS, SNS, S3 and CloudSearch. These are simple in-process implementations which act as substitutes for the real external services. Tests have in-process access to the state of the test doubles for easy state set-up and test verification. Service tests are executed against the application directly, which is configured using [Spring Test](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/testing.html) in a [Jersey Test](https://jersey.java.net/documentation/latest/test-framework.html) container.

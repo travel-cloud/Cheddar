@@ -307,12 +307,20 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         if (!previousItemAttributeMap.get(VERSION_ATTRIBUTE).getN().equals(String.valueOf(item.getVersion()))) {
             throw new ConditionalCheckFailedException("Version attribute has changed: Conflict!");
         }
+        final Map<String, AttributeValue> updateItemAttributeMap = getAttributeMap(item, itemConfiguration,
+                item.getVersion());
         final Collection<String> updatedProperties = getUpdateProperties(previousItemAttributeMap,
-                getAttributeMap(item, itemConfiguration, item.getVersion()));
+                updateItemAttributeMap);
         final Collection<UniqueConstraint> updatedUniqueConstraints = new HashSet<>();
         for (final UniqueConstraint uniqueConstraint : itemConfiguration.uniqueConstraints()) {
-            if (updatedProperties.contains(uniqueConstraint.propertyDescriptor().getName())) {
-                updatedUniqueConstraints.add(uniqueConstraint);
+            final String propertyName = uniqueConstraint.propertyDescriptor().getName();
+            if (updatedProperties.contains(propertyName)) {
+                final AttributeValue previousAttributeValue = previousItemAttributeMap.get(propertyName);
+                final AttributeValue updatedAttributeValue = updateItemAttributeMap.get(propertyName);
+                if (previousAttributeValue == null || updatedAttributeValue == null
+                        || !previousAttributeValue.getS().equalsIgnoreCase(updatedAttributeValue.getS())) {
+                    updatedUniqueConstraints.add(uniqueConstraint);
+                }
             }
         }
         return updatedUniqueConstraints;
@@ -440,7 +448,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             } while (lastEvaluatedKey != null);
 
         } else {
-            logger.warn("Performing table scan with query:" + query);
+            logger.debug("Performing table scan with query: " + query);
             do {
                 final ScanRequest scanRequest = new ScanRequest().withTableName(tableName).withScanFilter(conditions)
                         .withExclusiveStartKey(lastEvaluatedKey);
