@@ -242,7 +242,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             }
 
             final Iterator<com.amazonaws.services.dynamodbv2.document.Item> iterator = queryOutcome.iterator();
-            while (iterator.hasNext()) {
+            while (iterator != null && iterator.hasNext()) {
                 final com.amazonaws.services.dynamodbv2.document.Item item = iterator.next();
                 totalItems.add(stringToItem(item.toJSON(), itemClass));
             }
