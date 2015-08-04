@@ -229,10 +229,17 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
         if (itemConfiguration.hasIndexOn(query.getAttributeName())
                 && query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
-            final Index index = table.getIndex(query.getAttributeName() + "_idx");
 
             final QuerySpec querySpec = generateQuerySpec(query);
-            final ItemCollection<QueryOutcome> queryOutcome = index.query(querySpec);
+            final ItemCollection<QueryOutcome> queryOutcome;
+
+            if (itemConfiguration.primaryKeyDefinition().propertyName().equals(query.getAttributeName())) {
+                // if the query is for the has then call query on table
+                queryOutcome = table.query(querySpec);
+            } else {
+                final Index index = table.getIndex(query.getAttributeName() + "_idx");
+                queryOutcome = index.query(querySpec);
+            }
 
             final Iterator<com.amazonaws.services.dynamodbv2.document.Item> iterator = queryOutcome.iterator();
             while (iterator.hasNext()) {
