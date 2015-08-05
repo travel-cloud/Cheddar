@@ -176,14 +176,14 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
     }
 
     /**
-     * Checks the presence of a unique constraint for the given item property
+     * Checks the presence of a matching unique constraint for the given item property
      * 
      * @param item The Item for which to check unique constraints
      * @param propertyName The name of the property for which the unique constraint should be checked
      * @param propertyValue The value of the property which needs to be checked for presence of unique constraint
      * @return
      */
-    public boolean hasUniqueConstraint(final Item item, final String propertyName, final String propertyValue) {
+    public boolean hasMatchingUniqueConstraint(final Item item, final String propertyName, final String propertyValue) {
         final Class<? extends Item> itemClass = item.getClass();
         final String tableName = getItemTableName(itemClass);
         final Map<String, ItemId> uniqueConstraintsForProperty = uniqueConstraints.get(newUniqueConstraintKey(

@@ -731,7 +731,7 @@ public class InMemoryDatabaseTemplateTest {
         final StubItem uniqueStubItem = new StubItem();
         uniqueStubItem.setId(randomId());
         uniqueStubItem.setStringProperty(stubItemIndexAttributeValue);
-        assertTrue(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
                 stubItem.getStringProperty()));
     }
 
@@ -765,7 +765,7 @@ public class InMemoryDatabaseTemplateTest {
         // Then
         assertNotNull(actualException);
         assertEquals(stubItem, databaseTemplate.read(new ItemId(stubItem.getId()), stubItem.getClass()));
-        assertTrue(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
                 stubItem.getStringProperty()));
     }
 
@@ -799,7 +799,7 @@ public class InMemoryDatabaseTemplateTest {
         // Then
         assertNotNull(actualException);
         assertEquals(stubItem, databaseTemplate.read(new ItemId(stubItem.getId()), stubItem.getClass()));
-        assertTrue(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
                 stubItem.getStringProperty()));
     }
 
@@ -834,7 +834,7 @@ public class InMemoryDatabaseTemplateTest {
         final StubItem uniqueStubItem = new StubItem();
         uniqueStubItem.setId(randomId());
         uniqueStubItem.setStringProperty(propertyValue);
-        assertTrue(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
                 stubItem.getStringProperty()));
     }
 
@@ -863,7 +863,8 @@ public class InMemoryDatabaseTemplateTest {
         final StubItem uniqueStubItem = new StubItem();
         uniqueStubItem.setId(randomId());
         uniqueStubItem.setStringProperty(updatedPropertyValue);
-        assertTrue(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName, updatedPropertyValue));
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                updatedPropertyValue));
     }
 
     @Test
@@ -896,9 +897,9 @@ public class InMemoryDatabaseTemplateTest {
 
         // Then
         assertNotNull(actualException);
-        assertTrue(databaseTemplate.hasUniqueConstraint(existingStubItem, uniqueConstraintAttributeName,
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(existingStubItem, uniqueConstraintAttributeName,
                 alreadyExistingUniqueConstraint));
-        assertTrue(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
                 originalStubItemContstraintValue));
     }
 
@@ -925,7 +926,7 @@ public class InMemoryDatabaseTemplateTest {
         final StubItem uniqueStubItem = new StubItem();
         uniqueStubItem.setId(randomId());
         uniqueStubItem.setStringProperty(existingUniqueConstraint);
-        assertFalse(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+        assertFalse(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
                 existingUniqueConstraint));
     }
 
