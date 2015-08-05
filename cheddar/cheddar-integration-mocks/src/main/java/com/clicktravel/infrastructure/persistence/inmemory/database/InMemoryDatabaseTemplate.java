@@ -183,7 +183,7 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
      * @param propertyValue The value of the property which needs to be checked for presence of unique constraint
      * @return
      */
-    public boolean hasMatchingUniqueConstraint(final Item item, final String propertyName, final String propertyValue) {
+    boolean hasMatchingUniqueConstraint(final Item item, final String propertyName, final String propertyValue) {
         final Class<? extends Item> itemClass = item.getClass();
         final String tableName = getItemTableName(itemClass);
         final Map<String, ItemId> uniqueConstraintsForProperty = uniqueConstraints.get(newUniqueConstraintKey(
