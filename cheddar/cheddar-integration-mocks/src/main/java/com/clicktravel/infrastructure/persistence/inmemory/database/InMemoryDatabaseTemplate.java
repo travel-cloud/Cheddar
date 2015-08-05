@@ -97,7 +97,12 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                     + oldItem.getVersion() + "]");
         }
         deleteUniqueConstraints(oldItem);
-        createUniqueConstraints(item);
+        try {
+            createUniqueConstraints(item);
+        } catch (final ItemConstraintViolationException e) {
+            createUniqueConstraints(oldItem);
+            throw e;
+        }
         item.setVersion(item.getVersion() + 1);
         getItemMap(tableName).put(itemId, getSerializedItem(itemId.value(), item));
         return item;
@@ -119,6 +124,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
         final Class<? extends Item> itemClass = item.getClass();
         final String tableName = getItemTableName(itemClass);
         final Collection<PropertyDescriptor> uniqueConstraintProperties = getUniqueConstraintProperties(itemClass);
+        final Map<String, String> newConstraints = new HashMap<>();
+        final ItemId itemId = getItemId(item);
         for (final PropertyDescriptor propertyDescriptor : uniqueConstraintProperties) {
             final String propertyName = propertyDescriptor.getName();
             final String uniqueConstraintKey = newUniqueConstraintKey(tableName, propertyName);
@@ -135,8 +142,13 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 if (existingItemId != null) {
                     throw new ItemConstraintViolationException(propertyName, "Already is use");
                 }
-                uniqueConstraints.get(uniqueConstraintKey).put(uniqueConstraintPropertyValue, getItemId(item));
+                newConstraints.put(uniqueConstraintKey, uniqueConstraintPropertyValue);
             }
+        }
+        for (final Entry<String, String> entry : newConstraints.entrySet()) {
+            final String uniqueConstraintKey = entry.getKey();
+            final String uniqueConstraintPropertyValue = entry.getValue();
+            uniqueConstraints.get(uniqueConstraintKey).put(uniqueConstraintPropertyValue, itemId);
         }
     }
 
@@ -161,6 +173,28 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 }
             }
         }
+    }
+
+    /**
+     * Checks the presence of a matching unique constraint for the given item property
+     * 
+     * @param item The Item for which to check unique constraints
+     * @param propertyName The name of the property for which the unique constraint should be checked
+     * @param propertyValue The value of the property which needs to be checked for presence of unique constraint
+     * @return
+     */
+    boolean hasMatchingUniqueConstraint(final Item item, final String propertyName, final String propertyValue) {
+        final Class<? extends Item> itemClass = item.getClass();
+        final String tableName = getItemTableName(itemClass);
+        final Map<String, ItemId> uniqueConstraintsForProperty = uniqueConstraints.get(newUniqueConstraintKey(
+                tableName, propertyName));
+        final ItemId itemId = getItemId(item);
+        for (final Entry<String, ItemId> entry : uniqueConstraintsForProperty.entrySet()) {
+            if (entry.getValue().equals(itemId)) {
+                return entry.getKey().equals(propertyValue.toUpperCase());
+            }
+        }
+        return false;
     }
 
     @Override

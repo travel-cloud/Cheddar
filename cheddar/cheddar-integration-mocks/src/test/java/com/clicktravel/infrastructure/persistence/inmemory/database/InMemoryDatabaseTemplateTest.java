@@ -19,7 +19,10 @@ package com.clicktravel.infrastructure.persistence.inmemory.database;
 import static com.clicktravel.common.random.Randoms.*;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.util.*;
@@ -705,7 +708,7 @@ public class InMemoryDatabaseTemplateTest {
     }
 
     @Test
-    public void shoudSaveItemAndItsUnqiueConstraints_withItemWithUniqueConstraint() {
+    public void shoudSaveItemAndItsUniqueConstraints_withItemWithUniqueConstraint() {
         // Given
         final StubItem stubItem = dataGenerator.randomStubItem();
         final String uniqueConstraintAttributeName = "stringProperty";
@@ -728,13 +731,8 @@ public class InMemoryDatabaseTemplateTest {
         final StubItem uniqueStubItem = new StubItem();
         uniqueStubItem.setId(randomId());
         uniqueStubItem.setStringProperty(stubItemIndexAttributeValue);
-        ItemConstraintViolationException actualException = null;
-        try {
-            databaseTemplate.create(uniqueStubItem);
-        } catch (final ItemConstraintViolationException e) {
-            actualException = e;
-        }
-        assertNotNull(actualException);
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                stubItem.getStringProperty()));
     }
 
     @Test
@@ -767,6 +765,8 @@ public class InMemoryDatabaseTemplateTest {
         // Then
         assertNotNull(actualException);
         assertEquals(stubItem, databaseTemplate.read(new ItemId(stubItem.getId()), stubItem.getClass()));
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                stubItem.getStringProperty()));
     }
 
     @Test
@@ -799,66 +799,12 @@ public class InMemoryDatabaseTemplateTest {
         // Then
         assertNotNull(actualException);
         assertEquals(stubItem, databaseTemplate.read(new ItemId(stubItem.getId()), stubItem.getClass()));
-    }
-
-    @Test
-    public void shouldNotUpdateItem_withItemVersionNotEqualToOldItem() {
-        // Given
-        final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(databaseSchemaHolder);
-        final StubItem stubItem = dataGenerator.randomStubItem();
-
-        databaseTemplate.create(stubItem);
-
-        stubItem.setVersion(randomLong());
-
-        // When
-        IllegalAccessError actualException = null;
-        try {
-            databaseTemplate.update(stubItem);
-        } catch (final IllegalAccessError e) {
-            actualException = e;
-        }
-
-        // Then
-        assertNotNull(actualException);
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                stubItem.getStringProperty()));
     }
 
     @Test
     public void shouldUpdateItemAndUniqueConstraints_withUpdatedItemWithUnchangedUniqueConstraint() {
-        // Given
-        final StubItem stubItem = dataGenerator.randomStubItem();
-        final String uniqueConstraintAttributeName = "stringProperty";
-        final String updatedPropertyValue = randomString();
-        final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
-                "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
-        final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
-                databaseSchemaHolderWithUniqueConstraints);
-
-        databaseTemplate.create(stubItem);
-        stubItem.setStringProperty(updatedPropertyValue);
-
-        // When
-        final StubItem updatedItem = databaseTemplate.update(stubItem);
-
-        // Then
-        assertNotNull(updatedItem);
-        final StubItem uniqueStubItem = new StubItem();
-        uniqueStubItem.setId(randomId());
-        uniqueStubItem.setStringProperty(updatedPropertyValue);
-        ItemConstraintViolationException actualException = null;
-        try {
-            databaseTemplate.create(uniqueStubItem);
-        } catch (final ItemConstraintViolationException e) {
-            actualException = e;
-        }
-        assertNotNull(actualException);
-    }
-
-    @Test
-    public void shouldUpdateItemAndUniqueConstraint_withItemWithUpdatedUniqueConstraint() {
         // Given
         final StubItem stubItem = dataGenerator.randomStubItem();
         final String propertyValue = stubItem.getStringProperty();
@@ -888,21 +834,46 @@ public class InMemoryDatabaseTemplateTest {
         final StubItem uniqueStubItem = new StubItem();
         uniqueStubItem.setId(randomId());
         uniqueStubItem.setStringProperty(propertyValue);
-        ItemConstraintViolationException actualException = null;
-        try {
-            databaseTemplate.create(uniqueStubItem);
-        } catch (final ItemConstraintViolationException e) {
-            actualException = e;
-        }
-        assertNotNull(actualException);
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                stubItem.getStringProperty()));
+    }
+
+    @Test
+    public void shouldUpdateItemAndUniqueConstraint_withItemWithUpdatedUniqueConstraint() {
+        // Given
+        final StubItem stubItem = dataGenerator.randomStubItem();
+        final String uniqueConstraintAttributeName = "stringProperty";
+        final String updatedPropertyValue = randomString();
+        final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
+                "stubTable");
+        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
+                uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
+                databaseSchemaHolderWithUniqueConstraints);
+
+        databaseTemplate.create(stubItem);
+        stubItem.setStringProperty(updatedPropertyValue);
+
+        // When
+        final StubItem updatedItem = databaseTemplate.update(stubItem);
+
+        // Then
+        assertNotNull(updatedItem);
+        final StubItem uniqueStubItem = new StubItem();
+        uniqueStubItem.setId(randomId());
+        uniqueStubItem.setStringProperty(updatedPropertyValue);
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                updatedPropertyValue));
     }
 
     @Test
     public void shouldNotUpdateItemAndUniqueConstraint_withItemExistingUpdatedUniqueConstraintValue() {
         // Given
         final StubItem stubItem = dataGenerator.randomStubItem();
+        final String originalStubItemContstraintValue = stubItem.getStringProperty();
         final StubItem existingStubItem = dataGenerator.randomStubItem();
-        final String alreadyExsitingUniqueConstraint = existingStubItem.getStringProperty();
+        final String alreadyExistingUniqueConstraint = existingStubItem.getStringProperty();
         final String uniqueConstraintAttributeName = "stringProperty";
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
@@ -914,7 +885,7 @@ public class InMemoryDatabaseTemplateTest {
 
         databaseTemplate.create(existingStubItem);
         databaseTemplate.create(stubItem);
-        stubItem.setStringProperty(alreadyExsitingUniqueConstraint);
+        stubItem.setStringProperty(alreadyExistingUniqueConstraint);
 
         // When
         ItemConstraintViolationException actualException = null;
@@ -926,6 +897,10 @@ public class InMemoryDatabaseTemplateTest {
 
         // Then
         assertNotNull(actualException);
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(existingStubItem, uniqueConstraintAttributeName,
+                alreadyExistingUniqueConstraint));
+        assertTrue(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                originalStubItemContstraintValue));
     }
 
     @Test
@@ -951,13 +926,8 @@ public class InMemoryDatabaseTemplateTest {
         final StubItem uniqueStubItem = new StubItem();
         uniqueStubItem.setId(randomId());
         uniqueStubItem.setStringProperty(existingUniqueConstraint);
-        ItemConstraintViolationException actualException = null;
-        try {
-            databaseTemplate.create(uniqueStubItem);
-        } catch (final ItemConstraintViolationException e) {
-            actualException = e;
-        }
-        assertNull(actualException);
+        assertFalse(databaseTemplate.hasMatchingUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                existingUniqueConstraint));
     }
 
     @Test
@@ -979,6 +949,28 @@ public class InMemoryDatabaseTemplateTest {
         try {
             databaseTemplate.fetchUnique(query, stubItem.getClass());
         } catch (final NonUniqueResultException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+    }
+
+    @Test
+    public void shouldNotUpdateItem_withItemVersionNotEqualToOldItem() {
+        // Given
+        final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(databaseSchemaHolder);
+        final StubItem stubItem = dataGenerator.randomStubItem();
+
+        databaseTemplate.create(stubItem);
+
+        stubItem.setVersion(randomLong());
+
+        // When
+        IllegalAccessError actualException = null;
+        try {
+            databaseTemplate.update(stubItem);
+        } catch (final IllegalAccessError e) {
             actualException = e;
         }
 
@@ -1009,7 +1001,7 @@ public class InMemoryDatabaseTemplateTest {
         final Collection<SequenceKeyGenerator> sequnceKeyGeneratorCollection = new ArrayList<>();
         final Collection<GeneratedKeyHolder> generatedKeyHolderCollection = new ArrayList<>();
         int totalKeyCount = 0;
-        for (int i = 0; i < (randomInt(9) + 1); i++) {
+        for (int i = 0; i < randomInt(9) + 1; i++) {
             final int keyCount = 1 + Randoms.randomInt(100);
             totalKeyCount += keyCount;
             final SequenceKeyGenerator sequenceKeyGenerator = new SequenceKeyGenerator(randomString(), keyCount);
