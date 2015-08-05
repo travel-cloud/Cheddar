@@ -21,6 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -41,18 +42,21 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.DatabaseSchemaHolder;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.IndexDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.ItemConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.Condition;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
 import com.clicktravel.common.random.Randoms;
 
 @RunWith(PowerMockRunner.class)
@@ -74,7 +78,7 @@ public class DynamoDocumentStoreTemplateTest {
         mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
         mockDynamoDBClient = mock(DynamoDB.class);
         whenNew(DynamoDB.class).withParameterTypes(AmazonDynamoDB.class).withArguments(eq(mockAmazonDynamoDbClient))
-        .thenReturn(mockDynamoDBClient);
+                .thenReturn(mockDynamoDBClient);
     }
 
     @SuppressWarnings("deprecation")
@@ -112,6 +116,64 @@ public class DynamoDocumentStoreTemplateTest {
         assertEquals(stubItem.getStringProperty(), returnedItem.getStringProperty());
         assertEquals(stubItem.getStringProperty2(), returnedItem.getStringProperty2());
         assertEquals(stubItem.getStringSetProperty(), returnedItem.getStringSetProperty());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void shouldQueryTable() {
+        // Given
+        final ItemId itemId = new ItemId(randomId());
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+
+        final Table mockTable = mock(Table.class);
+        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+
+        final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
+                mockDatabaseSchemaHolder);
+        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
+
+        final ItemCollection<QueryOutcome> outcome = mock(ItemCollection.class);
+        when(mockTable.query(any(QuerySpec.class))).thenReturn(outcome);
+        // when
+        dynamoDocumentStoreTemplate.fetch(new AttributeQuery("id", new Condition(Operators.EQUALS, itemId.value())),
+                StubItem.class);
+        // then
+        verify(mockTable.query(any(QuerySpec.class)));
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void shouldQueryIndex() {
+        // Given
+        final ItemId itemId = new ItemId(randomId());
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        itemConfiguration.registerIndexes(Arrays.asList(new IndexDefinition("stringProperty")));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+
+        final Table mockTable = mock(Table.class);
+        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+
+        final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
+                mockDatabaseSchemaHolder);
+        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
+
+        final Index mockIndex = mock(Index.class);
+        when(mockTable.getIndex(anyString())).thenReturn(mockIndex);
+
+        final ItemCollection<QueryOutcome> outcome = mock(ItemCollection.class);
+        when(mockIndex.query(any(QuerySpec.class))).thenReturn(outcome);
+
+        // when
+        dynamoDocumentStoreTemplate.fetch(
+                new AttributeQuery("stringProperty", new Condition(Operators.EQUALS, itemId.value())), StubItem.class);
+
+        // then
+        verify(mockIndex.query(any(QuerySpec.class)));
     }
 
     @SuppressWarnings("deprecation")
