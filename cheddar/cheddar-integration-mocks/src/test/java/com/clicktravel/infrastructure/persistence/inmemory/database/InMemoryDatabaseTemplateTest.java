@@ -870,6 +870,7 @@ public class InMemoryDatabaseTemplateTest {
     public void shouldNotUpdateItemAndUniqueConstraint_withItemExistingUpdatedUniqueConstraintValue() {
         // Given
         final StubItem stubItem = dataGenerator.randomStubItem();
+        final String originalStubItemContstraintValue = stubItem.getStringProperty();
         final StubItem existingStubItem = dataGenerator.randomStubItem();
         final String alreadyExistingUniqueConstraint = existingStubItem.getStringProperty();
         final String uniqueConstraintAttributeName = "stringProperty";
@@ -897,6 +898,8 @@ public class InMemoryDatabaseTemplateTest {
         assertNotNull(actualException);
         assertTrue(databaseTemplate.hasUniqueConstraint(existingStubItem, uniqueConstraintAttributeName,
                 alreadyExistingUniqueConstraint));
+        assertTrue(databaseTemplate.hasUniqueConstraint(stubItem, uniqueConstraintAttributeName,
+                originalStubItemContstraintValue));
     }
 
     @Test
