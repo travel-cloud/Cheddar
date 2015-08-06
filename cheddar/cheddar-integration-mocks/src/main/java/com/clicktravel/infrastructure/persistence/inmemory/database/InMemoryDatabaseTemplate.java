@@ -140,7 +140,7 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 final String uniqueConstraintPropertyValue = uniqueConstraintPropertyValue(propertyValue);
                 final ItemId existingItemId = uniqueValues.get(uniqueConstraintPropertyValue);
                 if (existingItemId != null) {
-                    throw new ItemConstraintViolationException(propertyName, "Already is use");
+                    throw new ItemConstraintViolationException(propertyName, "Already in use");
                 }
                 newConstraints.put(uniqueConstraintKey, uniqueConstraintPropertyValue);
             }

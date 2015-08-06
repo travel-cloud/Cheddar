@@ -64,7 +64,6 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStatus() {
         // Test if REST requests other than this one are in progress
