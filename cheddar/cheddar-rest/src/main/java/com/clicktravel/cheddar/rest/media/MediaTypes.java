@@ -16,8 +16,12 @@
  */
 package com.clicktravel.cheddar.rest.media;
 
+import javax.ws.rs.core.MediaType;
+
 public class MediaTypes {
 
     public static final String CDM_V1_JSON = "application/vnd.clicktravel.schema-v1+json";
+
+    public static final MediaType CDM_V1_JSON_TYPE = new MediaType("application", "vnd.clicktravel.schema-v1+json");
 
 }
