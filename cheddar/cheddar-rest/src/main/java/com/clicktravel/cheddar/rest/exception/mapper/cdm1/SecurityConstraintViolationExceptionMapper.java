@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.rest.exception.mapper;
+package com.clicktravel.cheddar.rest.exception.mapper.cdm1;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -24,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.application.security.SecurityConstraintViolationException;
+import com.clicktravel.schema.canonical.data.model.v1.common.Error;
+import com.clicktravel.schema.canonical.data.model.v1.common.ErrorResponse;
 
 @Provider
 public class SecurityConstraintViolationExceptionMapper implements
@@ -34,7 +36,11 @@ public class SecurityConstraintViolationExceptionMapper implements
     @Override
     public Response toResponse(final SecurityConstraintViolationException exception) {
         logger.debug(exception.getMessage());
-        return Response.status(Response.Status.FORBIDDEN).build();
+        final ErrorResponse errorResponse = new ErrorResponse();
+        final Error error = new Error();
+        error.setDescription(exception.getMessage());
+        errorResponse.getErrors().add(error);
+        return Response.status(Response.Status.FORBIDDEN).entity(errorResponse).build();
     }
 
 }
