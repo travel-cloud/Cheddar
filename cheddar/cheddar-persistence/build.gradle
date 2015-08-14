@@ -1,5 +1,4 @@
 dependencies {
-	compile 'com.thoughtworks.xstream:xstream:1.4.5'
     compile project(':commons:commons-lang')
     
     testCompile 'junit:junit:4.11'

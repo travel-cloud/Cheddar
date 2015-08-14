@@ -1,0 +1,7 @@
+apply from: '../../test.gradle'
+
+dependencies {
+    compile project(':cheddar:cheddar-metrics')
+    compile project(':commons:commons-lang')
+    compile 'io.intercom:intercom-java:1.1.1'
+}

@@ -14,23 +14,27 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.application.pending.result;
 
-class SimpleResult implements MethodResult {
+/**
+ * Container for value returned by {@link PendingResult}
+ */
+class SimpleResult implements Result {
 
-    private final Object result;
+    private final Object value;
 
-    public SimpleResult(final Object result) {
-        this.result = result;
+    public SimpleResult(final Object value) {
+        this.value = value;
     }
 
     @Override
-    public Object getReturnValue() {
-        return result;
+    public Object getValue() {
+        return value;
     }
 
     @Override
     public String toString() {
-        return "SimpleResult; result:[" + result + "]";
+        return "SimpleResult; value:[" + value + "]";
     }
+
 }

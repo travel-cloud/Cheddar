@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.application.pending.result;
 
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
@@ -24,26 +24,25 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-public class ContinuationTest {
+public class PendingResultTest {
 
     @Test
-    public void shouldReturnMethodResult_whenPollAndOffer() {
+    public void shouldReturnResult_whenPollAndOffer() throws Exception {
         // Given
-        final MethodResult mockMethodResult = mock(MethodResult.class);
-        final Continuation continuation = new Continuation();
+        final Result mockResult = mock(Result.class);
+        final PendingResult pendingResult = new PendingResult();
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                continuation.setMethodResult(mockMethodResult);
-                continuation.offerMethodResult();
+                pendingResult.offerResult(mockResult);
             }
         };
         Executors.newSingleThreadScheduledExecutor().schedule(runnable, 200, TimeUnit.MILLISECONDS);
 
         // When
-        final MethodResult actualResult = continuation.pollForMethodResult();
+        final Result actualResult = pendingResult.pollResult();
 
         // Then
-        assertSame(mockMethodResult, actualResult);
+        assertSame(mockResult, actualResult);
     }
 }

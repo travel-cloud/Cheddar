@@ -14,10 +14,18 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.metrics;
 
-interface MethodResult {
+public interface MetricCollector {
 
-    Object getReturnValue() throws Exception;
+    void createOrganisation(MetricOrganisation metricOrganisation);
+
+    void updateOrganisation(MetricOrganisation metricOrganisation);
+
+    void createUser(MetricUser user);
+
+    void updateUser(MetricUser user);
+
+    void sendMetric(Metric metric);
 
 }

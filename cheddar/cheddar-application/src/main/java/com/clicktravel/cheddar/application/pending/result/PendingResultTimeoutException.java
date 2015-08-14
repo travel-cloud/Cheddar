@@ -14,13 +14,13 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.application.pending.result;
 
-public class ContinuationException extends RuntimeException {
+public class PendingResultTimeoutException extends RuntimeException {
 
-    private static final long serialVersionUID = -202899174951885943L;
+    private static final long serialVersionUID = -8242439000690526767L;
 
-    public ContinuationException(final String message) {
-        super(message);
+    public PendingResultTimeoutException() {
+        super();
     }
 }

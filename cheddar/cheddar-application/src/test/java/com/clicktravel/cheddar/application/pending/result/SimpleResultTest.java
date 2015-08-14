@@ -14,23 +14,24 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.application.continuation;
+package com.clicktravel.cheddar.application.pending.result;
 
-class ExceptionResult implements MethodResult {
+import static org.junit.Assert.assertSame;
 
-    private final Exception exception;
+import org.junit.Test;
 
-    public ExceptionResult(final Exception exception) {
-        this.exception = exception;
-    }
+public class SimpleResultTest {
 
-    @Override
-    public Object getReturnValue() throws Exception {
-        throw exception;
-    }
+    @Test
+    public void shouldReturnValue() {
+        // Given
+        final Object value = new Object();
+        final SimpleResult simpleResult = new SimpleResult(value);
 
-    @Override
-    public String toString() {
-        return "ExceptionResult; exception:[" + exception.getMessage() + "]";
+        // When
+        final Object returnedValue = simpleResult.getValue();
+
+        // Then
+        assertSame(value, returnedValue);
     }
 }

@@ -65,7 +65,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     /**
      * Simple method for splitting a list into a list of smaller lists of the supplied length
-     *
+     * 
      * @param list
      * @param length
      * @return
@@ -229,18 +229,25 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
         if (itemConfiguration.hasIndexOn(query.getAttributeName())
                 && query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
-            final Index index = table.getIndex(query.getAttributeName() + "_idx");
 
             final QuerySpec querySpec = generateQuerySpec(query);
-            final ItemCollection<QueryOutcome> queryOutcome = index.query(querySpec);
+            final ItemCollection<QueryOutcome> queryOutcome;
+
+            if (itemConfiguration.primaryKeyDefinition().propertyName().equals(query.getAttributeName())) {
+                // if the query is for the has then call query on table
+                queryOutcome = table.query(querySpec);
+            } else {
+                final Index index = table.getIndex(query.getAttributeName() + "_idx");
+                queryOutcome = index.query(querySpec);
+            }
 
             final Iterator<com.amazonaws.services.dynamodbv2.document.Item> iterator = queryOutcome.iterator();
-            while (iterator.hasNext()) {
+            while (iterator != null && iterator.hasNext()) {
                 final com.amazonaws.services.dynamodbv2.document.Item item = iterator.next();
                 totalItems.add(stringToItem(item.toJSON(), itemClass));
             }
         } else {
-            logger.warn("Performing table scan");
+            logger.debug("Performing table scan with query: " + query);
             ScanSpec scanSpec = null;
             try {
                 scanSpec = generateScanSpec(query, itemClass);

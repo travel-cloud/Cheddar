@@ -198,21 +198,23 @@ public abstract class AbstractDynamoDbTemplate extends AbstractDatabaseTemplate 
             if (constraintPropertyDescriptors.contains(uniqueConstraintPropertyDescriptor)) {
                 final AttributeValue uniqueConstraintAttributeValue = DynamoDbPropertyMarshaller.getValue(item,
                         uniqueConstraintPropertyDescriptor);
-                if (uniqueConstraintAttributeValue.getS() != null) {
-                    uniqueConstraintAttributeValue.setS(uniqueConstraintAttributeValue.getS().toUpperCase());
-                }
-                final Map<String, AttributeValue> key = new HashMap<>();
-                key.put("property", new AttributeValue(uniqueConstraintPropertyName));
-                key.put("value", uniqueConstraintAttributeValue);
-                final String indexTableName = databaseSchemaHolder.schemaName() + "-indexes."
-                        + itemConfiguration.tableName();
-                final DeleteItemRequest itemRequest = new DeleteItemRequest().withTableName(indexTableName)
-                        .withKey(key);
-                try {
-                    amazonDynamoDbClient.deleteItem(itemRequest);
-                } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException(
-                            "Failed while attempting to perform DynamoDb Delete (for unique constraints)", e);
+                if (uniqueConstraintAttributeValue != null) {
+                    if (uniqueConstraintAttributeValue.getS() != null) {
+                        uniqueConstraintAttributeValue.setS(uniqueConstraintAttributeValue.getS().toUpperCase());
+                    }
+                    final Map<String, AttributeValue> key = new HashMap<>();
+                    key.put("property", new AttributeValue(uniqueConstraintPropertyName));
+                    key.put("value", uniqueConstraintAttributeValue);
+                    final String indexTableName = databaseSchemaHolder.schemaName() + "-indexes."
+                            + itemConfiguration.tableName();
+                    final DeleteItemRequest itemRequest = new DeleteItemRequest().withTableName(indexTableName)
+                            .withKey(key);
+                    try {
+                        amazonDynamoDbClient.deleteItem(itemRequest);
+                    } catch (final AmazonServiceException e) {
+                        throw new PersistenceResourceFailureException(
+                                "Failed while attempting to perform DynamoDb Delete (for unique constraints)", e);
+                    }
                 }
             }
         }
