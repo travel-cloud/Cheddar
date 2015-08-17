@@ -16,6 +16,12 @@
  */
 package com.clicktravel.cheddar.server.rest;
 
+import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.models.Info;
+import io.swagger.models.Swagger;
+import io.swagger.models.auth.OAuth2Definition;
+import io.swagger.models.parameters.HeaderParameter;
+
 import java.io.IOException;
 import java.net.URI;
 
@@ -31,11 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.server.rest.resource.config.RestResourceConfig;
-import com.wordnik.swagger.jaxrs.config.BeanConfig;
-import com.wordnik.swagger.models.Info;
-import com.wordnik.swagger.models.Swagger;
-import com.wordnik.swagger.models.auth.OAuth2Definition;
-import com.wordnik.swagger.models.parameters.HeaderParameter;
 
 /**
  * HTTP server which exposes JAX-RS resources
@@ -73,16 +74,20 @@ public class RestServer {
         final String localApplicationGatewayEndpiont = "http://localhost:80";
 
         // The main scanner class used to scan the classes for swagger + jax-rs annoatations
-        final BeanConfig beanConfig = new BeanConfig();
+        final io.swagger.jaxrs.config.BeanConfig beanConfig = new BeanConfig();
         // Could not get the try base path to work with swagger 2.0 as it is matched by contains in
         // 'com.wordnik.swagger.jaxrs.config.BeanConfig.classes')'
         beanConfig.setResourcePackage("com.clicktravel.services,com.clicktravel.services.iam.rest.resource");
         // This affects the path that is generated in each resource adapter code so setting it to "" allows the correct
         // paths to be appended
-        beanConfig.setBasePath("");
+        beanConfig.setHost(baseUri.getHost());
+        beanConfig.setSchemes(new String[] { "https" });
+        beanConfig.setBasePath("/");
         final Info info = new Info();
         info.setVersion("1.0.0");
         beanConfig.setInfo(info);
+        beanConfig.setTitle("IAM Swagger Specification");
+        beanConfig.setVersion("1.0.0");
 
         // The follow sets up the security schemes so they can be referenced later (doesn't affect codegen methods!)
         final Swagger swaggerConfiguration = beanConfig.getSwagger();
