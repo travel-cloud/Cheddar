@@ -392,17 +392,17 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final com.amazonaws.services.dynamodbv2.model.Condition condition = new com.amazonaws.services.dynamodbv2.model.Condition();
 
-        if (query.getCondition().getComparisonOperator().equals(Operators.NULL)) {
-            condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.NULL);
-        } else if (query.getCondition().getComparisonOperator().equals(Operators.NOT_NULL)) {
-            condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.NOT_NULL);
+        if (query.getCondition().getComparisonOperator() == Operators.NULL) {
+            condition.setComparisonOperator(ComparisonOperator.NULL);
+        } else if (query.getCondition().getComparisonOperator() == Operators.NOT_NULL) {
+            condition.setComparisonOperator(ComparisonOperator.NOT_NULL);
         } else {
-            if (query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
-                condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.EQ);
-            } else if (query.getCondition().getComparisonOperator().equals(Operators.LESS_THAN_OR_EQUALS)) {
-                condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.LE);
-            } else if (query.getCondition().getComparisonOperator().equals(Operators.GREATER_THAN_OR_EQUALS)) {
-                condition.setComparisonOperator(com.amazonaws.services.dynamodbv2.model.ComparisonOperator.GE);
+            if (query.getCondition().getComparisonOperator() == Operators.EQUALS) {
+                condition.setComparisonOperator(ComparisonOperator.EQ);
+            } else if (query.getCondition().getComparisonOperator() == Operators.LESS_THAN_OR_EQUALS) {
+                condition.setComparisonOperator(ComparisonOperator.LE);
+            } else if (query.getCondition().getComparisonOperator() == Operators.GREATER_THAN_OR_EQUALS) {
+                condition.setComparisonOperator(ComparisonOperator.GE);
             }
 
             final Collection<AttributeValue> attributeValueList = new ArrayList<>();

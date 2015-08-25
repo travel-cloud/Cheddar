@@ -228,7 +228,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final List<T> totalItems = new ArrayList<>();
 
         if (itemConfiguration.hasIndexOn(query.getAttributeName())
-                && query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
+                && query.getCondition().getComparisonOperator() == Operators.EQUALS) {
 
             final QuerySpec querySpec = generateQuerySpec(query);
             final ItemCollection<QueryOutcome> queryOutcome;
@@ -284,12 +284,12 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final ValueMap valueMap = new ValueMap();
         int valueMapCount = 0;
 
-        if (query.getCondition().getComparisonOperator().equals(Operators.NULL)) {
+        if (query.getCondition().getComparisonOperator() == Operators.NULL) {
             filterExpression.append("attribute_not_exists(").append(query.getAttributeName()).append(")");
-        } else if (query.getCondition().getComparisonOperator().equals(Operators.NOT_NULL)) {
+        } else if (query.getCondition().getComparisonOperator() == Operators.NOT_NULL) {
             filterExpression.append("attribute_exists(").append(query.getAttributeName()).append(")");
         } else {
-            if (query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
+            if (query.getCondition().getComparisonOperator() == Operators.EQUALS) {
                 filterExpression.append(query.getAttributeName()).append(" IN (");
 
                 final Iterator<String> valueIterator = query.getCondition().getValues().iterator();
@@ -302,7 +302,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                     }
                 }
                 filterExpression.append(")");
-            } else if (query.getCondition().getComparisonOperator().equals(Operators.LESS_THAN_OR_EQUALS)) {
+            } else if (query.getCondition().getComparisonOperator() == Operators.LESS_THAN_OR_EQUALS) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" <= ").append(":").append(valueMapCount);
                     final Object valueInstance = clazz.getConstructor(String.class).newInstance(
@@ -312,7 +312,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 } else {
                     // throw exeption??
                 }
-            } else if (query.getCondition().getComparisonOperator().equals(Operators.GREATER_THAN_OR_EQUALS)) {
+            } else if (query.getCondition().getComparisonOperator() == Operators.GREATER_THAN_OR_EQUALS) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" >= ").append(":").append(valueMapCount);
                     final Object valueInstance = clazz.getConstructor(String.class).newInstance(

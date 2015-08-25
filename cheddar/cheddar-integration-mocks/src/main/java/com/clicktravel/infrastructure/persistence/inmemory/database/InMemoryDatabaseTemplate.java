@@ -268,6 +268,7 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
         return matches;
     }
 
+    @SuppressWarnings("unchecked")
     private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass) {
         final Map<ItemId, T> allItems = getAllItems(itemClass);
         final Collection<T> matches = new ArrayList<>();
@@ -279,28 +280,50 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 final Class<?> itemPropertyType = getter.getReturnType();
                 final Condition condition = query.getCondition();
                 final Set<String> values = condition.getValues();
-                if (Operators.NULL.equals(query.getCondition().getComparisonOperator())) {
-                    if (itemPropertyValue == null) {
-                        matches.add(item);
-                    }
-                } else if (Operators.NOT_NULL.equals(query.getCondition().getComparisonOperator())) {
-                    if (itemPropertyValue != null) {
-                        matches.add(item);
-                    }
-
-                } else if (Collection.class.isAssignableFrom(itemPropertyType)) {
-                    @SuppressWarnings("unchecked")
-                    final Collection<String> itemPropertyValueStringCollection = itemPropertyValue == null ? null
-                            : (Collection<String>) itemPropertyValue;
-                    if (condition.getComparisonOperator().compare(itemPropertyValueStringCollection, values)) {
-                        matches.add(item);
-                    }
-                } else if (values.size() == 1) {
-                    final String itemPropertyValueString = itemPropertyValue == null ? null : String
-                            .valueOf(itemPropertyValue);
-                    if (condition.getComparisonOperator().compare(itemPropertyValueString, values.iterator().next())) {
-                        matches.add(item);
-                    }
+                String singleValue = null;
+                if (values != null && !values.isEmpty()) {
+                    singleValue = values.iterator().next();
+                }
+                switch (query.getCondition().getComparisonOperator()) {
+                    case NULL:
+                        if (itemPropertyValue == null) {
+                            matches.add(item);
+                        }
+                        break;
+                    case NOT_NULL:
+                        if (itemPropertyValue != null) {
+                            matches.add(item);
+                        }
+                        break;
+                    case LESS_THAN_OR_EQUALS:
+                        if (Collection.class.isAssignableFrom(itemPropertyType)) {
+                            if (((Comparable<Set<String>>) itemPropertyValue).compareTo(values) >= 0) {
+                                matches.add(item);
+                            }
+                        } else if (((Comparable<String>) itemPropertyValue).compareTo(singleValue) >= 0) {
+                            matches.add(item);
+                        }
+                        break;
+                    case GREATER_THAN_OR_EQUALS:
+                        if (Collection.class.isAssignableFrom(itemPropertyType)) {
+                            if (((Comparable<Set<String>>) itemPropertyValue).compareTo(values) <= 0) {
+                                matches.add(item);
+                            }
+                        } else if (((Comparable<String>) itemPropertyValue).compareTo(singleValue) <= 0) {
+                            matches.add(item);
+                        }
+                        break;
+                    case EQUALS:
+                        if (Collection.class.isAssignableFrom(itemPropertyType)) {
+                            if (itemPropertyValue.equals(values)) {
+                                matches.add(item);
+                            }
+                        } else if (itemPropertyValue.equals(singleValue)) {
+                            matches.add(item);
+                        }
+                        break;
+                    default:
+                        break;
                 }
             } catch (final Exception e) {
                 throw new IllegalStateException("No getter for property [" + attribute + "] on class: ["
