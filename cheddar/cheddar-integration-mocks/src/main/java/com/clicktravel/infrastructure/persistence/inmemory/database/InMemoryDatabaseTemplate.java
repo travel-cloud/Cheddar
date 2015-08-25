@@ -268,7 +268,6 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
         return matches;
     }
 
-    @SuppressWarnings("unchecked")
     private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass) {
         final Map<ItemId, T> allItems = getAllItems(itemClass);
         final Collection<T> matches = new ArrayList<>();
@@ -284,6 +283,11 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 if (values != null && !values.isEmpty()) {
                     singleValue = values.iterator().next();
                 }
+                final boolean isSingleItemProperty = Collection.class.isAssignableFrom(itemPropertyType);
+                String singleItemPropertyValue = null;
+                if (isSingleItemProperty) {
+                    singleItemPropertyValue = (String) itemPropertyValue;
+                }
                 switch (query.getCondition().getComparisonOperator()) {
                     case NULL:
                         if (itemPropertyValue == null) {
@@ -296,29 +300,19 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                         }
                         break;
                     case LESS_THAN_OR_EQUALS:
-                        if (Collection.class.isAssignableFrom(itemPropertyType)) {
-                            if (((Comparable<Set<String>>) itemPropertyValue).compareTo(values) >= 0) {
-                                matches.add(item);
-                            }
-                        } else if (((Comparable<String>) itemPropertyValue).compareTo(singleValue) >= 0) {
+                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) >= 0) {
                             matches.add(item);
                         }
                         break;
                     case GREATER_THAN_OR_EQUALS:
-                        if (Collection.class.isAssignableFrom(itemPropertyType)) {
-                            if (((Comparable<Set<String>>) itemPropertyValue).compareTo(values) <= 0) {
-                                matches.add(item);
-                            }
-                        } else if (((Comparable<String>) itemPropertyValue).compareTo(singleValue) <= 0) {
+                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) <= 0) {
                             matches.add(item);
                         }
                         break;
                     case EQUALS:
-                        if (Collection.class.isAssignableFrom(itemPropertyType)) {
-                            if (itemPropertyValue.equals(values)) {
-                                matches.add(item);
-                            }
-                        } else if (itemPropertyValue.equals(singleValue)) {
+                        if (isSingleItemProperty && singleItemPropertyValue.equals(singleValue)) {
+                            matches.add(item);
+                        } else if (itemPropertyValue.equals(values)) {
                             matches.add(item);
                         }
                         break;
