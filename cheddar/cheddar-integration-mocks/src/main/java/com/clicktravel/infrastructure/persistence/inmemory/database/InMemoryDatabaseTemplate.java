@@ -283,10 +283,10 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                 if (values != null && !values.isEmpty()) {
                     singleValue = values.iterator().next();
                 }
-                final boolean isSingleItemProperty = Collection.class.isAssignableFrom(itemPropertyType);
+                final boolean isSingleItemProperty = !Collection.class.isAssignableFrom(itemPropertyType);
                 String singleItemPropertyValue = null;
                 if (isSingleItemProperty) {
-                    singleItemPropertyValue = (String) itemPropertyValue;
+                    singleItemPropertyValue = String.valueOf(itemPropertyValue);
                 }
                 switch (query.getCondition().getComparisonOperator()) {
                     case NULL:
