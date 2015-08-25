@@ -16,12 +16,12 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
+import static com.clicktravel.common.random.Randoms.randomEnum;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
 
 import java.util.Set;
 
@@ -33,15 +33,15 @@ public class ConditionTest {
     @Test
     public void shouldCreateCondition_withComparisonOperatorAndValue() throws Exception {
         // Given
-        final ComparisonOperator mockComparisonOperator = mock(ComparisonOperator.class);
+        final Operators randomComparisonOperator = randomEnum(Operators.class);
         final String value = randomString(10);
 
         // When
-        final Condition condition = new Condition(mockComparisonOperator, value);
+        final Condition condition = new Condition(randomComparisonOperator, value);
 
         // Then
         assertNotNull(condition);
-        assertEquals(mockComparisonOperator, condition.getComparisonOperator());
+        assertEquals(randomComparisonOperator, condition.getComparisonOperator());
         assertEquals(1, condition.getValues().size());
         assertThat(condition.getValues(), hasItem(value));
     }
@@ -49,29 +49,29 @@ public class ConditionTest {
     @Test
     public void shouldCreateCondition_withComparisonOperatorAndValueSet() throws Exception {
         // Given
-        final ComparisonOperator mockComparisonOperator = mock(ComparisonOperator.class);
+        final Operators randomComparisonOperator = randomEnum(Operators.class);
         final Set<String> values = Sets.newSet(randomString(10), randomString(10), randomString(10));
 
         // When
-        final Condition condition = new Condition(mockComparisonOperator, values);
+        final Condition condition = new Condition(randomComparisonOperator, values);
 
         // Then
         assertNotNull(condition);
-        assertEquals(mockComparisonOperator, condition.getComparisonOperator());
+        assertEquals(randomComparisonOperator, condition.getComparisonOperator());
         assertEquals(values.size(), condition.getValues().size());
     }
 
     @Test
     public void shouldCreateCondition_withComparisonOperator() throws Exception {
         // Given
-        final ComparisonOperator mockComparisonOperator = mock(ComparisonOperator.class);
+        final Operators randomComparisonOperator = randomEnum(Operators.class);
 
         // When
-        final Condition condition = new Condition(mockComparisonOperator);
+        final Condition condition = new Condition(randomComparisonOperator);
 
         // Then
         assertNotNull(condition);
-        assertEquals(mockComparisonOperator, condition.getComparisonOperator());
+        assertEquals(randomComparisonOperator, condition.getComparisonOperator());
         assertEquals(0, condition.getValues().size());
     }
 

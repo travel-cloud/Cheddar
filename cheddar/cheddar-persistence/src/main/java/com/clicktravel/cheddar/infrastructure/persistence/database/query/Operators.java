@@ -16,106 +16,12 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
-import java.util.Collection;
+public enum Operators {
 
-import com.clicktravel.common.functional.Equals;
+    EQUALS,
+    LESS_THAN_OR_EQUALS,
+    GREATER_THAN_OR_EQUALS,
+    NULL,
+    NOT_NULL,
 
-public class Operators {
-
-    public static final ComparisonOperator EQUALS = new ComparisonOperator() {
-
-        @Override
-        public boolean compare(final String value1, final String value2) {
-            return Equals.safeEquals(value1, value2);
-        }
-
-        @Override
-        public boolean compare(final Collection<String> value1, final Collection<String> value2) {
-            return value1.equals(value2);
-        }
-
-        @Override
-        public String toString() {
-            return "ComparisonOperator.EQUALS";
-        }
-
-    };
-
-    public static final ComparisonOperator LESS_THAN_OR_EQUALS = new ComparisonOperator() {
-
-        @Override
-        public boolean compare(final String value1, final String value2) {
-            return value1.equals(value2) || value1.compareTo(value2) > 0;
-        }
-
-        @Override
-        public boolean compare(final Collection<String> value1, final Collection<String> value2) {
-            throw new UnsupportedOperationException(
-                    "Operators.LESS_THAN_OR_EQUALS is not supported for Collection<String> types");
-        }
-
-        @Override
-        public String toString() {
-            return "ComparisonOperator.LESS_THAN_OR_EQUALS";
-        }
-
-    };
-
-    public static final ComparisonOperator GREATER_THAN_OR_EQUALS = new ComparisonOperator() {
-
-        @Override
-        public boolean compare(final String value1, final String value2) {
-            return value2.equals(value1) || value1.compareTo(value2) > 0;
-        }
-
-        @Override
-        public boolean compare(final Collection<String> value1, final Collection<String> value2) {
-            throw new UnsupportedOperationException(
-                    "Operators.GREATER_THAN_OR_EQUALS is not supported for Collection<String> types");
-        }
-
-        @Override
-        public String toString() {
-            return "ComparisonOperator.GREATER_THAN_OR_EQUALS";
-        }
-
-    };
-
-    public static final ComparisonOperator NULL = new ComparisonOperator() {
-
-        @Override
-        public boolean compare(final String value1, final String value2) {
-            throw new UnsupportedOperationException("compare() is not supported for Operators.NULL");
-        }
-
-        @Override
-        public boolean compare(final Collection<String> value1, final Collection<String> value2) {
-            throw new UnsupportedOperationException("compare() is not supported for Operators.NULL");
-        }
-
-        @Override
-        public String toString() {
-            return "ComparisonOperator.NULL";
-        }
-
-    };
-
-    public static final ComparisonOperator NOT_NULL = new ComparisonOperator() {
-
-        @Override
-        public boolean compare(final String value1, final String value2) {
-            throw new UnsupportedOperationException("compare() is not supported for Operators.NOT_NULL");
-        }
-
-        @Override
-        public boolean compare(final Collection<String> value1, final Collection<String> value2) {
-            throw new UnsupportedOperationException("compare() is not supported for Operators.NOT_NULL");
-        }
-
-        @Override
-        public String toString() {
-            return "ComparisonOperator.NOT_NULL";
-        }
-
-    };
 }

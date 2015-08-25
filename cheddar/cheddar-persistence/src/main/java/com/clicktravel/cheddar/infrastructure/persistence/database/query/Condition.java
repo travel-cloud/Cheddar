@@ -21,10 +21,10 @@ import java.util.Set;
 
 public class Condition {
 
-    private final ComparisonOperator comparisonOperator;
+    private final Operators comparisonOperator;
     private final Set<String> values;
 
-    public Condition(final ComparisonOperator comparisonOperator, final Set<String> values) {
+    public Condition(final Operators comparisonOperator, final Set<String> values) {
         this.comparisonOperator = comparisonOperator;
         this.values = new HashSet<>();
         setValues(values);
@@ -68,18 +68,18 @@ public class Condition {
         return true;
     }
 
-    public Condition(final ComparisonOperator comparisonOperator, final String value) {
+    public Condition(final Operators comparisonOperator, final String value) {
         this.comparisonOperator = comparisonOperator;
         values = new HashSet<>();
         setValue(value);
     }
 
-    public Condition(final ComparisonOperator comparisonOperator) {
+    public Condition(final Operators comparisonOperator) {
         this.comparisonOperator = comparisonOperator;
         values = new HashSet<>();
     }
 
-    public ComparisonOperator getComparisonOperator() {
+    public Operators getComparisonOperator() {
         return comparisonOperator;
     }
 
