@@ -320,7 +320,6 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                         break;
                 }
             } catch (final Exception e) {
-                e.printStackTrace();
                 throw new IllegalStateException("No getter for property [" + attribute + "] on class: ["
                         + item.getClass() + "]");
             }
