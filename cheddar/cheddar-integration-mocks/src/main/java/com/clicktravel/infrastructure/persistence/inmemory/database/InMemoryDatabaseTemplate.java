@@ -300,19 +300,19 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                         }
                         break;
                     case LESS_THAN_OR_EQUALS:
-                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) >= 0) {
+                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) <= 0) {
                             matches.add(item);
                         }
                         break;
                     case GREATER_THAN_OR_EQUALS:
-                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) <= 0) {
+                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) >= 0) {
                             matches.add(item);
                         }
                         break;
                     case EQUALS:
                         if (isSingleItemProperty && singleItemPropertyValue.equals(singleValue)) {
                             matches.add(item);
-                        } else if (itemPropertyValue.equals(values)) {
+                        } else if (values.equals(itemPropertyValue)) {
                             matches.add(item);
                         }
                         break;
