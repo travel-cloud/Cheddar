@@ -21,6 +21,14 @@ import com.clicktravel.infrastructure.messaging.aws.sns.SnsTopicResource;
 public interface SqsQueueResourceFactory {
 
     /**
+     * Creates an {@link SqsQueueResource} which is subscribed to the given {@link SnsTopicResource}s.
+     * @param name Queue name
+     * @param snsTopics {@link SnsTopicResource}s to subscribe to
+     * @return {@link SqsQueueResource} with the given name.
+     */
+    SqsQueueResource createSqsQueueResource(String name, SnsTopicResource... snsTopics);
+
+    /**
      * Creates an {@link SqsQueueResource} which is subscribed to the given {@link SnsTopicResource}s. An actual AWS SQS
      * queue is created if one does not already exist with the given name. The topic subscriptions (and a compatible
      * queue policy) are always updated, whether or not the AWS SQS queue already exists.
@@ -28,5 +36,6 @@ public interface SqsQueueResourceFactory {
      * @param snsTopics {@link SnsTopicResource}s to subscribe to
      * @return {@link SqsQueueResource} with the given name, subscribed to the specified topics.
      */
-    SqsQueueResource createSqsQueueResource(String name, SnsTopicResource... snsTopics);
+    SqsQueueResource createSqsQueueResourceAndAwsSqsQueueIfAbsent(String name, SnsTopicResource... snsTopics);
+
 }
