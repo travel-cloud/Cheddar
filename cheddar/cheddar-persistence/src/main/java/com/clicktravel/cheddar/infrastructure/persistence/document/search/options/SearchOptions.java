@@ -81,4 +81,33 @@ public class SearchOptions {
         return this;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + expressions.hashCode();
+        result = prime * result + sortOrder.hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final SearchOptions other = (SearchOptions) obj;
+        if (!expressions.equals(other.expressions)) {
+            return false;
+        }
+        if (!sortOrder.equals(other.sortOrder)) {
+            return false;
+        }
+        return true;
+    }
 }
