@@ -53,15 +53,38 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
 
     @Override
     public SqsQueueResource createSqsQueueResource(final String name, final SnsTopicResource... snsTopics) {
-        String queueUrl;
-        try {
-            queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(name)).getQueueUrl();
-            logger.info("Using existing SQS queue: " + name);
-        } catch (final QueueDoesNotExistException e) {
-            queueUrl = createAwsSqsQueue(name);
-        }
+        final String queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(name)).getQueueUrl();
+        logger.info("Using existing SQS queue: " + name);
         final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, queueUrl, amazonSqsClient);
+        subscribeToSnsTopics(name, sqsQueueResource, snsTopics);
+        return sqsQueueResource;
 
+    }
+
+    @Override
+    public SqsQueueResource createSqsQueueResourceAndAwsSqsQueueIfAbsent(final String name,
+            final SnsTopicResource... snsTopics) {
+        try {
+            final SqsQueueResource sqsQueueResource = createSqsQueueResource(name, snsTopics);
+            return sqsQueueResource;
+        } catch (final QueueDoesNotExistException e) {
+            final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, createAwsSqsQueue(name),
+                    amazonSqsClient);
+            subscribeToSnsTopics(name, sqsQueueResource, snsTopics);
+            return sqsQueueResource;
+        }
+    }
+
+    private String createAwsSqsQueue(final String name) {
+        logger.info("Creating SQS queue: " + name);
+        final Map<String, String> attributes = new HashMap<>();
+        attributes.put(SQS_VISIBILITY_TIMEOUT_ATTRIBUTE, SQS_VISIBILITY_TIMEOUT_VALUE);
+        final CreateQueueRequest createQueueRequest = new CreateQueueRequest(name).withAttributes(attributes);
+        return amazonSqsClient.createQueue(createQueueRequest).getQueueUrl();
+    }
+
+    private void subscribeToSnsTopics(final String name, final SqsQueueResource sqsQueueResource,
+            final SnsTopicResource... snsTopics) {
         // If this queue should subscribe to any topics, create (or update existing) subscriptions and queue policy
         if (snsTopics.length != 0) {
             logger.info("Adding SQS queue [" + name + "] as a subscriber for these SNS topics: ["
@@ -71,16 +94,6 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
                 snsTopicResource.subscribe(sqsQueueResource);
             }
         }
-
-        return sqsQueueResource;
-    }
-
-    private String createAwsSqsQueue(final String name) {
-        logger.info("Creating SQS queue: " + name);
-        final Map<String, String> attributes = new HashMap<>();
-        attributes.put(SQS_VISIBILITY_TIMEOUT_ATTRIBUTE, SQS_VISIBILITY_TIMEOUT_VALUE);
-        final CreateQueueRequest createQueueRequest = new CreateQueueRequest(name).withAttributes(attributes);
-        return amazonSqsClient.createQueue(createQueueRequest).getQueueUrl();
     }
 
     private Policy acceptMessagesFromTopicsPolicy(final SqsQueueResource sqsQueueResource,
