@@ -56,7 +56,6 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
         final String queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(name)).getQueueUrl();
         logger.info("Using existing SQS queue: " + name);
         final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, queueUrl, amazonSqsClient);
-        subscribeToSnsTopics(name, sqsQueueResource, snsTopics);
         return sqsQueueResource;
 
     }
