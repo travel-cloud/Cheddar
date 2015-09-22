@@ -21,12 +21,11 @@ import com.clicktravel.infrastructure.messaging.aws.sns.SnsTopicResource;
 public interface SqsQueueResourceFactory {
 
     /**
-     * Creates an {@link SqsQueueResource} which is subscribed to the given {@link SnsTopicResource}s.
+     * Creates an {@link SqsQueueResource} representing an existing actual AWS SQS queue.
      * @param name Queue name
-     * @param snsTopics {@link SnsTopicResource}s to subscribe to
      * @return {@link SqsQueueResource} with the given name.
      */
-    SqsQueueResource createSqsQueueResource(String name, SnsTopicResource... snsTopics);
+    SqsQueueResource createSqsQueueResource(String name);
 
     /**
      * Creates an {@link SqsQueueResource} which is subscribed to the given {@link SnsTopicResource}s. An actual AWS SQS

@@ -52,7 +52,7 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
     }
 
     @Override
-    public SqsQueueResource createSqsQueueResource(final String name, final SnsTopicResource... snsTopics) {
+    public SqsQueueResource createSqsQueueResource(final String name) {
         final String queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(name)).getQueueUrl();
         logger.info("Using existing SQS queue: " + name);
         final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, queueUrl, amazonSqsClient);
@@ -64,7 +64,7 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
     public SqsQueueResource createSqsQueueResourceAndAwsSqsQueueIfAbsent(final String name,
             final SnsTopicResource... snsTopics) {
         try {
-            final SqsQueueResource sqsQueueResource = createSqsQueueResource(name, snsTopics);
+            final SqsQueueResource sqsQueueResource = createSqsQueueResource(name);
             return sqsQueueResource;
         } catch (final QueueDoesNotExistException e) {
             final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, createAwsSqsQueue(name),
