@@ -22,12 +22,10 @@ import java.util.HashSet;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.clicktravel.infrastructure.persistence.aws.s3.S3FileStore;
 
-@Component
 public class S3InfrastructureManager {
 
     private final AmazonS3 amazonS3Client;

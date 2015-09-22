@@ -21,7 +21,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.amazonaws.auth.policy.*;
 import com.amazonaws.auth.policy.Statement.Effect;
@@ -37,7 +36,6 @@ import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 import com.clicktravel.common.functional.StringUtils;
 import com.clicktravel.infrastructure.messaging.aws.sns.SnsTopicResource;
 
-@Component
 public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
 
     private static final String SQS_VISIBILITY_TIMEOUT_ATTRIBUTE = QueueAttributeName.VisibilityTimeout.toString();
@@ -109,12 +107,12 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
     private Statement acceptMessagesFromTopicStatement(final SqsQueueResource sqsQueueResource,
             final SnsTopicResource snsTopicResource) {
         return new Statement(Effect.Allow)
-                .withPrincipals(Principal.AllUsers)
-                .withActions(SQSActions.SendMessage)
-                .withResources(new Resource(sqsQueueResource.queueArn()))
-                .withConditions(
-                        new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY,
-                                snsTopicResource.getTopicArn()));
+        .withPrincipals(Principal.AllUsers)
+        .withActions(SQSActions.SendMessage)
+        .withResources(new Resource(sqsQueueResource.queueArn()))
+        .withConditions(
+                new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY,
+                        snsTopicResource.getTopicArn()));
     }
 
     private String snsTopicNames(final SnsTopicResource[] snsTopics) {
