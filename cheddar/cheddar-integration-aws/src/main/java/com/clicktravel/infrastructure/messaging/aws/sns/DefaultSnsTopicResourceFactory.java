@@ -53,8 +53,8 @@ public class DefaultSnsTopicResourceFactory implements SnsTopicResourceFactory {
         if (topicArn == null) {
             topicArn = createAwsSnsTopic(name);
             final SnsTopicResource snsTopicResource = new SnsTopicResource(name, topicArn, amazonSnsClient);
-            snsTopicResource.setPolicy(allowAllQueuesPolicy(snsTopicResource)); // policy is set once, on creation of
-            // SNS topic
+            // policy is set once, on creation of SNS topic
+            snsTopicResource.setPolicy(allowAllQueuesPolicy(snsTopicResource));
             return snsTopicResource;
         } else {
             logger.info("Using existing SNS topic: " + name);
