@@ -21,7 +21,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.amazonaws.auth.policy.*;
 import com.amazonaws.auth.policy.Statement.Effect;
@@ -37,7 +36,6 @@ import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
 import com.clicktravel.common.functional.StringUtils;
 import com.clicktravel.infrastructure.messaging.aws.sns.SnsTopicResource;
 
-@Component
 public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
 
     private static final String SQS_VISIBILITY_TIMEOUT_ATTRIBUTE = QueueAttributeName.VisibilityTimeout.toString();
@@ -52,11 +50,10 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
     }
 
     @Override
-    public SqsQueueResource createSqsQueueResource(final String name, final SnsTopicResource... snsTopics) {
+    public SqsQueueResource createSqsQueueResource(final String name) {
         final String queueUrl = amazonSqsClient.getQueueUrl(new GetQueueUrlRequest(name)).getQueueUrl();
         logger.info("Using existing SQS queue: " + name);
         final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, queueUrl, amazonSqsClient);
-        subscribeToSnsTopics(name, sqsQueueResource, snsTopics);
         return sqsQueueResource;
 
     }
@@ -65,7 +62,7 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
     public SqsQueueResource createSqsQueueResourceAndAwsSqsQueueIfAbsent(final String name,
             final SnsTopicResource... snsTopics) {
         try {
-            final SqsQueueResource sqsQueueResource = createSqsQueueResource(name, snsTopics);
+            final SqsQueueResource sqsQueueResource = createSqsQueueResource(name);
             return sqsQueueResource;
         } catch (final QueueDoesNotExistException e) {
             final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, createAwsSqsQueue(name),
@@ -110,12 +107,12 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
     private Statement acceptMessagesFromTopicStatement(final SqsQueueResource sqsQueueResource,
             final SnsTopicResource snsTopicResource) {
         return new Statement(Effect.Allow)
-                .withPrincipals(Principal.AllUsers)
-                .withActions(SQSActions.SendMessage)
-                .withResources(new Resource(sqsQueueResource.queueArn()))
-                .withConditions(
-                        new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY,
-                                snsTopicResource.getTopicArn()));
+        .withPrincipals(Principal.AllUsers)
+        .withActions(SQSActions.SendMessage)
+        .withResources(new Resource(sqsQueueResource.queueArn()))
+        .withConditions(
+                new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY,
+                        snsTopicResource.getTopicArn()));
     }
 
     private String snsTopicNames(final SnsTopicResource[] snsTopics) {

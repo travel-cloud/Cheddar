@@ -21,7 +21,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.amazonaws.auth.policy.*;
 import com.amazonaws.auth.policy.Statement.Effect;
@@ -31,7 +30,6 @@ import com.amazonaws.services.sns.model.CreateTopicRequest;
 import com.amazonaws.services.sns.model.ListTopicsResult;
 import com.amazonaws.services.sns.model.Topic;
 
-@Component
 public class DefaultSnsTopicResourceFactory implements SnsTopicResourceFactory {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -55,8 +53,8 @@ public class DefaultSnsTopicResourceFactory implements SnsTopicResourceFactory {
         if (topicArn == null) {
             topicArn = createAwsSnsTopic(name);
             final SnsTopicResource snsTopicResource = new SnsTopicResource(name, topicArn, amazonSnsClient);
-            snsTopicResource.setPolicy(allowAllQueuesPolicy(snsTopicResource)); // policy is set once, on creation of
-                                                                                // SNS topic
+            // policy is set once, on creation of SNS topic
+            snsTopicResource.setPolicy(allowAllQueuesPolicy(snsTopicResource));
             return snsTopicResource;
         } else {
             logger.info("Using existing SNS topic: " + name);
