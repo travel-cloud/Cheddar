@@ -79,6 +79,8 @@ public class StatusResource {
         status.setVersion(applicationConfiguration.version());
         status.setFrameworkVersion(applicationConfiguration.frameworkVersion());
         status.setStatus(lifecycleStatus);
+        status.setJavaVersion(System.getProperty("java.version"));
+        status.setJavaVendor(System.getProperty("java.vendor"));
         status.setProcessingRestRequest(processingRestRequest);
         status.setDeferrableProcessing(isDeferrableProcessing);
         status.setMaximumWorkRates(getMaximumWorkRates());
