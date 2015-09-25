@@ -238,8 +238,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                                 new AttributeValue().withN(String.valueOf(version))));
             } else if (propertyDescriptor.getWriteMethod() != null) {
                 final AttributeValue attributeValue = DynamoDbPropertyMarshaller.getValue(item, propertyDescriptor);
-                // TODO Only add to attribute map if there is a difference
                 if (attributeMap != null) {
+                    // TODO Only add to attribute map if there is a difference
                     if (attributeValue != null) {
                         attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
                                 .withValue(attributeValue));
@@ -285,6 +285,9 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(item.getVersion()))));
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         final Map<String, AttributeValue> key = generateKey(itemConfiguration.getItemId(item), itemConfiguration);
+        for (final Entry<String, AttributeValue> entry : key.entrySet()) {
+            attributeMap.remove(entry.getKey());
+        }
         final UpdateItemRequest itemRequest = new UpdateItemRequest().withTableName(tableName).withKey(key)
                 .withAttributeUpdates(attributeMap).withExpected(expectedResults);
         boolean itemRequestSucceeded = false;

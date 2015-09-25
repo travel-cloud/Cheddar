@@ -525,10 +525,11 @@ public class DynamoDbTemplateTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
                 new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
                         new AttributeValue(stringPropertyValue)),
-                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -623,7 +624,7 @@ public class DynamoDbTemplateTest {
         key.put("id", new AttributeValue(stubItem.getId()));
         key.put("stringProperty", new AttributeValue(stubItem.getStringProperty()));
         assertEquals(key, updateItemRequest.getKey());
-
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 4);
         assertEquals(
                 new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
                         new AttributeValue(stubItem.getStringProperty2())), updateItemRequest.getAttributeUpdates()
@@ -689,10 +690,11 @@ public class DynamoDbTemplateTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
                 new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
                         new AttributeValue(stringPropertyValue)),
-                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
 
@@ -758,10 +760,11 @@ public class DynamoDbTemplateTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
                 new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
                         new AttributeValue(stringPropertyValue)),
-                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -813,6 +816,7 @@ public class DynamoDbTemplateTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(new AttributeValueUpdate().withAction(AttributeAction.DELETE), updateItemRequest
                 .getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
@@ -890,10 +894,11 @@ public class DynamoDbTemplateTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
                 new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
                         new AttributeValue(newStringPropertyValue)),
-                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
 
@@ -949,10 +954,11 @@ public class DynamoDbTemplateTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
                 new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
                         new AttributeValue(stringPropertyValue)),
-                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -1000,10 +1006,11 @@ public class DynamoDbTemplateTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
+        assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
                 new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
                         new AttributeValue(stringPropertyValue)),
-                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
