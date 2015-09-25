@@ -102,8 +102,6 @@ public class StatusResourceTest {
         assertEquals(applicationVersion, statusResult.getVersion());
         assertEquals(frameworkVersion, statusResult.getFrameworkVersion());
         assertEquals(expectedLifecycleStatus.name(), statusResult.getStatus());
-        assertEquals(System.getProperty("java.version"), statusResult.getJavaVersion());
-        assertEquals(System.getProperty("java.vendor"), statusResult.getJavaVendor());
         assertEquals(expectedProcessingRestRequest, statusResult.isProcessingRestRequest());
         assertEquals(expectedDeferrableProcessing, statusResult.isDeferrableProcessing());
         assertEquals(expectedDeferrableProcessing, statusResult.isProcessedRecentDeferrableEvent());

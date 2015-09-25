@@ -22,8 +22,6 @@ public class StatusResult {
     private String version;
     private String frameworkVersion;
     private String status;
-    private String javaVersion;
-    private String javaVendor;
     private boolean processingRestRequest;
     private boolean deferrableProcessing;
     private MaximumWorkRates maximumWorkRates;
@@ -71,22 +69,6 @@ public class StatusResult {
 
     public void setStatus(final String status) {
         this.status = status;
-    }
-
-    public String getJavaVersion() {
-        return javaVersion;
-    }
-
-    public void setJavaVersion(final String javaVersion) {
-        this.javaVersion = javaVersion;
-    }
-
-    public String getJavaVendor() {
-        return javaVendor;
-    }
-
-    public void setJavaVendor(final String javaVendor) {
-        this.javaVendor = javaVendor;
     }
 
     public boolean isProcessingRestRequest() {
