@@ -517,15 +517,20 @@ public class DynamoDbTemplateTest {
         dynamoDbTemplate.update(stubItem);
 
         // Then
-        final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
-                .forClass(PutItemRequest.class);
-        verify(mockAmazonDynamoDbClient).putItem(putItemRequestArgumentCaptor.capture());
-        final PutItemRequest putItemRequest = putItemRequestArgumentCaptor.getValue();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertEquals(new AttributeValue(stringPropertyValue), putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        assertEquals(key, updateItemRequest.getKey());
+        assertEquals(
+                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                        new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
     }
 
     @Test
@@ -543,7 +548,7 @@ public class DynamoDbTemplateTest {
         stubItem.setStringProperty(stringPropertyValue);
         final Long oldVersion = randomLong();
         stubItem.setVersion(oldVersion);
-        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(
+        when(mockAmazonDynamoDbClient.updateItem(any(UpdateItemRequest.class))).thenThrow(
                 ConditionalCheckFailedException.class);
 
         // When
@@ -573,7 +578,7 @@ public class DynamoDbTemplateTest {
         stubItem.setStringProperty(stringPropertyValue);
         final Long oldVersion = randomLong();
         stubItem.setVersion(oldVersion);
-        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(AmazonServiceException.class);
+        when(mockAmazonDynamoDbClient.updateItem(any(UpdateItemRequest.class))).thenThrow(AmazonServiceException.class);
 
         // When
         PersistenceResourceFailureException actualException = null;
@@ -601,6 +606,7 @@ public class DynamoDbTemplateTest {
         stubItem.setId(randomId());
         final String stringPropertyValue = randomString(10);
         stubItem.setStringProperty(stringPropertyValue);
+        stubItem.setStringProperty2(randomString(10));
         final Long oldVersion = randomLong();
         stubItem.setVersion(oldVersion);
 
@@ -608,15 +614,22 @@ public class DynamoDbTemplateTest {
         dynamoDbTemplate.update(stubItem);
 
         // Then
-        final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
-                .forClass(PutItemRequest.class);
-        verify(mockAmazonDynamoDbClient).putItem(putItemRequestArgumentCaptor.capture());
-        final PutItemRequest putItemRequest = putItemRequestArgumentCaptor.getValue();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertEquals(new AttributeValue(stringPropertyValue), putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        key.put("stringProperty", new AttributeValue(stubItem.getStringProperty()));
+        assertEquals(key, updateItemRequest.getKey());
+
+        assertEquals(
+                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                        new AttributeValue(stubItem.getStringProperty2())), updateItemRequest.getAttributeUpdates()
+                        .get("stringProperty2"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
     }
 
     @Test
@@ -652,29 +665,36 @@ public class DynamoDbTemplateTest {
                 .forClass(GetItemRequest.class);
         final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(PutItemRequest.class);
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
         final ArgumentCaptor<DeleteItemRequest> deleteItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(DeleteItemRequest.class);
         verify(mockAmazonDynamoDbClient).getItem(getItemRequestArgumentCaptor.capture());
-        verify(mockAmazonDynamoDbClient, times(2)).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
         verify(mockAmazonDynamoDbClient).deleteItem(deleteItemRequestArgumentCaptor.capture());
         final GetItemRequest getItemRequest = getItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, getItemRequest.getTableName());
         assertEquals(new AttributeValue(stubItem.getId()), getItemRequest.getKey().get("id"));
-        final Iterator<PutItemRequest> iterator = putItemRequestArgumentCaptor.getAllValues().iterator();
 
-        final PutItemRequest putIndexRequest = iterator.next();
+        final PutItemRequest putIndexRequest = putItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "-indexes." + tableName, putIndexRequest.getTableName());
         assertEquals(2, putIndexRequest.getItem().size());
         assertEquals(new AttributeValue("stringProperty"), putIndexRequest.getItem().get("property"));
         assertEquals(new AttributeValue(stringPropertyValue.toUpperCase()), putIndexRequest.getItem().get("value"));
         assertEquals(new ExpectedAttributeValue(false), putIndexRequest.getExpected().get("value"));
 
-        final PutItemRequest putItemRequest = iterator.next();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertEquals(new AttributeValue(stringPropertyValue), putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        assertEquals(key, updateItemRequest.getKey());
+        assertEquals(
+                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                        new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
 
         final DeleteItemRequest deleteIndexRequest = deleteItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "-indexes." + tableName, deleteIndexRequest.getTableName());
@@ -713,29 +733,37 @@ public class DynamoDbTemplateTest {
         // Then
         final ArgumentCaptor<GetItemRequest> getItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(GetItemRequest.class);
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
         final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(PutItemRequest.class);
         verify(mockAmazonDynamoDbClient).getItem(getItemRequestArgumentCaptor.capture());
-        verify(mockAmazonDynamoDbClient, times(2)).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).putItem(putItemRequestArgumentCaptor.capture());
         verify(mockAmazonDynamoDbClient, never()).deleteItem(any(DeleteItemRequest.class));
         final GetItemRequest getItemRequest = getItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, getItemRequest.getTableName());
         assertEquals(new AttributeValue(stubItem.getId()), getItemRequest.getKey().get("id"));
-        final Iterator<PutItemRequest> iterator = putItemRequestArgumentCaptor.getAllValues().iterator();
 
-        final PutItemRequest putIndexRequest = iterator.next();
+        final PutItemRequest putIndexRequest = putItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "-indexes." + tableName, putIndexRequest.getTableName());
         assertEquals(2, putIndexRequest.getItem().size());
         assertEquals(new AttributeValue("stringProperty"), putIndexRequest.getItem().get("property"));
         assertEquals(new AttributeValue(stringPropertyValue.toUpperCase()), putIndexRequest.getItem().get("value"));
         assertEquals(new ExpectedAttributeValue(false), putIndexRequest.getExpected().get("value"));
 
-        final PutItemRequest putItemRequest = iterator.next();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertEquals(new AttributeValue(stringPropertyValue), putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        assertEquals(key, updateItemRequest.getKey());
+        assertEquals(
+                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                        new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
     }
 
     @Test
@@ -769,24 +797,26 @@ public class DynamoDbTemplateTest {
         // Then
         final ArgumentCaptor<GetItemRequest> getItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(GetItemRequest.class);
-        final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
-                .forClass(PutItemRequest.class);
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
         final ArgumentCaptor<DeleteItemRequest> deleteItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(DeleteItemRequest.class);
         verify(mockAmazonDynamoDbClient).getItem(getItemRequestArgumentCaptor.capture());
-        verify(mockAmazonDynamoDbClient, times(1)).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
         verify(mockAmazonDynamoDbClient).deleteItem(deleteItemRequestArgumentCaptor.capture());
         final GetItemRequest getItemRequest = getItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, getItemRequest.getTableName());
         assertEquals(new AttributeValue(stubItem.getId()), getItemRequest.getKey().get("id"));
-        final Iterator<PutItemRequest> iterator = putItemRequestArgumentCaptor.getAllValues().iterator();
 
-        final PutItemRequest putItemRequest = iterator.next();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertNull(putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        assertEquals(key, updateItemRequest.getKey());
+        assertEquals(new AttributeValueUpdate().withAction(AttributeAction.DELETE), updateItemRequest
+                .getAttributeUpdates().get("stringProperty"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
 
         final DeleteItemRequest deleteIndexRequest = deleteItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "-indexes." + tableName, deleteIndexRequest.getTableName());
@@ -814,8 +844,7 @@ public class DynamoDbTemplateTest {
         final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
         final GetItemResult mockGetItemResult = mock(GetItemResult.class);
         when(mockAmazonDynamoDbClient.getItem(any(GetItemRequest.class))).thenReturn(mockGetItemResult);
-        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenReturn(null).thenThrow(
-                AmazonServiceException.class);
+        when(mockAmazonDynamoDbClient.updateItem(any(UpdateItemRequest.class))).thenThrow(AmazonServiceException.class);
         final Map<String, AttributeValue> attributeMap = new HashMap<>();
         attributeMap.put("id", new AttributeValue(stubItem.getId()));
         attributeMap.put("stringProperty", new AttributeValue(previousStringPropertyValue));
@@ -837,29 +866,36 @@ public class DynamoDbTemplateTest {
                 .forClass(GetItemRequest.class);
         final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(PutItemRequest.class);
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
         final ArgumentCaptor<DeleteItemRequest> deleteItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(DeleteItemRequest.class);
         verify(mockAmazonDynamoDbClient).getItem(getItemRequestArgumentCaptor.capture());
-        verify(mockAmazonDynamoDbClient, times(2)).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
         verify(mockAmazonDynamoDbClient).deleteItem(deleteItemRequestArgumentCaptor.capture());
         final GetItemRequest getItemRequest = getItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, getItemRequest.getTableName());
         assertEquals(new AttributeValue(stubItem.getId()), getItemRequest.getKey().get("id"));
-        final Iterator<PutItemRequest> iterator = putItemRequestArgumentCaptor.getAllValues().iterator();
 
-        final PutItemRequest putIndexRequest = iterator.next();
+        final PutItemRequest putIndexRequest = putItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "-indexes." + tableName, putIndexRequest.getTableName());
         assertEquals(2, putIndexRequest.getItem().size());
         assertEquals(new AttributeValue("stringProperty"), putIndexRequest.getItem().get("property"));
         assertEquals(new AttributeValue(newStringPropertyValue.toUpperCase()), putIndexRequest.getItem().get("value"));
         assertEquals(new ExpectedAttributeValue(false), putIndexRequest.getExpected().get("value"));
 
-        final PutItemRequest putItemRequest = iterator.next();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertEquals(new AttributeValue(newStringPropertyValue), putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        assertEquals(key, updateItemRequest.getKey());
+        assertEquals(
+                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                        new AttributeValue(newStringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
 
         final DeleteItemRequest deleteIndexRequest = deleteItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "-indexes." + tableName, deleteIndexRequest.getTableName());
@@ -899,20 +935,26 @@ public class DynamoDbTemplateTest {
         // Then
         final ArgumentCaptor<GetItemRequest> getItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(GetItemRequest.class);
-        final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
-                .forClass(PutItemRequest.class);
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
         verify(mockAmazonDynamoDbClient).getItem(getItemRequestArgumentCaptor.capture());
-        verify(mockAmazonDynamoDbClient).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
         final GetItemRequest getItemRequest = getItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, getItemRequest.getTableName());
         assertEquals(new AttributeValue(stubItem.getId()), getItemRequest.getKey().get("id"));
         assertThat(getItemRequest.getAttributesToGet(), hasItems("version", "stringProperty"));
-        final PutItemRequest putItemRequest = putItemRequestArgumentCaptor.getValue();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertEquals(new AttributeValue(stringPropertyValue), putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        assertEquals(key, updateItemRequest.getKey());
+        assertEquals(
+                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                        new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
     }
 
     @Test
@@ -944,20 +986,26 @@ public class DynamoDbTemplateTest {
         // Then
         final ArgumentCaptor<GetItemRequest> getItemRequestArgumentCaptor = ArgumentCaptor
                 .forClass(GetItemRequest.class);
-        final ArgumentCaptor<PutItemRequest> putItemRequestArgumentCaptor = ArgumentCaptor
-                .forClass(PutItemRequest.class);
+        final ArgumentCaptor<UpdateItemRequest> updateItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(UpdateItemRequest.class);
         verify(mockAmazonDynamoDbClient).getItem(getItemRequestArgumentCaptor.capture());
-        verify(mockAmazonDynamoDbClient).putItem(putItemRequestArgumentCaptor.capture());
+        verify(mockAmazonDynamoDbClient).updateItem(updateItemRequestArgumentCaptor.capture());
         final GetItemRequest getItemRequest = getItemRequestArgumentCaptor.getValue();
         assertEquals(schemaName + "." + tableName, getItemRequest.getTableName());
         assertEquals(new AttributeValue(stubItem.getId()), getItemRequest.getKey().get("id"));
         assertThat(getItemRequest.getAttributesToGet(), hasItems("version", "stringProperty"));
-        final PutItemRequest putItemRequest = putItemRequestArgumentCaptor.getValue();
-        assertEquals(schemaName + "." + tableName, putItemRequest.getTableName());
-        assertEquals(new AttributeValue(stubItem.getId()), putItemRequest.getItem().get("id"));
-        assertEquals(new AttributeValue(stringPropertyValue), putItemRequest.getItem().get("stringProperty"));
-        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))), putItemRequest
-                .getExpected().get("version"));
+
+        final UpdateItemRequest updateItemRequest = updateItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, updateItemRequest.getTableName());
+        final Map<String, AttributeValue> key = new HashMap<>();
+        key.put("id", new AttributeValue(stubItem.getId()));
+        assertEquals(key, updateItemRequest.getKey());
+        assertEquals(
+                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                        new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
+                updateItemRequest.getExpected().get("version"));
     }
 
     @Test

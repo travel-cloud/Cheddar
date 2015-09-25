@@ -226,6 +226,39 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         return attributeMap;
     }
 
+    private Map<String, AttributeValueUpdate> getAttributeUpdateMap(final Item item,
+            final ItemConfiguration itemConfiguration, final Long version) {
+        final Map<String, AttributeValueUpdate> attributeMap = new HashMap<>();
+        for (final PropertyDescriptor propertyDescriptor : itemConfiguration.propertyDescriptors()) {
+            final String propertyName = propertyDescriptor.getName();
+            if (propertyName.equals(VERSION_ATTRIBUTE)) {
+                attributeMap.put(
+                        propertyName,
+                        new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                                new AttributeValue().withN(String.valueOf(version))));
+            } else if (propertyDescriptor.getWriteMethod() != null) {
+                final AttributeValue attributeValue = DynamoDbPropertyMarshaller.getValue(item, propertyDescriptor);
+                // TODO Only add to attribute map if there is a difference
+                if (attributeMap != null) {
+                    if (attributeValue != null) {
+                        attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                                .withValue(attributeValue));
+                    } else {
+                        attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.DELETE));
+                    }
+                }
+            }
+        }
+        if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
+            final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
+            attributeMap.put(
+                    variantItemConfiguration.parentItemConfiguration().discriminator(),
+                    new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
+                            new AttributeValue(variantItemConfiguration.discriminatorValue())));
+        }
+        return attributeMap;
+    }
+
     @Override
     public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
@@ -245,16 +278,18 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             createUniqueConstraintIndexes(item, itemConfiguration, updatedUniqueConstraintPropertyDescriptors);
         }
         final long newVersion = item.getVersion() + 1;
-        final Map<String, AttributeValue> attributeMap = getAttributeMap(item, itemConfiguration, newVersion);
+        final Map<String, AttributeValueUpdate> attributeMap = getAttributeUpdateMap(item, itemConfiguration,
+                newVersion);
         final Map<String, ExpectedAttributeValue> expectedResults = new HashMap<>();
         expectedResults.put(VERSION_ATTRIBUTE,
                 new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(item.getVersion()))));
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-        final PutItemRequest itemRequest = new PutItemRequest().withTableName(tableName).withItem(attributeMap)
-                .withExpected(expectedResults);
+        final Map<String, AttributeValue> key = generateKey(itemConfiguration.getItemId(item), itemConfiguration);
+        final UpdateItemRequest itemRequest = new UpdateItemRequest().withTableName(tableName).withKey(key)
+                .withAttributeUpdates(attributeMap).withExpected(expectedResults);
         boolean itemRequestSucceeded = false;
         try {
-            amazonDynamoDbClient.putItem(itemRequest);
+            amazonDynamoDbClient.updateItem(itemRequest);
             itemRequestSucceeded = true;
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
             throw new OptimisticLockException("Conflicting write detected while updating item");
