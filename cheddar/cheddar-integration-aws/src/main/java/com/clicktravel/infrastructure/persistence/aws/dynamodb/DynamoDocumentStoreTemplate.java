@@ -45,16 +45,23 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.han
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Deprecated
 public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private DynamoDB dynamoDBClient = null;
+    private final ObjectMapper mapper;
 
     public DynamoDocumentStoreTemplate(final DatabaseSchemaHolder databaseSchemaHolder) {
         super(databaseSchemaHolder);
+        mapper = new ObjectMapper();
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
@@ -177,12 +184,26 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         item.setVersion(newVersion);
 
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-        final com.amazonaws.services.dynamodbv2.document.Item awsItem = com.amazonaws.services.dynamodbv2.document.Item
-                .fromJSON(itemToString(item));
-        final PutItemSpec putItemSpec = new PutItemSpec().withItem(awsItem).withExpected(expectedCondition);
+        final String itemJson = itemToString(item);
+        final PrimaryKey primaryKey = new PrimaryKey();
+        final ItemId itemId = itemConfiguration.getItemId(item);
+        final PrimaryKeyDefinition primaryKeyDefinition = itemConfiguration.primaryKeyDefinition();
+        primaryKey.addComponent(primaryKeyDefinition.propertyName(), itemId.value());
+        if (primaryKeyDefinition instanceof CompoundPrimaryKeyDefinition) {
+            primaryKey.addComponent(((CompoundPrimaryKeyDefinition) primaryKeyDefinition).supportingPropertyName(),
+                    itemId.supportingValue());
+        }
+        Table table = dynamoDBClient.getTable(tableName);
+        final com.amazonaws.services.dynamodbv2.document.Item previousAwsItem = table
+                .getItem(primaryKey);
+        final String previousItemJson = previousAwsItem.toJSON();
 
+        final String mergedJson = mergeJSONObjects(itemJson, previousItemJson);
+        final com.amazonaws.services.dynamodbv2.document.Item awsItem = com.amazonaws.services.dynamodbv2.document.Item
+                .fromJSON(mergedJson);
+        final PutItemSpec putItemSpec = new PutItemSpec().withItem(awsItem).withExpected(expectedCondition);
         try {
-            dynamoDBClient.getTable(tableName).putItem(putItemSpec);
+            table.putItem(putItemSpec);
         } catch (final ConditionalCheckFailedException e) {
             throw new OptimisticLockException("Conflicting write detected while updating item");
         }
@@ -356,8 +377,6 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     <T extends Item> String itemToString(final T item) {
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
         final StringBuilder value = new StringBuilder();
         try {
             value.append(mapper.writeValueAsString(item));
@@ -367,8 +386,37 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         return value.toString();
     }
 
-    <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
-        final ObjectMapper mapper = new ObjectMapper();
+    private String mergeJSONObjects(final String itemJsonString, final String previousJsonString) {
+        try {
+            final JsonNode itemJson = mapper.readTree(itemJsonString);
+            final JsonNode previousItemJson = mapper.readTree(previousJsonString);
+            merge(itemJson, previousItemJson);
+            return mapper.writeValueAsString(previousItemJson);
+        } catch (final IOException e) {
+            throw new RuntimeException("JSON Exception" + e);
+        }
+    }
+
+    public static void merge(final JsonNode primary, final JsonNode backup) {
+        final Iterator<String> fieldNames = backup.fieldNames();
+        while (fieldNames.hasNext()) {
+            final String fieldName = fieldNames.next();
+            final JsonNode primaryValue = primary.get(fieldName);
+            if (primaryValue == null) {
+                final JsonNode backupValue = backup.get(fieldName).deepCopy();
+                ((ObjectNode) primary).set(fieldName, backupValue);
+            } else if (primaryValue.isObject()) {
+                final JsonNode backupValue = backup.get(fieldName);
+                if (backupValue.isObject()) {
+                    merge(primaryValue, backupValue.deepCopy());
+                }
+            } else {
+                ((ObjectNode) backup).set(fieldName, primaryValue);
+            }
+        }
+    }
+
+    private <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
         T value = null;
         try {
             value = mapper.readValue(item, valueType);
