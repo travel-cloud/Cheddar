@@ -41,7 +41,7 @@ configure(subproj) {
     apply plugin: 'checkstyle'
 
     group = 'com.clicktravel'
-    sourceCompatibility = 1.7
+    sourceCompatibility = 1.8
 
     idea { module { excludeDirs += file('bin') } }
 

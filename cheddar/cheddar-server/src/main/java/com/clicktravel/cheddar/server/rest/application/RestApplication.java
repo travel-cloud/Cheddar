@@ -51,6 +51,8 @@ public class RestApplication {
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
         final Logger logger = LoggerFactory.getLogger(RestApplication.class);
+        logger.debug(String.format("java.version:[%s] java.vendor:[%s]", System.getProperty("java.version"),
+                System.getProperty("java.vendor")));
         final RestServer restServer = new RestServer(servicePort, statusPort, bindAddress);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
