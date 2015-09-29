@@ -340,7 +340,43 @@ public class DynamoDbTemplateIntegrationTest {
         assertEquals(stringProperty, updatedItem.getStringProperty());
         assertEquals(stringProperty2, updatedItem.getStringProperty2());
         assertEquals(newStringSetProperty, updatedItem.getStringSetProperty());
+    }
 
+    @Test
+    public void shouldUpdate_withSingleItemHavingLessAttributes() {
+        // Given
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+        final StubItem createdItem = dataGenerator.createStubItem();
+        final Long originalVersion = createdItem.getVersion();
+        final String stringProperty = randomString(10);
+        final String stringProperty2 = randomString(10);
+        final Set<String> oldStringSetProperty = createdItem.getStringSetProperty();
+
+        final StubVariantItem updatedItem = new StubVariantItem();
+        final String itemId = createdItem.getId();
+        updatedItem.setId(itemId);
+        updatedItem.setStringProperty(stringProperty);
+        updatedItem.setStringProperty2(stringProperty2);
+        updatedItem.setVersion(originalVersion);
+        final Long newVersion = originalVersion + 1;
+
+        // When
+        dynamoDbTemplate.update(updatedItem);
+
+        // Then
+        final StubItem updatedItemResult = dynamoDbTemplate.read(new ItemId(itemId), StubItem.class);
+        final StubVariantItem updatedVariantItemResult = dynamoDbTemplate.read(new ItemId(itemId),
+                StubVariantItem.class);
+        assertEquals(newVersion, updatedItemResult.getVersion());
+        assertEquals(itemId, updatedItemResult.getId());
+        assertEquals(stringProperty, updatedItemResult.getStringProperty());
+        assertEquals(stringProperty2, updatedItemResult.getStringProperty2());
+        assertEquals(oldStringSetProperty, updatedItemResult.getStringSetProperty());
+        assertEquals(newVersion, updatedItemResult.getVersion());
+        assertEquals(itemId, updatedVariantItemResult.getId());
+        assertEquals(stringProperty, updatedVariantItemResult.getStringProperty());
+        assertEquals(stringProperty2, updatedVariantItemResult.getStringProperty2());
     }
 
     @Test

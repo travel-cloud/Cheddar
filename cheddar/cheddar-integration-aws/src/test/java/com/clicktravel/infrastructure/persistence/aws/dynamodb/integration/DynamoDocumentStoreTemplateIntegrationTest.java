@@ -16,6 +16,7 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.dynamodb.integration;
 
+import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -28,18 +29,15 @@ import org.junit.experimental.categories.Category;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundPrimaryKeyDefinition;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.DatabaseSchemaHolder;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.ItemConfiguration;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.common.random.Randoms;
 import com.clicktravel.infrastructure.integration.aws.AwsIntegration;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.DynamoDocumentStoreTemplate;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubItem;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubWithRangeItem;
+import com.clicktravel.infrastructure.persistence.aws.dynamodb.*;
 
 @Category({ AwsIntegration.class })
+@SuppressWarnings("deprecation")
 public class DynamoDocumentStoreTemplateIntegrationTest {
 
     private static DynamoDbDataGenerator dataGenerator;
@@ -68,8 +66,12 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
                 dataGenerator.getStubItemTableName());
         final ItemConfiguration stubItemWithRangeConfiguration = new ItemConfiguration(StubWithRangeItem.class,
                 dataGenerator.getStubItemWithRangeTableName(), new CompoundPrimaryKeyDefinition("id", "supportingId"));
+        final ParentItemConfiguration stubParentItemConfiguration = new ParentItemConfiguration(StubParentItem.class,
+                dataGenerator.getStubItemTableName());
         itemConfigurations.add(stubItemConfiguration);
         itemConfigurations.add(stubItemWithRangeConfiguration);
+        itemConfigurations.add(stubParentItemConfiguration);
+        itemConfigurations.add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantItem.class, "a"));
         databaseSchemaHolder = new DatabaseSchemaHolder(dataGenerator.getUnitTestSchemaName(), itemConfigurations);
     }
 
@@ -155,6 +157,43 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         assertEquals(stubItem.getStringProperty(), item.getStringProperty());
         assertEquals(stubItem.getStringProperty2(), item.getStringProperty2());
         assertEquals(stubItem.getStringSetProperty(), item.getStringSetProperty());
+    }
+
+    @Test
+    public void shouldUpdate_withSingleItemHavingLessAttributes() {
+        // Given
+        final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+        final StubItem createdItem = dataGenerator.createStubItem();
+        final Long originalVersion = createdItem.getVersion();
+        final String stringProperty = randomString(10);
+        final String stringProperty2 = randomString(10);
+        final Set<String> oldStringSetProperty = createdItem.getStringSetProperty();
+
+        final StubVariantItem updatedItem = new StubVariantItem();
+        final String itemId = createdItem.getId();
+        updatedItem.setId(itemId);
+        updatedItem.setStringProperty(stringProperty);
+        updatedItem.setStringProperty2(stringProperty2);
+        updatedItem.setVersion(originalVersion);
+        final Long newVersion = originalVersion + 1;
+
+        // When
+        dynamoDbTemplate.update(updatedItem);
+
+        // Then
+        final StubItem updatedItemResult = dynamoDbTemplate.read(new ItemId(itemId), StubItem.class);
+        final StubVariantItem updatedVariantItemResult = dynamoDbTemplate.read(new ItemId(itemId),
+                StubVariantItem.class);
+        assertEquals(newVersion, updatedItemResult.getVersion());
+        assertEquals(itemId, updatedItemResult.getId());
+        assertEquals(stringProperty, updatedItemResult.getStringProperty());
+        assertEquals(stringProperty2, updatedItemResult.getStringProperty2());
+        assertEquals(oldStringSetProperty, updatedItemResult.getStringSetProperty());
+        assertEquals(newVersion, updatedItemResult.getVersion());
+        assertEquals(itemId, updatedVariantItemResult.getId());
+        assertEquals(stringProperty, updatedVariantItemResult.getStringProperty());
+        assertEquals(stringProperty2, updatedVariantItemResult.getStringProperty2());
     }
 
     @Test
