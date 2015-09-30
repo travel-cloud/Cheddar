@@ -20,10 +20,7 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +69,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     /**
      * Simple method for splitting a list into a list of smaller lists of the supplied length
-     * 
+     *
      * @param list
      * @param length
      * @return
@@ -193,9 +190,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             primaryKey.addComponent(((CompoundPrimaryKeyDefinition) primaryKeyDefinition).supportingPropertyName(),
                     itemId.supportingValue());
         }
-        Table table = dynamoDBClient.getTable(tableName);
-        final com.amazonaws.services.dynamodbv2.document.Item previousAwsItem = table
-                .getItem(primaryKey);
+        final Table table = dynamoDBClient.getTable(tableName);
+        final com.amazonaws.services.dynamodbv2.document.Item previousAwsItem = table.getItem(primaryKey);
         final String previousItemJson = previousAwsItem.toJSON();
 
         final String mergedJson = mergeJSONObjects(itemJson, previousItemJson);
@@ -390,30 +386,45 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         try {
             final JsonNode itemJson = mapper.readTree(itemJsonString);
             final JsonNode previousItemJson = mapper.readTree(previousJsonString);
-            merge(itemJson, previousItemJson);
-            return mapper.writeValueAsString(previousItemJson);
+            final JsonNode mergedItemJson = merge(itemJson, previousItemJson);
+            return mapper.writeValueAsString(mergedItemJson);
         } catch (final IOException e) {
             throw new RuntimeException("JSON Exception" + e);
         }
     }
 
-    public static void merge(final JsonNode primary, final JsonNode backup) {
-        final Iterator<String> fieldNames = backup.fieldNames();
-        while (fieldNames.hasNext()) {
-            final String fieldName = fieldNames.next();
-            final JsonNode primaryValue = primary.get(fieldName);
-            if (primaryValue == null) {
-                final JsonNode backupValue = backup.get(fieldName).deepCopy();
-                ((ObjectNode) primary).set(fieldName, backupValue);
-            } else if (primaryValue.isObject()) {
-                final JsonNode backupValue = backup.get(fieldName);
-                if (backupValue.isObject()) {
-                    merge(primaryValue, backupValue.deepCopy());
-                }
+    public JsonNode merge(final JsonNode newNode, final JsonNode oldNode) {
+        final Set<String> allFieldNames = new HashSet<>();
+        final Iterator<String> newNodeFieldNames = oldNode.fieldNames();
+        while (newNodeFieldNames.hasNext()) {
+            allFieldNames.add(newNodeFieldNames.next());
+        }
+        final Iterator<String> oldNodeFieldNames = oldNode.fieldNames();
+        while (oldNodeFieldNames.hasNext()) {
+            allFieldNames.add(oldNodeFieldNames.next());
+        }
+        final JsonNode mergedNode = newNode.deepCopy();
+        for (final String fieldName : allFieldNames) {
+            final JsonNode newNodeValue = newNode.get(fieldName);
+            final JsonNode oldNodeValue = oldNode.get(fieldName);
+            if (newNodeValue == null && oldNodeValue == null) {
+                logger.trace("Skipping (both null): " + fieldName);
+            } else if (newNodeValue == null && oldNodeValue != null) {
+                logger.trace("Using old (new is null): " + fieldName);
+                ((ObjectNode) mergedNode).set(fieldName, oldNodeValue);
+            } else if (newNodeValue != null && oldNodeValue == null) {
+                logger.trace("Using new (old is null): " + fieldName);
+                ((ObjectNode) mergedNode).set(fieldName, newNodeValue);
             } else {
-                ((ObjectNode) backup).set(fieldName, primaryValue);
+                logger.trace("Using new: " + fieldName);
+                if (oldNodeValue.isObject()) {
+                    ((ObjectNode) mergedNode).set(fieldName, merge(newNodeValue, oldNodeValue));
+                } else {
+                    ((ObjectNode) mergedNode).set(fieldName, newNodeValue);
+                }
             }
         }
+        return mergedNode;
     }
 
     private <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
