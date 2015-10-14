@@ -38,8 +38,8 @@ import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 @Priority(Priorities.AUTHENTICATION)
 public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
 
-    private static final String PROXY_AUTHORIZATION = "Proxy-Authorization";
-    private static final String CLICK_PLATFORM_HEADER_VALUE_PREFIX = "clickplatform";
+    private static final String CLICK_PLATFORM_AUTHORIZATION_SCHEME = "clickplatform";
+    private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_SCHEME = "clickplatform-agent";
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
@@ -50,17 +50,9 @@ public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
             for (final String headerValue : headersMap.get(HttpHeaders.AUTHORIZATION)) {
                 final String[] headerValueParts = headerValue.split(" ");
                 if (headerValueParts.length == 2) {
-                    if (CLICK_PLATFORM_HEADER_VALUE_PREFIX.equals(headerValueParts[0])) {
+                    if (CLICK_PLATFORM_AUTHORIZATION_SCHEME.equals(headerValueParts[0])) {
                         principal = headerValueParts[1];
-                    }
-                }
-            }
-        }
-        if (headersMap.containsKey(PROXY_AUTHORIZATION)) {
-            for (final String headerValue : headersMap.get(PROXY_AUTHORIZATION)) {
-                final String[] headerValueParts = headerValue.split(" ");
-                if (headerValueParts.length == 2) {
-                    if (CLICK_PLATFORM_HEADER_VALUE_PREFIX.equals(headerValueParts[0])) {
+                    } else if (CLICK_PLATFORM_AGENT_AUTHORIZATION_SCHEME.equals(headerValueParts[0])) {
                         agent = headerValueParts[1];
                     }
                 }
@@ -74,4 +66,5 @@ public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
             SecurityContextHolder.clear();
         }
     }
+
 }
