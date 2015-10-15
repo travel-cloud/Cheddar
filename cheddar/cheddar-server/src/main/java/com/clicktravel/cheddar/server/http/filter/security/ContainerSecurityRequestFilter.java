@@ -39,20 +39,28 @@ import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
 
     private static final String CLICK_PLATFORM_AUTHORIZATION_SCHEME = "clickplatform";
-    private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_SCHEME = "clickplatform-agent";
+    private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER = "Agent-Authorization";
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
         final MultivaluedMap<String, String> headersMap = requestContext.getHeaders();
         String principal = null;
-        String agent = null;
         if (headersMap.containsKey(HttpHeaders.AUTHORIZATION)) {
             for (final String headerValue : headersMap.get(HttpHeaders.AUTHORIZATION)) {
                 final String[] headerValueParts = headerValue.split(" ");
                 if (headerValueParts.length == 2) {
                     if (CLICK_PLATFORM_AUTHORIZATION_SCHEME.equals(headerValueParts[0])) {
                         principal = headerValueParts[1];
-                    } else if (CLICK_PLATFORM_AGENT_AUTHORIZATION_SCHEME.equals(headerValueParts[0])) {
+                    }
+                }
+            }
+        }
+        String agent = null;
+        if (headersMap.containsKey(CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER)) {
+            for (final String headerValue : headersMap.get(CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER)) {
+                final String[] headerValueParts = headerValue.split(" ");
+                if (headerValueParts.length == 2) {
+                    if (CLICK_PLATFORM_AUTHORIZATION_SCHEME.equals(headerValueParts[0])) {
                         agent = headerValueParts[1];
                     }
                 }
