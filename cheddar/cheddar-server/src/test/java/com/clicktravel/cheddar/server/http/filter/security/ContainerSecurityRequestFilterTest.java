@@ -44,7 +44,7 @@ import com.clicktravel.common.random.Randoms;
 public class ContainerSecurityRequestFilterTest {
 
     private static final String CLICK_PLATFORM_AUTHORIZATION_SCHEME = "clickplatform";
-    private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_SCHEME = "clickplatform-agent";
+    private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER = "Agent-Authorization";
 
     @Test
     public void shouldSetPrincipal_withPrincipalHeader() throws Exception {
@@ -77,7 +77,7 @@ public class ContainerSecurityRequestFilterTest {
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final MultivaluedMap<String, String> headersMap = new MultivaluedHashMap<>();
         headersMap.add(HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_AUTHORIZATION_SCHEME + " " + principal);
-        headersMap.add(HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_AGENT_AUTHORIZATION_SCHEME + " " + agent);
+        headersMap.add(CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER, CLICK_PLATFORM_AUTHORIZATION_SCHEME + " " + agent);
         when(mockContainerRequestContext.getHeaders()).thenReturn(headersMap);
         final ContainerSecurityRequestFilter containerSecurityRequestFilter = new ContainerSecurityRequestFilter();
 
