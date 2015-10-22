@@ -40,7 +40,6 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.Non
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.exception.UnsuccessfulSearchException;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -225,18 +224,12 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     @Override
     public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass) {
-        return fetch(query, itemClass, null);
+        return fetch(query, itemClass, 0);
     }
 
     @Override
-    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass,
-            final Integer maxPageSize) {
+    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass, final int maxPageSize) {
         final long startTimeMillis = System.currentTimeMillis();
-
-        if (maxPageSize != null && maxPageSize < 1) {
-            throw new UnsuccessfulSearchException(
-                    "MaxPageSize value " + maxPageSize + " not valid, must be greater than 0");
-        }
 
         Collection<T> result;
 
@@ -250,13 +243,14 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
         final long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
 
-        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]");
+        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]. "
+                + (maxPageSize > 0 ? "Using maxPageSize [" + maxPageSize + "]." : ""));
 
         return result;
     }
 
     private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass,
-            final Integer maxPageSize) {
+            final int maxPageSize) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
 
@@ -304,11 +298,11 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         return totalItems;
     }
 
-    private QuerySpec generateQuerySpec(final AttributeQuery query, final Integer maxPageSize) {
+    private QuerySpec generateQuerySpec(final AttributeQuery query, final int maxPageSize) {
         final QuerySpec querySpec = new QuerySpec().withHashKey(query.getAttributeName(),
                 query.getCondition().getValues().iterator().next());
 
-        if (maxPageSize != null) {
+        if (maxPageSizeOverridden(maxPageSize)) {
             querySpec.withMaxPageSize(maxPageSize);
         }
 
@@ -316,7 +310,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     private <T extends Item> ScanSpec generateScanSpec(final AttributeQuery query, final Class<T> tableItemType,
-            final Integer maxPageSize) throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+            final int maxPageSize) throws InstantiationException, IllegalAccessException, IllegalArgumentException,
                     InvocationTargetException, NoSuchMethodException, SecurityException {
         final Class<?> clazz = getScanSpecOperandType(query.getAttributeName(), tableItemType);
 
@@ -374,11 +368,19 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             scanSpec = scanSpec.withValueMap(valueMap);
         }
 
-        if (maxPageSize != null) {
+        if (maxPageSizeOverridden(maxPageSize)) {
             scanSpec = scanSpec.withMaxPageSize(maxPageSize);
         }
 
         return scanSpec;
+    }
+
+    private boolean maxPageSizeOverridden(final int maxPageSize) {
+        if (maxPageSize > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     private <T extends Item> Class<?> getScanSpecOperandType(final String fieldName, final Class<T> itemClass) {

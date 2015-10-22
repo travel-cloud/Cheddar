@@ -37,7 +37,6 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.Non
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
-import com.clicktravel.cheddar.infrastructure.persistence.document.search.exception.UnsuccessfulSearchException;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
 public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchDatabaseTemplate {
@@ -233,17 +232,15 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         for (final PropertyDescriptor propertyDescriptor : itemConfiguration.propertyDescriptors()) {
             final String propertyName = propertyDescriptor.getName();
             if (propertyName.equals(VERSION_ATTRIBUTE)) {
-                attributeMap.put(
-                        propertyName,
-                        new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                                new AttributeValue().withN(String.valueOf(version))));
+                attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue().withN(String.valueOf(version))));
             } else if (propertyDescriptor.getWriteMethod() != null) {
                 final AttributeValue attributeValue = DynamoDbPropertyMarshaller.getValue(item, propertyDescriptor);
                 if (attributeMap != null) {
                     // TODO Only add to attribute map if there is a difference
                     if (attributeValue != null) {
-                        attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
-                                .withValue(attributeValue));
+                        attributeMap.put(propertyName,
+                                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(attributeValue));
                     } else {
                         attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.DELETE));
                     }
@@ -252,10 +249,9 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         }
         if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
-            attributeMap.put(
-                    variantItemConfiguration.parentItemConfiguration().discriminator(),
-                    new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                            new AttributeValue(variantItemConfiguration.discriminatorValue())));
+            attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(),
+                    new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                            .withValue(new AttributeValue(variantItemConfiguration.discriminatorValue())));
         }
         return attributeMap;
     }
@@ -415,18 +411,12 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
 
     @Override
     public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass) {
-        return fetch(query, itemClass, null);
+        return fetch(query, itemClass, 0);
     }
 
     @Override
-    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass,
-            final Integer maxPageSize) {
+    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass, final int maxPageSize) {
         final long startTimeMillis = System.currentTimeMillis();
-
-        if (maxPageSize != null && maxPageSize < 1) {
-            throw new UnsuccessfulSearchException(
-                    "MaxPageSize value " + maxPageSize + " not valid, must be greater than 0");
-        }
 
         Collection<T> result;
 
@@ -440,13 +430,14 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
 
         final long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
 
-        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]");
+        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]. "
+                + (maxPageSize > 0 ? "Using maxPageSize [" + maxPageSize + "]." : ""));
 
         return result;
     }
 
     private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass,
-            final Integer maxPageSize) {
+            final int maxPageSize) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final com.amazonaws.services.dynamodbv2.model.Condition condition = new com.amazonaws.services.dynamodbv2.model.Condition();
 
@@ -494,7 +485,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 final QueryRequest queryRequest = new QueryRequest().withTableName(tableName)
                         .withKeyConditions(conditions).withExclusiveStartKey(lastEvaluatedKey);
 
-                if (maxPageSize != null) {
+                if (maxPageSizeOverridden(maxPageSize)) {
                     queryRequest.withLimit(maxPageSize);
                 }
 
@@ -521,7 +512,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 final ScanRequest scanRequest = new ScanRequest().withTableName(tableName).withScanFilter(conditions)
                         .withExclusiveStartKey(lastEvaluatedKey);
 
-                if (maxPageSize != null) {
+                if (maxPageSizeOverridden(maxPageSize)) {
                     scanRequest.withLimit(maxPageSize);
                 }
 
@@ -539,6 +530,14 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         }
 
         return totalItems;
+    }
+
+    private boolean maxPageSizeOverridden(final int maxPageSize) {
+        if (maxPageSize > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     public <T extends Item> Collection<T> executeQuery(final KeySetQuery query, final Class<T> itemClass) {

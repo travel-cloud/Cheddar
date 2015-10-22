@@ -66,7 +66,7 @@ public class AbstractDatabaseTemplateTest {
             @SuppressWarnings("unchecked")
             @Override
             public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass,
-                    final Integer maxPageSize) {
+                    final int maxPageSize) {
                 return (Collection<T>) items;
             }
 
@@ -114,7 +114,7 @@ public class AbstractDatabaseTemplateTest {
             @SuppressWarnings("unchecked")
             @Override
             public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass,
-                    final Integer maxPageSize) {
+                    final int maxPageSize) {
                 return (Collection<T>) items;
             }
 

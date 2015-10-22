@@ -226,7 +226,7 @@ public class DynamoDbTemplateTest {
     @Test
     public void shouldFetch_withAttributeQueryOnIndexWithMaxPageSizeSet() throws Exception {
         // Given
-        final Integer maxPageSize = Randoms.randomIntInRange(1, 100);
+        final int maxPageSize = Randoms.randomIntInRange(0, 100);
         final AttributeQuery query = mock(AttributeQuery.class);
         final Condition mockCondition = mock(Condition.class);
         when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
@@ -265,7 +265,7 @@ public class DynamoDbTemplateTest {
         assertEquals(1, queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().size());
         assertEquals(new AttributeValue(stringProperty),
                 queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().get(0));
-        assertEquals(maxPageSize, queryRequest.getLimit());
+        assertEquals(maxPageSize, queryRequest.getLimit().intValue());
         assertNotNull(returnedItems);
         assertEquals(1, returnedItems.size());
     }

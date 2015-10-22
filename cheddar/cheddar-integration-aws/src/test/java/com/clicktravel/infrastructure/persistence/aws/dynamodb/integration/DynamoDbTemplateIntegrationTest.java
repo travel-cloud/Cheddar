@@ -437,7 +437,7 @@ public class DynamoDbTemplateIntegrationTest {
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
         // When
-        final Collection<StubItem> itemResults = dynamoDbTemplate.fetch(query, StubItem.class, 10);
+        final Collection<StubItem> itemResults = dynamoDbTemplate.fetch(query, StubItem.class, Randoms.randomInt(11));
 
         // Then
         assertNotNull(itemResults);

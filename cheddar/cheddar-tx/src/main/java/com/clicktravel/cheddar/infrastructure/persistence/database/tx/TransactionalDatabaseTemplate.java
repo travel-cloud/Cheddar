@@ -112,8 +112,7 @@ public class TransactionalDatabaseTemplate implements DatabaseTemplate, Transact
     }
 
     @Override
-    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass,
-            final Integer maxPageSize) {
+    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass, final int maxPageSize) {
         return databaseTemplate.fetch(query, itemClass, maxPageSize);
     }
 
