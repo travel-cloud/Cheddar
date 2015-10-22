@@ -171,8 +171,8 @@ public class DynamoDbTemplateTest {
         assertEquals(1, queryRequest.getKeyConditions().size());
         assertEquals("EQ", queryRequest.getKeyConditions().get("id").getComparisonOperator());
         assertEquals(1, queryRequest.getKeyConditions().get("id").getAttributeValueList().size());
-        assertEquals(new AttributeValue(stringProperty), queryRequest.getKeyConditions().get("id")
-                .getAttributeValueList().get(0));
+        assertEquals(new AttributeValue(stringProperty),
+                queryRequest.getKeyConditions().get("id").getAttributeValueList().get(0));
         assertNotNull(returnedItems);
         assertEquals(1, returnedItems.size());
     }
@@ -216,8 +216,56 @@ public class DynamoDbTemplateTest {
         assertEquals(1, queryRequest.getKeyConditions().size());
         assertEquals("EQ", queryRequest.getKeyConditions().get("stringProperty").getComparisonOperator());
         assertEquals(1, queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().size());
-        assertEquals(new AttributeValue(stringProperty), queryRequest.getKeyConditions().get("stringProperty")
-                .getAttributeValueList().get(0));
+        assertEquals(new AttributeValue(stringProperty),
+                queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().get(0));
+        assertEquals(null, queryRequest.getLimit());
+        assertNotNull(returnedItems);
+        assertEquals(1, returnedItems.size());
+    }
+
+    @Test
+    public void shouldFetch_withAttributeQueryOnIndexWithMaxPageSizeSet() throws Exception {
+        // Given
+        final int maxPageSize = Randoms.randomIntInRange(0, 100);
+        final AttributeQuery query = mock(AttributeQuery.class);
+        final Condition mockCondition = mock(Condition.class);
+        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
+        final String itemId = randomId();
+        final String stringProperty = randomString(10);
+        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
+        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(query.getAttributeName()).thenReturn("stringProperty");
+        when(query.getCondition()).thenReturn(mockCondition);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        itemConfiguration.registerIndexes(Arrays.asList(new IndexDefinition("stringProperty")));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        final QueryResult mockQueryResult = mock(QueryResult.class);
+        final Map<String, AttributeValue> mockItem = new HashMap<>();
+        mockItem.put("id", new AttributeValue(itemId));
+        mockItem.put("stringProperty", new AttributeValue(stringProperty));
+        final List<Map<String, AttributeValue>> mockItems = Arrays.asList(mockItem);
+        when(mockQueryResult.getItems()).thenReturn(mockItems);
+        when(mockQueryResult.getLastEvaluatedKey()).thenReturn(null);
+        when(mockAmazonDynamoDbClient.query(any(QueryRequest.class))).thenReturn(mockQueryResult);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        final Collection<StubItem> returnedItems = dynamoDbTemplate.fetch(query, StubItem.class, maxPageSize);
+
+        // Then
+        final ArgumentCaptor<QueryRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(mockAmazonDynamoDbClient).query(queryRequestArgumentCaptor.capture());
+        final QueryRequest queryRequest = queryRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, queryRequest.getTableName());
+        assertEquals("stringProperty_idx", queryRequest.getIndexName());
+        assertEquals(1, queryRequest.getKeyConditions().size());
+        assertEquals("EQ", queryRequest.getKeyConditions().get("stringProperty").getComparisonOperator());
+        assertEquals(1, queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().size());
+        assertEquals(new AttributeValue(stringProperty),
+                queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().get(0));
+        assertEquals(maxPageSize, queryRequest.getLimit().intValue());
         assertNotNull(returnedItems);
         assertEquals(1, returnedItems.size());
     }
@@ -260,8 +308,8 @@ public class DynamoDbTemplateTest {
         assertEquals(1, queryRequest.getKeyConditions().size());
         assertEquals("EQ", queryRequest.getKeyConditions().get("id").getComparisonOperator());
         assertEquals(1, queryRequest.getKeyConditions().get("id").getAttributeValueList().size());
-        assertEquals(new AttributeValue(stringProperty), queryRequest.getKeyConditions().get("id")
-                .getAttributeValueList().get(0));
+        assertEquals(new AttributeValue(stringProperty),
+                queryRequest.getKeyConditions().get("id").getAttributeValueList().get(0));
     }
 
     @Test
@@ -305,8 +353,8 @@ public class DynamoDbTemplateTest {
         stubItem.setId(randomId());
         final String stringPropertyValue = randomString(10);
         stubItem.setStringProperty(stringPropertyValue);
-        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(
-                ConditionalCheckFailedException.class);
+        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
 
         // When
         ItemConstraintViolationException actualException = null;
@@ -370,8 +418,8 @@ public class DynamoDbTemplateTest {
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
         final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
         dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
-        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(
-                ConditionalCheckFailedException.class);
+        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
         final StubItem stubItem = new StubItem();
         stubItem.setId(randomId());
         final String stringPropertyValue = randomString(10);
@@ -410,8 +458,8 @@ public class DynamoDbTemplateTest {
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
         final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
         dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
-        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenThrow(
-                ConditionalCheckFailedException.class);
+        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
         final StubItem stubItem = new StubItem();
         stubItem.setId(randomId());
         final String stringPropertyValue = randomString(10);
@@ -450,8 +498,8 @@ public class DynamoDbTemplateTest {
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
         final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
         dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
-        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenReturn(null).thenThrow(
-                AmazonServiceException.class);
+        when(mockAmazonDynamoDbClient.putItem(any(PutItemRequest.class))).thenReturn(null)
+                .thenThrow(AmazonServiceException.class);
         final StubItem stubItem = new StubItem();
         stubItem.setId(randomId());
         final String stringPropertyValue = randomString(10);
@@ -527,9 +575,9 @@ public class DynamoDbTemplateTest {
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
-                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                        new AttributeValue(stringPropertyValue)),
-                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -549,8 +597,8 @@ public class DynamoDbTemplateTest {
         stubItem.setStringProperty(stringPropertyValue);
         final Long oldVersion = randomLong();
         stubItem.setVersion(oldVersion);
-        when(mockAmazonDynamoDbClient.updateItem(any(UpdateItemRequest.class))).thenThrow(
-                ConditionalCheckFailedException.class);
+        when(mockAmazonDynamoDbClient.updateItem(any(UpdateItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
 
         // When
         OptimisticLockException actualException = null;
@@ -626,9 +674,9 @@ public class DynamoDbTemplateTest {
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 4);
         assertEquals(
-                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                        new AttributeValue(stubItem.getStringProperty2())), updateItemRequest.getAttributeUpdates()
-                        .get("stringProperty2"));
+                new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue(stubItem.getStringProperty2())),
+                updateItemRequest.getAttributeUpdates().get("stringProperty2"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -692,9 +740,9 @@ public class DynamoDbTemplateTest {
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
-                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                        new AttributeValue(stringPropertyValue)),
-                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
 
@@ -762,9 +810,9 @@ public class DynamoDbTemplateTest {
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
-                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                        new AttributeValue(stringPropertyValue)),
-                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -817,8 +865,8 @@ public class DynamoDbTemplateTest {
         key.put("id", new AttributeValue(stubItem.getId()));
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
-        assertEquals(new AttributeValueUpdate().withAction(AttributeAction.DELETE), updateItemRequest
-                .getAttributeUpdates().get("stringProperty"));
+        assertEquals(new AttributeValueUpdate().withAction(AttributeAction.DELETE),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
 
@@ -896,9 +944,9 @@ public class DynamoDbTemplateTest {
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
-                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                        new AttributeValue(newStringPropertyValue)),
-                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue(newStringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
 
@@ -906,7 +954,8 @@ public class DynamoDbTemplateTest {
         assertEquals(schemaName + "-indexes." + tableName, deleteIndexRequest.getTableName());
         assertEquals(2, deleteIndexRequest.getKey().size());
         assertEquals(new AttributeValue("stringProperty"), deleteIndexRequest.getKey().get("property"));
-        assertEquals(new AttributeValue(newStringPropertyValue.toUpperCase()), deleteIndexRequest.getKey().get("value"));
+        assertEquals(new AttributeValue(newStringPropertyValue.toUpperCase()),
+                deleteIndexRequest.getKey().get("value"));
 
         assertNotNull(actualException);
     }
@@ -956,9 +1005,9 @@ public class DynamoDbTemplateTest {
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
-                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                        new AttributeValue(stringPropertyValue)),
-                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -1008,9 +1057,9 @@ public class DynamoDbTemplateTest {
         assertEquals(key, updateItemRequest.getKey());
         assertEquals(updateItemRequest.getAttributeUpdates().size(), 5);
         assertEquals(
-                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                        new AttributeValue(stringPropertyValue)),
-                        updateItemRequest.getAttributeUpdates().get("stringProperty"));
+                new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue(stringPropertyValue)),
+                updateItemRequest.getAttributeUpdates().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(oldVersion))),
                 updateItemRequest.getExpected().get("version"));
     }
@@ -1104,7 +1153,8 @@ public class DynamoDbTemplateTest {
         assertEquals(schemaName + "." + tableName, deleteItemRequest.getTableName());
         assertEquals(2, deleteItemRequest.getKey().size());
         assertEquals(new AttributeValue(stubItem.getId()), deleteItemRequest.getKey().get("id"));
-        assertEquals(new AttributeValue(stubItem.getStringProperty()), deleteItemRequest.getKey().get("stringProperty"));
+        assertEquals(new AttributeValue(stubItem.getStringProperty()),
+                deleteItemRequest.getKey().get("stringProperty"));
         assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(stubItem.getVersion()))),
                 deleteItemRequest.getExpected().get("version"));
     }
@@ -1438,8 +1488,8 @@ public class DynamoDbTemplateTest {
         final AmazonDynamoDB mockAmazonDynamoDbClient = mock(AmazonDynamoDB.class);
         dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
 
-        when(mockAmazonDynamoDbClient.batchWriteItem(any(BatchWriteItemRequest.class))).thenThrow(
-                AmazonServiceException.class);
+        when(mockAmazonDynamoDbClient.batchWriteItem(any(BatchWriteItemRequest.class)))
+                .thenThrow(AmazonServiceException.class);
         final List<StubItem> stubItems = new ArrayList<StubItem>();
         for (int i = 0; i < numberOfItems; i++) {
             final StubItem stubItem = new StubItem();

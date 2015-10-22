@@ -54,8 +54,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             final T item = marshallIntoObject(itemClass, attributeMap);
             return item;
         } catch (final ItemClassDiscriminatorMismatchException e) {
-            throw new NonExistentItemException(String.format("The item of type [%s] with id [%s] does not exist",
-                    itemClass.getName(), itemId));
+            throw new NonExistentItemException(
+                    String.format("The item of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
         }
 
     }
@@ -82,8 +82,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         }
 
         if (getItemResult == null || getItemResult.getItem() == null) {
-            throw new NonExistentItemException(String.format("The item of type [%s] with id [%s] does not exist",
-                    itemClass.getName(), itemId));
+            throw new NonExistentItemException(
+                    String.format("The item of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
         } else {
             return getItemResult.getItem();
         }
@@ -107,8 +107,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         final AttributeValue supportingKeyValue = new AttributeValue();
         if (CompoundPrimaryKeyDefinition.class.isAssignableFrom(primaryKeyDefinition.getClass())) {
             final CompoundPrimaryKeyDefinition compoundPrimaryKeyDefinition = (CompoundPrimaryKeyDefinition) primaryKeyDefinition;
-            final ScalarAttributeType supportingKeyAttributeType = getAttributeType(compoundPrimaryKeyDefinition
-                    .propertyType());
+            final ScalarAttributeType supportingKeyAttributeType = getAttributeType(
+                    compoundPrimaryKeyDefinition.propertyType());
             switch (supportingKeyAttributeType) {
                 case N:
                     supportingKeyValue.withN(itemId.supportingValue());
@@ -135,11 +135,10 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             }
         } else if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
-            final AttributeValue discriminatorAttribute = itemAttributeMap.get(variantItemConfiguration
-                    .parentItemConfiguration().discriminator());
-            if (discriminatorAttribute == null
-                    || !((VariantItemConfiguration) itemConfiguration).discriminatorValue().equals(
-                            discriminatorAttribute.getS())) {
+            final AttributeValue discriminatorAttribute = itemAttributeMap
+                    .get(variantItemConfiguration.parentItemConfiguration().discriminator());
+            if (discriminatorAttribute == null || !((VariantItemConfiguration) itemConfiguration).discriminatorValue()
+                    .equals(discriminatorAttribute.getS())) {
                 throw new ItemClassDiscriminatorMismatchException();
             }
         }
@@ -170,7 +169,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
     }
 
     @Override
-    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T create(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
                 itemConfiguration);
@@ -220,8 +220,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         }
         if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
-            attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(), new AttributeValue(
-                    variantItemConfiguration.discriminatorValue()));
+            attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(),
+                    new AttributeValue(variantItemConfiguration.discriminatorValue()));
         }
         return attributeMap;
     }
@@ -232,17 +232,15 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         for (final PropertyDescriptor propertyDescriptor : itemConfiguration.propertyDescriptors()) {
             final String propertyName = propertyDescriptor.getName();
             if (propertyName.equals(VERSION_ATTRIBUTE)) {
-                attributeMap.put(
-                        propertyName,
-                        new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                                new AttributeValue().withN(String.valueOf(version))));
+                attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue().withN(String.valueOf(version))));
             } else if (propertyDescriptor.getWriteMethod() != null) {
                 final AttributeValue attributeValue = DynamoDbPropertyMarshaller.getValue(item, propertyDescriptor);
                 if (attributeMap != null) {
                     // TODO Only add to attribute map if there is a difference
                     if (attributeValue != null) {
-                        attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
-                                .withValue(attributeValue));
+                        attributeMap.put(propertyName,
+                                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(attributeValue));
                     } else {
                         attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.DELETE));
                     }
@@ -251,16 +249,16 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         }
         if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
-            attributeMap.put(
-                    variantItemConfiguration.parentItemConfiguration().discriminator(),
-                    new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                            new AttributeValue(variantItemConfiguration.discriminatorValue())));
+            attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(),
+                    new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                            .withValue(new AttributeValue(variantItemConfiguration.discriminatorValue())));
         }
         return attributeMap;
     }
 
     @Override
-    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T update(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         if (item.getVersion() == null) {
             return create(item);
@@ -333,13 +331,13 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         try {
             return marshallIntoObject(itemClass, attributeMap);
         } catch (final ItemClassDiscriminatorMismatchException e) {
-            throw new NonExistentItemException(String.format("The item of type [%s] with id [%s] does not exist",
-                    itemClass.getName(), itemId));
+            throw new NonExistentItemException(
+                    String.format("The item of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
         }
     }
 
-    public <T extends Item> Collection<UniqueConstraint> getUpdatedUniqueConstraints(final T item,
-            final T previousItem, final ItemConfiguration itemConfiguration) {
+    public <T extends Item> Collection<UniqueConstraint> getUpdatedUniqueConstraints(final T item, final T previousItem,
+            final ItemConfiguration itemConfiguration) {
         final Map<String, AttributeValue> previousItemAttributeMap = getAttributeMap(previousItem, itemConfiguration,
                 item.getVersion());
         if (!previousItemAttributeMap.get(VERSION_ATTRIBUTE).getN().equals(String.valueOf(item.getVersion()))) {
@@ -393,7 +391,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         key.put(primaryKeyDefinition.propertyName(), new AttributeValue(itemId.value()));
         if (CompoundPrimaryKeyDefinition.class.isAssignableFrom(primaryKeyDefinition.getClass())) {
             final CompoundPrimaryKeyDefinition compoundPrimaryKeyDefinition = (CompoundPrimaryKeyDefinition) primaryKeyDefinition;
-            key.put(compoundPrimaryKeyDefinition.supportingPropertyName(), new AttributeValue(itemId.supportingValue()));
+            key.put(compoundPrimaryKeyDefinition.supportingPropertyName(),
+                    new AttributeValue(itemId.supportingValue()));
         }
         final Map<String, ExpectedAttributeValue> expectedResults = new HashMap<>();
         expectedResults.put(VERSION_ATTRIBUTE,
@@ -412,21 +411,33 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
 
     @Override
     public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass) {
+        return fetch(query, itemClass, 0);
+    }
+
+    @Override
+    public <T extends Item> Collection<T> fetch(final Query query, final Class<T> itemClass, final int maxPageSize) {
         final long startTimeMillis = System.currentTimeMillis();
+
         Collection<T> result;
+
         if (query instanceof AttributeQuery) {
-            result = executeQuery((AttributeQuery) query, itemClass);
+            result = executeQuery((AttributeQuery) query, itemClass, maxPageSize);
         } else if (query instanceof KeySetQuery) {
             result = executeQuery((KeySetQuery) query, itemClass);
         } else {
             throw new UnsupportedQueryException(query.getClass());
         }
+
         final long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
-        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]");
+
+        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]. "
+                + (maxPageSize > 0 ? "Using maxPageSize [" + maxPageSize + "]." : ""));
+
         return result;
     }
 
-    private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass) {
+    private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass,
+            final int maxPageSize) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final com.amazonaws.services.dynamodbv2.model.Condition condition = new com.amazonaws.services.dynamodbv2.model.Condition();
 
@@ -463,45 +474,70 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         final List<T> totalItems = new ArrayList<>();
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
+
         if (itemConfiguration.hasIndexOn(query.getAttributeName())) {
             do {
                 final String queryAttributeName = query.getAttributeName();
                 final PrimaryKeyDefinition primaryKeyDefinition = itemConfiguration.primaryKeyDefinition();
                 final String primaryKeyPropertyName = primaryKeyDefinition.propertyName();
                 final boolean isPrimaryKeyQuery = queryAttributeName.equals(primaryKeyPropertyName);
+
                 final QueryRequest queryRequest = new QueryRequest().withTableName(tableName)
                         .withKeyConditions(conditions).withExclusiveStartKey(lastEvaluatedKey);
+
+                if (maxPageSizeOverridden(maxPageSize)) {
+                    queryRequest.withLimit(maxPageSize);
+                }
+
                 if (!isPrimaryKeyQuery) {
                     queryRequest.withIndexName(queryAttributeName + "_idx");
                 }
 
                 final QueryResult queryResult;
+
                 try {
                     queryResult = amazonDynamoDbClient.query(queryRequest);
                 } catch (final AmazonServiceException e) {
                     throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Query", e);
                 }
+
                 totalItems.addAll(marshallIntoObjects(itemClass, queryResult.getItems()));
                 lastEvaluatedKey = queryResult.getLastEvaluatedKey();
             } while (lastEvaluatedKey != null);
 
         } else {
             logger.debug("Performing table scan with query: " + query);
+
             do {
                 final ScanRequest scanRequest = new ScanRequest().withTableName(tableName).withScanFilter(conditions)
                         .withExclusiveStartKey(lastEvaluatedKey);
+
+                if (maxPageSizeOverridden(maxPageSize)) {
+                    scanRequest.withLimit(maxPageSize);
+                }
+
                 final ScanResult scanResult;
+
                 try {
                     scanResult = amazonDynamoDbClient.scan(scanRequest);
                 } catch (final AmazonServiceException e) {
                     throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Scan", e);
                 }
+
                 totalItems.addAll(marshallIntoObjects(itemClass, scanResult.getItems()));
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
             } while (lastEvaluatedKey != null);
         }
 
         return totalItems;
+    }
+
+    private boolean maxPageSizeOverridden(final int maxPageSize) {
+        if (maxPageSize > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     public <T extends Item> Collection<T> executeQuery(final KeySetQuery query, final Class<T> itemClass) {

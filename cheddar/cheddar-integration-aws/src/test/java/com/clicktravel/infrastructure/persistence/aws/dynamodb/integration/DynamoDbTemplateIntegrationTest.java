@@ -55,8 +55,8 @@ public class DynamoDbTemplateIntegrationTest {
 
     @BeforeClass
     public static void createTables() throws Exception {
-        amazonDynamoDbClient = new AmazonDynamoDBClient(new BasicAWSCredentials(AwsIntegration.getAccessKeyId(),
-                AwsIntegration.getSecretKeyId()));
+        amazonDynamoDbClient = new AmazonDynamoDBClient(
+                new BasicAWSCredentials(AwsIntegration.getAccessKeyId(), AwsIntegration.getSecretKeyId()));
         amazonDynamoDbClient.setEndpoint(AwsIntegration.getDynamoDbEndpoint());
         dataGenerator = new DynamoDbDataGenerator(amazonDynamoDbClient);
 
@@ -426,6 +426,26 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
+    public void shouldFetch_withAttributeQueryAndMaxPageSize() throws Exception {
+        // Given
+        final StubItem createdItem = dataGenerator.createStubItem();
+        final String stringProperty = createdItem.getStringProperty();
+        final StubItem stubItem = new StubItem();
+        stubItem.setStringProperty(stringProperty);
+        final Query query = new AttributeQuery(STRING_PROPERTY, new Condition(Operators.EQUALS, stringProperty));
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+
+        // When
+        final Collection<StubItem> itemResults = dynamoDbTemplate.fetch(query, StubItem.class, Randoms.randomInt(11));
+
+        // Then
+        assertNotNull(itemResults);
+        assertEquals(1, itemResults.size());
+        assertEquals(createdItem, itemResults.iterator().next());
+    }
+
+    @Test
     public void shouldGetEmptySet_withNullAttributeQuery() {
         // Given
         final String stringProperty = null;
@@ -562,8 +582,8 @@ public class DynamoDbTemplateIntegrationTest {
         // Then
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(createdItem.getId()));
-        final GetItemResult result = amazonDynamoDbClient.getItem(dataGenerator.getUnitTestSchemaName() + "."
-                + dataGenerator.getStubItemTableName(), key);
+        final GetItemResult result = amazonDynamoDbClient
+                .getItem(dataGenerator.getUnitTestSchemaName() + "." + dataGenerator.getStubItemTableName(), key);
         assertNull(result.getItem());
     }
 
@@ -581,8 +601,8 @@ public class DynamoDbTemplateIntegrationTest {
         final Map<String, AttributeValue> key = new HashMap<>();
         key.put("id", new AttributeValue(createdItem.getId()));
         key.put("supportingId", new AttributeValue(createdItem.getSupportingId()));
-        final GetItemResult result = amazonDynamoDbClient.getItem(dataGenerator.getUnitTestSchemaName() + "."
-                + dataGenerator.getStubItemWithRangeTableName(), key);
+        final GetItemResult result = amazonDynamoDbClient.getItem(
+                dataGenerator.getUnitTestSchemaName() + "." + dataGenerator.getStubItemWithRangeTableName(), key);
         assertNull(result.getItem());
     }
 
