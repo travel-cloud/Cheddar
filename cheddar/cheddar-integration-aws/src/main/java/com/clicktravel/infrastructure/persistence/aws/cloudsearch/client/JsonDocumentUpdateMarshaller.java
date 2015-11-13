@@ -19,13 +19,13 @@ package com.clicktravel.infrastructure.persistence.aws.cloudsearch.client;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.joda.time.DateTime;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class JsonDocumentUpdateMarshaller {
 
@@ -40,9 +40,10 @@ public class JsonDocumentUpdateMarshaller {
     private JsonDocumentUpdateMarshaller() {
         mapper = new ObjectMapper();
         final SimpleModule module = new SimpleModule();
-        module.addSerializer(DateTime.class, new JodaDateTimeSerializer());
         module.addSerializer(Boolean.class, new BooleanLiteralSerializer());
         mapper.registerModule(module);
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.registerModule(new JodaModule());
         mapper.setPropertyNamingStrategy(new LowerCasePropertyNamingStrategy());
     }
 
