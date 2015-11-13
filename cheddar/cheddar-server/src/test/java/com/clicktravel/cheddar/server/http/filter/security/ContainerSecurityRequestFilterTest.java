@@ -43,7 +43,8 @@ import com.clicktravel.common.random.Randoms;
 @PrepareForTest({ SecurityContextHolder.class })
 public class ContainerSecurityRequestFilterTest {
 
-    private static final String CLICK_PLATFORM_HEADER_VALUE_PREFIX = "clickplatform";
+    private static final String CLICK_PLATFORM_AUTHORIZATION_SCHEME = "clickplatform";
+    private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER = "Agent-Authorization";
 
     @Test
     public void shouldSetPrincipal_withPrincipalHeader() throws Exception {
@@ -52,7 +53,7 @@ public class ContainerSecurityRequestFilterTest {
         final String principal = Randoms.randomString();
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final MultivaluedMap<String, String> headersMap = new MultivaluedHashMap<>();
-        headersMap.add(HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_HEADER_VALUE_PREFIX + " " + principal);
+        headersMap.add(HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_AUTHORIZATION_SCHEME + " " + principal);
         when(mockContainerRequestContext.getHeaders()).thenReturn(headersMap);
         final ContainerSecurityRequestFilter containerSecurityRequestFilter = new ContainerSecurityRequestFilter();
 
@@ -75,8 +76,8 @@ public class ContainerSecurityRequestFilterTest {
         final String agent = Randoms.randomString();
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final MultivaluedMap<String, String> headersMap = new MultivaluedHashMap<>();
-        headersMap.add(HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_HEADER_VALUE_PREFIX + " " + principal);
-        headersMap.add("Proxy-Authorization", CLICK_PLATFORM_HEADER_VALUE_PREFIX + " " + agent);
+        headersMap.add(HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_AUTHORIZATION_SCHEME + " " + principal);
+        headersMap.add(CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER, CLICK_PLATFORM_AUTHORIZATION_SCHEME + " " + agent);
         when(mockContainerRequestContext.getHeaders()).thenReturn(headersMap);
         final ContainerSecurityRequestFilter containerSecurityRequestFilter = new ContainerSecurityRequestFilter();
 

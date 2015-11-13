@@ -22,7 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.amazonaws.auth.policy.*;
+import com.amazonaws.auth.policy.Policy;
+import com.amazonaws.auth.policy.Principal;
+import com.amazonaws.auth.policy.Resource;
+import com.amazonaws.auth.policy.Statement;
 import com.amazonaws.auth.policy.Statement.Effect;
 import com.amazonaws.auth.policy.actions.SQSActions;
 import com.amazonaws.auth.policy.conditions.ArnCondition;
@@ -61,15 +64,15 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
     @Override
     public SqsQueueResource createSqsQueueResourceAndAwsSqsQueueIfAbsent(final String name,
             final SnsTopicResource... snsTopics) {
+        SqsQueueResource sqsQueueResource = null;
         try {
-            final SqsQueueResource sqsQueueResource = createSqsQueueResource(name);
-            return sqsQueueResource;
+            sqsQueueResource = createSqsQueueResource(name);
         } catch (final QueueDoesNotExistException e) {
-            final SqsQueueResource sqsQueueResource = new SqsQueueResource(name, createAwsSqsQueue(name),
-                    amazonSqsClient);
+            sqsQueueResource = new SqsQueueResource(name, createAwsSqsQueue(name), amazonSqsClient);
+        } finally {
             subscribeToSnsTopics(name, sqsQueueResource, snsTopics);
-            return sqsQueueResource;
         }
+        return sqsQueueResource;
     }
 
     private String createAwsSqsQueue(final String name) {
@@ -106,12 +109,9 @@ public class DefaultSqsQueueResourceFactory implements SqsQueueResourceFactory {
 
     private Statement acceptMessagesFromTopicStatement(final SqsQueueResource sqsQueueResource,
             final SnsTopicResource snsTopicResource) {
-        return new Statement(Effect.Allow)
-        .withPrincipals(Principal.AllUsers)
-        .withActions(SQSActions.SendMessage)
-        .withResources(new Resource(sqsQueueResource.queueArn()))
-        .withConditions(
-                new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY,
+        return new Statement(Effect.Allow).withPrincipals(Principal.AllUsers).withActions(SQSActions.SendMessage)
+                .withResources(new Resource(sqsQueueResource.queueArn()))
+                .withConditions(new ArnCondition(ArnComparisonType.ArnEquals, ConditionFactory.SOURCE_ARN_CONDITION_KEY,
                         snsTopicResource.getTopicArn()));
     }
 
