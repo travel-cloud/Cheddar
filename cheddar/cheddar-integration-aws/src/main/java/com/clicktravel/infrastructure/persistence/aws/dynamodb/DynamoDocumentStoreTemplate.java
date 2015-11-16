@@ -45,7 +45,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 @Deprecated
 public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
@@ -59,6 +61,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         mapper = new ObjectMapper();
         mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.registerModule(new JodaModule());
     }
 
     @Override
@@ -115,7 +119,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     @Override
-    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T create(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         item.setVersion(1l);
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
@@ -158,8 +163,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         if (tableItem != null) {
             final String tableText = tableItem.toJSON();
             if (tableText.isEmpty()) {
-                throw new NonExistentItemException(String.format(
-                        "The document of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
+                throw new NonExistentItemException(String
+                        .format("The document of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
             }
             item = stringToItem(tableText, itemClass);
         } else {
@@ -170,7 +175,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     @Override
-    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T update(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         if (item.getVersion() == null) {
             return create(item);
@@ -210,8 +216,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     public void delete(final Item item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-        final DeleteItemSpec deleteItemSpec = new DeleteItemSpec().withPrimaryKey(getPrimaryKey(
-                itemConfiguration.getItemId(item), itemConfiguration));
+        final DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+                .withPrimaryKey(getPrimaryKey(itemConfiguration.getItemId(item), itemConfiguration));
 
         final Table table = dynamoDBClient.getTable(tableName);
         table.deleteItem(deleteItemSpec);
@@ -285,8 +291,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     private QuerySpec generateQuerySpec(final AttributeQuery query) {
-        final QuerySpec querySpec = new QuerySpec().withHashKey(query.getAttributeName(), query.getCondition()
-                .getValues().iterator().next());
+        final QuerySpec querySpec = new QuerySpec().withHashKey(query.getAttributeName(),
+                query.getCondition().getValues().iterator().next());
         return querySpec;
     }
 
@@ -322,8 +328,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             } else if (query.getCondition().getComparisonOperator() == Operators.LESS_THAN_OR_EQUALS) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" <= ").append(":").append(valueMapCount);
-                    final Object valueInstance = clazz.getConstructor(String.class).newInstance(
-                            query.getCondition().getValues().iterator().next());
+                    final Object valueInstance = clazz.getConstructor(String.class)
+                            .newInstance(query.getCondition().getValues().iterator().next());
                     valueMap.with(":" + valueMapCount, valueInstance);
                     valueMapCount++;
                 } else {
@@ -332,8 +338,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             } else if (query.getCondition().getComparisonOperator() == Operators.GREATER_THAN_OR_EQUALS) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" >= ").append(":").append(valueMapCount);
-                    final Object valueInstance = clazz.getConstructor(String.class).newInstance(
-                            query.getCondition().getValues().iterator().next());
+                    final Object valueInstance = clazz.getConstructor(String.class)
+                            .newInstance(query.getCondition().getValues().iterator().next());
                     valueMap.with(":" + valueMapCount, valueInstance);
                     valueMapCount++;
                 } else {
