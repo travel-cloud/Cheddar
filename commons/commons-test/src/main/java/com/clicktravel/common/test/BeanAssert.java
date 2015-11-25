@@ -28,6 +28,8 @@ import java.util.*;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
 import org.mockito.internal.util.collections.Sets;
 
 import com.clicktravel.common.random.Randoms;
@@ -113,6 +115,8 @@ public class BeanAssert {
         supportedPropertyTypes.put(BigDecimal.class, Randoms.randomBigDecimal(10000, randomInt(5)));
         supportedPropertyTypes.put(DateTime.class, Randoms.randomDateTime());
         supportedPropertyTypes.put(LocalDate.class, Randoms.randomDateTime().toLocalDate());
+        supportedPropertyTypes.put(LocalTime.class, Randoms.randomDateTime().toLocalTime());
+        supportedPropertyTypes.put(LocalDateTime.class, Randoms.randomDateTime().toLocalDateTime());
 
         if (supportedPropertyTypes.containsKey(propertyClass)) {
             return supportedPropertyTypes.get(propertyClass);
