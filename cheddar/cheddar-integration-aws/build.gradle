@@ -24,7 +24,7 @@ dependencies {
     compile "org.aspectj:aspectjweaver:1.7.4"
     compile 'javax.mail:mail:1.4.7'
     compile 'joda-time:joda-time:2.8.2'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.0'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3'
     compile 'net.spy:spymemcached:2.11.4' // Used to connect to memcache nodes - the aws version of this file is not in a public repo
 }
 

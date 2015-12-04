@@ -5,6 +5,7 @@ def springVersion = '4.1.1.RELEASE'
 
 dependencies {
     compile project(':cheddar:cheddar-messaging')
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.3'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3'
     compile "org.springframework:spring-context-support:${springVersion}"   //Required for BeanUtils
 }
