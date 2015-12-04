@@ -1,4 +1,4 @@
-apply from: '../../test.gradle'
+apply from: '../../logging-api.gradle'
 
 dependencies {
     compile project(':cheddar:cheddar-metrics')

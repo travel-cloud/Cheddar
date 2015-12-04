@@ -1,9 +1,6 @@
 apply from: '../../test.gradle'
 
-def springVersion = '4.1.1.RELEASE'
-
 dependencies {
+    compile 'org.powermock:powermock-api-mockito:1.6.3'
     compile project(':commons:commons-lang')
-
-    compile 'org.mockito:mockito-core:1.9.5'
 }
