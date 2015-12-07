@@ -31,6 +31,7 @@ public abstract class AbstractEvent implements Event {
 
     static {
         MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
