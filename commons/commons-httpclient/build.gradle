@@ -1,7 +1,7 @@
 apply from: '../../test.gradle'
 apply from: '../../logging-api.gradle'
 
-def jerseyVersion = '2.15'
+def jerseyVersion = '2.22.1'
 
 dependencies {
     compile project(':commons:commons-lang')
