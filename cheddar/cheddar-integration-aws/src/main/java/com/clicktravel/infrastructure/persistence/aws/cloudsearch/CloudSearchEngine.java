@@ -59,10 +59,11 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     private final Map<String, AmazonCloudSearchDomain> documentServiceClients = new HashMap<>();
     private final Map<String, AmazonCloudSearchDomain> searchServiceClients = new HashMap<>();
     private AmazonCloudSearch cloudSearchClient;
-    private AWSCredentials awsCredentials;
+    private AWSCredentials awsCredentials; // set to null when using default credentials provider chain
     private boolean domainEndpointsCached;
     private final JsonDocumentSearchResponseUnmarshaller fieldParser;
 
+    @Deprecated
     public CloudSearchEngine(final DocumentConfigurationHolder documentConfigurationHolder) {
         if (documentConfigurationHolder == null) {
             throw new IllegalArgumentException("Document store configuration must not be null");
@@ -73,6 +74,12 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             documentConfigurations.put(documentConfiguration.documentClass(), documentConfiguration);
         }
         fieldParser = new JsonDocumentSearchResponseUnmarshaller();
+    }
+
+    public CloudSearchEngine(final DocumentConfigurationHolder documentConfigurationHolder,
+            final AmazonCloudSearch cloudSearchClient) {
+        this(documentConfigurationHolder);
+        initialize(cloudSearchClient, null);
     }
 
     public void initialize(final AmazonCloudSearch cloudSearchClient, final AWSCredentials awsCredentials) {
@@ -111,8 +118,8 @@ public class CloudSearchEngine implements DocumentSearchEngine {
                         }
                         final AmazonCloudSearchDomain documentServiceClient = AmazonCloudSearchDomainClientBuilder
                                 .build(awsCredentials, documentServiceEndpoint);
-                        final AmazonCloudSearchDomain searchServiceClient = AmazonCloudSearchDomainClientBuilder.build(
-                                awsCredentials, searchServiceEndpoint);
+                        final AmazonCloudSearchDomain searchServiceClient = AmazonCloudSearchDomainClientBuilder
+                                .build(awsCredentials, searchServiceEndpoint);
                         documentServiceClients.put(domainStatus.getDomainName(), documentServiceClient);
                         searchServiceClients.put(domainStatus.getDomainName(), searchServiceClient);
                     }
@@ -176,7 +183,8 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     private UploadDocumentsRequest uploadDocumentsRequest(final BatchDocumentUpdateRequest batchDocumentUpdateRequest) {
         final UploadDocumentsRequest uploadDocumentsRequest = new UploadDocumentsRequest();
         final byte[] documentUpdatesJsonBytes;
-        final String documentUpdatesJson = JsonDocumentUpdateMarshaller.marshall(batchDocumentUpdateRequest.getDocumentUpdates());
+        final String documentUpdatesJson = JsonDocumentUpdateMarshaller
+                .marshall(batchDocumentUpdateRequest.getDocumentUpdates());
         documentUpdatesJsonBytes = documentUpdatesJson.getBytes(Charset.forName("UTF-8"));
         final InputStream documents = new ByteArrayInputStream(documentUpdatesJsonBytes);
         uploadDocumentsRequest.setDocuments(documents);
@@ -214,8 +222,8 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     /**
      * Passes the query to the correct cloud search domain
      *
-     * AWS could throw an exception on search for example the query may be invalid, we re throw this as a
-     * @link(UnsuccessfulSearchException)
+     * AWS could throw an exception on search for example the query may be invalid, we re throw this as
+     * a @link(UnsuccessfulSearchException)
      */
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,

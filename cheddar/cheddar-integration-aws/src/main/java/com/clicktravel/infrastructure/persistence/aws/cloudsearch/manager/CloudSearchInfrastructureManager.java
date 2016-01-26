@@ -16,7 +16,10 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch.manager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
@@ -33,8 +36,8 @@ import com.clicktravel.infrastructure.persistence.aws.cloudsearch.CloudSearchEng
 
 /**
  * Amazon Web Services CloudSearch Infrastructure Manager
- *
  */
+@Deprecated
 public class CloudSearchInfrastructureManager {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -104,11 +107,12 @@ public class CloudSearchInfrastructureManager {
         logger.debug("CloudSearch domain created: " + domainName);
         final Collection<IndexField> indexFields = indexDefinitionToIndexFieldCollectionMapper.map(indexDefinitions);
         for (final IndexField indexField : indexFields) {
-            final DefineIndexFieldRequest defineIndexFieldRequest = new DefineIndexFieldRequest().withDomainName(
-                    domainName).withIndexField(indexField);
+            final DefineIndexFieldRequest defineIndexFieldRequest = new DefineIndexFieldRequest()
+                    .withDomainName(domainName).withIndexField(indexField);
             final DefineIndexFieldResult defineIndexFieldResult = cloudSearchClient
                     .defineIndexField(defineIndexFieldRequest);
-            if (OptionState.valueOf(defineIndexFieldResult.getIndexField().getStatus().getState()) != OptionState.RequiresIndexDocuments) {
+            if (OptionState.valueOf(defineIndexFieldResult.getIndexField().getStatus()
+                    .getState()) != OptionState.RequiresIndexDocuments) {
                 throw new IllegalStateException(String.format("Index with name %s failed to be created in domain %s",
                         indexField.getIndexFieldName(), domainName));
             }
