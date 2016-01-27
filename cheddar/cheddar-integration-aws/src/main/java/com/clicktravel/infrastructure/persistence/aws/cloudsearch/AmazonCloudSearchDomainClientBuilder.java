@@ -23,7 +23,8 @@ import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomainClient;
 public class AmazonCloudSearchDomainClientBuilder {
 
     public static AmazonCloudSearchDomain build(final AWSCredentials awsCredentials, final String endpoint) {
-        final AmazonCloudSearchDomain amazonCloudSearchDomain = new AmazonCloudSearchDomainClient(awsCredentials);
+        final AmazonCloudSearchDomain amazonCloudSearchDomain = awsCredentials == null
+                ? new AmazonCloudSearchDomainClient() : new AmazonCloudSearchDomainClient(awsCredentials);
         amazonCloudSearchDomain.setEndpoint(endpoint);
         return amazonCloudSearchDomain;
     }
