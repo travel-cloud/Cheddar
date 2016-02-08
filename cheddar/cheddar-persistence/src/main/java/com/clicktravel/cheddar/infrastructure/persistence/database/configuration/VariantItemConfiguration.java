@@ -17,6 +17,8 @@
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 
@@ -24,6 +26,8 @@ public class VariantItemConfiguration extends ItemConfiguration {
 
     private final ParentItemConfiguration parentItemConfiguration;
     private final String discriminatorValue;
+    private final Collection<IndexDefinition> indexDefinitions;
+    private final Collection<UniqueConstraint> uniqueConstraints;
 
     public VariantItemConfiguration(final ParentItemConfiguration parentItemConfiguration,
             final Class<? extends Item> itemClass, final String discriminatorValue) {
@@ -31,6 +35,8 @@ public class VariantItemConfiguration extends ItemConfiguration {
         this.parentItemConfiguration = parentItemConfiguration;
         this.discriminatorValue = discriminatorValue;
         this.parentItemConfiguration.registerVariantItemClass(itemClass, discriminatorValue);
+        indexDefinitions = new HashSet<>();
+        uniqueConstraints = new HashSet<>();
     }
 
     public ParentItemConfiguration parentItemConfiguration() {
@@ -43,22 +49,26 @@ public class VariantItemConfiguration extends ItemConfiguration {
 
     @Override
     public void registerIndexes(final Collection<IndexDefinition> indexDefinitions) {
-        throw new UnsupportedOperationException("VariantItemConfiguration cannot register new indexes");
+        super.registerIndexes(indexDefinitions);
+        this.indexDefinitions.addAll(indexDefinitions);
+        this.indexDefinitions.addAll(parentItemConfiguration.indexDefinitions());
     }
 
     @Override
     public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
-        throw new UnsupportedOperationException("VariantItemConfiguration cannot register new unique constraints");
+        super.registerUniqueConstraints(uniqueConstraints);
+        this.uniqueConstraints.addAll(uniqueConstraints);
+        this.uniqueConstraints.addAll(parentItemConfiguration.uniqueConstraints());
     }
 
     @Override
     public Collection<IndexDefinition> indexDefinitions() {
-        return parentItemConfiguration.indexDefinitions();
+        return Collections.unmodifiableCollection(indexDefinitions);
     }
 
     @Override
     public Collection<UniqueConstraint> uniqueConstraints() {
-        return parentItemConfiguration.uniqueConstraints();
+        return Collections.unmodifiableCollection(uniqueConstraints);
     }
 
 }
