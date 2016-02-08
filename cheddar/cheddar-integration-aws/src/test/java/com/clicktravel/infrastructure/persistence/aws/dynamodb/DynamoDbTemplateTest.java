@@ -272,6 +272,55 @@ public class DynamoDbTemplateTest {
     }
 
     @Test
+    public void shouldFetch_withVariantItemAttributeQueryOnParentIndex() throws Exception {
+        // Given
+        final AttributeQuery query = mock(AttributeQuery.class);
+        final Condition mockCondition = mock(Condition.class);
+        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
+        final String itemId = randomId();
+        final String stringProperty = randomString(10);
+        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
+        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(query.getAttributeName()).thenReturn("stringProperty");
+        when(query.getCondition()).thenReturn(mockCondition);
+        final ParentItemConfiguration parentItemConfiguration = new ParentItemConfiguration(StubItem.class, tableName);
+        parentItemConfiguration.registerIndexes(Arrays.asList(new IndexDefinition("stringProperty")));
+        final VariantItemConfiguration variantItemConfiguration = new VariantItemConfiguration(parentItemConfiguration,
+                StubVariantItem.class, "VARIANT");
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(parentItemConfiguration,
+                variantItemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        final QueryResult mockQueryResult = mock(QueryResult.class);
+        final Map<String, AttributeValue> mockItem = new HashMap<>();
+        mockItem.put("id", new AttributeValue(itemId));
+        mockItem.put("stringProperty", new AttributeValue(stringProperty));
+        mockItem.put("discriminator", new AttributeValue("VARIANT"));
+        final List<Map<String, AttributeValue>> mockItems = Arrays.asList(mockItem);
+        when(mockQueryResult.getItems()).thenReturn(mockItems);
+        when(mockQueryResult.getLastEvaluatedKey()).thenReturn(null);
+        when(mockAmazonDynamoDbClient.query(any(QueryRequest.class))).thenReturn(mockQueryResult);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        final Collection<StubVariantItem> returnedItems = dynamoDbTemplate.fetch(query, StubVariantItem.class);
+
+        // Then
+        final ArgumentCaptor<QueryRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(mockAmazonDynamoDbClient).query(queryRequestArgumentCaptor.capture());
+        final QueryRequest queryRequest = queryRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, queryRequest.getTableName());
+        assertEquals("stringProperty_idx", queryRequest.getIndexName());
+        assertEquals(1, queryRequest.getKeyConditions().size());
+        assertEquals("EQ", queryRequest.getKeyConditions().get("stringProperty").getComparisonOperator());
+        assertEquals(1, queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().size());
+        assertEquals(new AttributeValue(stringProperty),
+                queryRequest.getKeyConditions().get("stringProperty").getAttributeValueList().get(0));
+        assertNotNull(returnedItems);
+        assertEquals(1, returnedItems.size());
+    }
+
+    @Test
     public void shouldNotFetch_withAmazonServiceException() throws Exception {
         // Given
         final AttributeQuery query = mock(AttributeQuery.class);

@@ -26,8 +26,6 @@ public class VariantItemConfiguration extends ItemConfiguration {
 
     private final ParentItemConfiguration parentItemConfiguration;
     private final String discriminatorValue;
-    private final Collection<IndexDefinition> indexDefinitions;
-    private final Collection<UniqueConstraint> uniqueConstraints;
 
     public VariantItemConfiguration(final ParentItemConfiguration parentItemConfiguration,
             final Class<? extends Item> itemClass, final String discriminatorValue) {
@@ -35,8 +33,6 @@ public class VariantItemConfiguration extends ItemConfiguration {
         this.parentItemConfiguration = parentItemConfiguration;
         this.discriminatorValue = discriminatorValue;
         this.parentItemConfiguration.registerVariantItemClass(itemClass, discriminatorValue);
-        indexDefinitions = new HashSet<>();
-        uniqueConstraints = new HashSet<>();
     }
 
     public ParentItemConfiguration parentItemConfiguration() {
@@ -48,27 +44,17 @@ public class VariantItemConfiguration extends ItemConfiguration {
     }
 
     @Override
-    public void registerIndexes(final Collection<IndexDefinition> indexDefinitions) {
-        super.registerIndexes(indexDefinitions);
-        this.indexDefinitions.addAll(indexDefinitions);
-        this.indexDefinitions.addAll(parentItemConfiguration.indexDefinitions());
-    }
-
-    @Override
-    public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
-        super.registerUniqueConstraints(uniqueConstraints);
-        this.uniqueConstraints.addAll(uniqueConstraints);
-        this.uniqueConstraints.addAll(parentItemConfiguration.uniqueConstraints());
-    }
-
-    @Override
     public Collection<IndexDefinition> indexDefinitions() {
-        return Collections.unmodifiableCollection(indexDefinitions);
+        final Collection<IndexDefinition> allIndexDefinitions = new HashSet<>(super.indexDefinitions());
+        allIndexDefinitions.addAll(parentItemConfiguration.indexDefinitions());
+        return Collections.unmodifiableCollection(allIndexDefinitions);
     }
 
     @Override
     public Collection<UniqueConstraint> uniqueConstraints() {
-        return Collections.unmodifiableCollection(uniqueConstraints);
+        final Collection<UniqueConstraint> allUniqueConstraints = new HashSet<>(super.uniqueConstraints());
+        allUniqueConstraints.addAll(parentItemConfiguration.uniqueConstraints());
+        return Collections.unmodifiableCollection(allUniqueConstraints);
     }
 
 }
