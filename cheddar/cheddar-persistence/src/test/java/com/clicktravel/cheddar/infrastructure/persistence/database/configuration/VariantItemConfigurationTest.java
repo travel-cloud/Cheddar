@@ -51,17 +51,17 @@ public class VariantItemConfigurationTest {
         when(parentItemConfiguration.uniqueConstraints()).thenReturn(uniqueConstraints);
 
         // When
-        final VariantItemConfiguration itemConfiguration = new VariantItemConfiguration(parentItemConfiguration,
+        final VariantItemConfiguration variantItemConfiguration = new VariantItemConfiguration(parentItemConfiguration,
                 itemClass, discriminatorValue);
 
         // Then
         verify(parentItemConfiguration).registerVariantItemClass(itemClass, discriminatorValue);
-        assertNotNull(itemConfiguration);
-        assertEquals(parentItemConfiguration, itemConfiguration.parentItemConfiguration());
-        assertEquals(itemClass, itemConfiguration.itemClass());
-        assertEquals(discriminatorValue, itemConfiguration.discriminatorValue());
-        assertThat(itemConfiguration.indexDefinitions(), hasItem(mockIndexDefinition));
-        assertThat(itemConfiguration.uniqueConstraints(), hasItem(mockUniqueConstraint));
+        assertNotNull(variantItemConfiguration);
+        assertEquals(parentItemConfiguration, variantItemConfiguration.parentItemConfiguration());
+        assertEquals(itemClass, variantItemConfiguration.itemClass());
+        assertEquals(discriminatorValue, variantItemConfiguration.discriminatorValue());
+        assertThat(variantItemConfiguration.indexDefinitions(), hasItem(mockIndexDefinition));
+        assertThat(variantItemConfiguration.uniqueConstraints(), hasItem(mockUniqueConstraint));
     }
 
 }
