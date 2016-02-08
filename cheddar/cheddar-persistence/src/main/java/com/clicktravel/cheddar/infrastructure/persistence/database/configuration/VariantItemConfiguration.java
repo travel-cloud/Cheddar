@@ -17,6 +17,8 @@
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 
@@ -42,23 +44,15 @@ public class VariantItemConfiguration extends ItemConfiguration {
     }
 
     @Override
-    public void registerIndexes(final Collection<IndexDefinition> indexDefinitions) {
-        throw new UnsupportedOperationException("VariantItemConfiguration cannot register new indexes");
-    }
-
-    @Override
     public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
         throw new UnsupportedOperationException("VariantItemConfiguration cannot register new unique constraints");
     }
 
     @Override
     public Collection<IndexDefinition> indexDefinitions() {
-        return parentItemConfiguration.indexDefinitions();
-    }
-
-    @Override
-    public Collection<UniqueConstraint> uniqueConstraints() {
-        return parentItemConfiguration.uniqueConstraints();
+        final Collection<IndexDefinition> allIndexDefinitions = new HashSet<>(super.indexDefinitions());
+        allIndexDefinitions.addAll(parentItemConfiguration.indexDefinitions());
+        return Collections.unmodifiableCollection(allIndexDefinitions);
     }
 
 }
