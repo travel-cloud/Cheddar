@@ -44,15 +44,20 @@ public class VariantItemConfiguration extends ItemConfiguration {
     }
 
     @Override
+    public Collection<IndexDefinition> indexDefinitions() {
+        final Collection<IndexDefinition> allIndexDefinitions = new HashSet<>(super.indexDefinitions());
+        allIndexDefinitions.addAll(parentItemConfiguration.indexDefinitions());
+        return Collections.unmodifiableCollection(allIndexDefinitions);
+    }
+
+    @Override
     public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
         throw new UnsupportedOperationException("VariantItemConfiguration cannot register new unique constraints");
     }
 
     @Override
-    public Collection<IndexDefinition> indexDefinitions() {
-        final Collection<IndexDefinition> allIndexDefinitions = new HashSet<>(super.indexDefinitions());
-        allIndexDefinitions.addAll(parentItemConfiguration.indexDefinitions());
-        return Collections.unmodifiableCollection(allIndexDefinitions);
+    public Collection<UniqueConstraint> uniqueConstraints() {
+        return parentItemConfiguration.uniqueConstraints();
     }
 
 }
