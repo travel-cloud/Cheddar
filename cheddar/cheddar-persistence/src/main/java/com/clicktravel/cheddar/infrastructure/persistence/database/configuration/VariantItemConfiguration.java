@@ -16,10 +16,6 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 
 public class VariantItemConfiguration extends ItemConfiguration {
@@ -27,12 +23,25 @@ public class VariantItemConfiguration extends ItemConfiguration {
     private final ParentItemConfiguration parentItemConfiguration;
     private final String discriminatorValue;
 
+    /**
+     * Creates a new VariantItemConfiguration based upon an existing ParentItemConfiguration
+     *
+     * NOTE: The ParentItemConfiguration MUST have its IndexDefinitions and UniqueConstraints already registered in
+     * order for the newly created VariantItemConfiguration to inherit these.
+     *
+     * @param parentItemConfiguration The item configuration on which this VariantItemConfiguration is based
+     * @param itemClass The Class of the Item which this configuration is for
+     * @param discriminatorValue A unique string value associated with each of the variant items. Discriminates between
+     *            multiple variant types
+     */
     public VariantItemConfiguration(final ParentItemConfiguration parentItemConfiguration,
             final Class<? extends Item> itemClass, final String discriminatorValue) {
         super(itemClass, parentItemConfiguration.tableName());
         this.parentItemConfiguration = parentItemConfiguration;
         this.discriminatorValue = discriminatorValue;
         this.parentItemConfiguration.registerVariantItemClass(itemClass, discriminatorValue);
+        registerIndexes(parentItemConfiguration.indexDefinitions());
+        registerUniqueConstraints(parentItemConfiguration.uniqueConstraints());
     }
 
     public ParentItemConfiguration parentItemConfiguration() {
@@ -41,23 +50,6 @@ public class VariantItemConfiguration extends ItemConfiguration {
 
     public String discriminatorValue() {
         return discriminatorValue;
-    }
-
-    @Override
-    public Collection<IndexDefinition> indexDefinitions() {
-        final Collection<IndexDefinition> allIndexDefinitions = new HashSet<>(super.indexDefinitions());
-        allIndexDefinitions.addAll(parentItemConfiguration.indexDefinitions());
-        return Collections.unmodifiableCollection(allIndexDefinitions);
-    }
-
-    @Override
-    public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
-        throw new UnsupportedOperationException("VariantItemConfiguration cannot register new unique constraints");
-    }
-
-    @Override
-    public Collection<UniqueConstraint> uniqueConstraints() {
-        return parentItemConfiguration.uniqueConstraints();
     }
 
 }
