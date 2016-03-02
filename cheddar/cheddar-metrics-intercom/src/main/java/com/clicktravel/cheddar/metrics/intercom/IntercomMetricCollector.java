@@ -69,6 +69,15 @@ public class IntercomMetricCollector implements MetricCollector {
             logger.debug("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
         }
     }
+    
+    @Override
+    public void deleteUser(final String userId) {
+    	try {
+            User.delete(userId);
+        } catch (final Exception e) {
+            logger.debug("Error deleting a Intercom user: " + userId + " - " + e.getMessage());
+        }
+    }
 
     @Override
     public void sendMetric(final Metric metric) {
