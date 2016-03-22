@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.junit.Test;
 
@@ -67,6 +68,26 @@ public class InMemoryMockDocumentSearchEngineTest {
     }
 
     @Test
+    public void shouldDelete_withDocuments() throws Exception {
+        // Given
+        final Collection<Document> documents = Arrays.asList(mock(Document.class), mock(Document.class),
+                mock(Document.class));
+        final InMemoryMockDocumentSearchEngine documentSearchEngine = new InMemoryMockDocumentSearchEngine();
+        for (final Document document : documents) {
+            documentSearchEngine.update(document);
+            assertTrue(documentSearchEngine.contains(document));
+        }
+
+        // When
+        documentSearchEngine.delete(documents);
+
+        // Then
+        for (final Document document : documents) {
+            assertFalse(documentSearchEngine.contains(document));
+        }
+    }
+
+    @Test
     public void shouldVerifyContains_withSingleDocument() throws Exception {
         // Given
         final Document document = mock(Document.class);
@@ -92,8 +113,8 @@ public class InMemoryMockDocumentSearchEngineTest {
         documentSearchEngine.update(document3);
 
         // When
-        final boolean containsDocuments = documentSearchEngine.containsExactly(Arrays.asList(document1, document2,
-                document3));
+        final boolean containsDocuments = documentSearchEngine
+                .containsExactly(Arrays.asList(document1, document2, document3));
 
         // Then
         assertTrue(containsDocuments);
@@ -112,8 +133,8 @@ public class InMemoryMockDocumentSearchEngineTest {
         final DocumentSearchResponse<StubDocument> expectedDocumentSearchResponse = mock(DocumentSearchResponse.class);
 
         // When
-        documentSearchEngine.when(query, start, size, documentClass, searchOptions).thenReturn(
-                expectedDocumentSearchResponse);
+        documentSearchEngine.when(query, start, size, documentClass, searchOptions)
+                .thenReturn(expectedDocumentSearchResponse);
         final DocumentSearchResponse<StubDocument> documentSearchResponse = documentSearchEngine.search(query, start,
                 size, documentClass, searchOptions);
 
@@ -134,8 +155,8 @@ public class InMemoryMockDocumentSearchEngineTest {
         final DocumentSearchResponse<StubDocument> expectedDocumentSearchResponse = mock(DocumentSearchResponse.class);
 
         // When
-        documentSearchEngine.when(query, start, size, documentClass, searchOptions).thenReturn(
-                expectedDocumentSearchResponse);
+        documentSearchEngine.when(query, start, size, documentClass, searchOptions)
+                .thenReturn(expectedDocumentSearchResponse);
         UnexpectedSearchException actualException = null;
         try {
             documentSearchEngine.search(mock(Query.class), start, size, documentClass, searchOptions);
