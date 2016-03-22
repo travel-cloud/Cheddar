@@ -38,13 +38,13 @@ public interface DocumentSearchEngine {
      */
 
     void delete(Document document);
-    
+
     /**
      * Delete all specified documents that have been previously added to the store
      *
      * @param documents - the documents to be deleted
      */
-    
+
     void delete(Collection<? extends Document> documents);
 
     /**
