@@ -78,7 +78,7 @@ public class InMemoryMockDocumentSearchEngineTest {
         }
 
         // When
-        documentSearchEngine.delete(documents, Document.class);
+        documentSearchEngine.delete(documents);
 
         // Then
         for(final Document document : documents){

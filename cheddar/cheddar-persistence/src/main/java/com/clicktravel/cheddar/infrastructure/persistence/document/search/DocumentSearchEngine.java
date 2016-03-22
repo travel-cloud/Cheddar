@@ -45,7 +45,7 @@ public interface DocumentSearchEngine {
      * @param documents - the documents to be deleted
      */
     
-    void delete(Collection<? extends Document> documents, final Class<? extends Document> documentClass);
+    void delete(Collection<? extends Document> documents);
 
     /**
      * Search for documents based on the given query

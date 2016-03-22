@@ -211,22 +211,35 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     @Override
     public void delete(final Document document) {
-        delete(Arrays.asList(document), document.getClass());
+        delete(Arrays.asList(document));
     }
     
-    @Override
-    public void delete(final Collection<? extends Document> documents, final Class<? extends Document> documentClass) {
-    	final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
-    	final String searchDomain = documentConfigurationHolder.schemaName() + "-" + documentConfiguration.namespace();
-    	final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
-    	for(final Document document : documents){
-    		final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
-    		batchDocumentUpdateRequest.withDocument(csDocument);
-    	}
-    	getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
-    }
+	@Override
+	public void delete(final Collection<? extends Document> documents) {
+		if (!documents.isEmpty()) {
+			final Class<? extends Document> documentClass = documents.iterator().next().getClass();
+			checkDocumentsHaveSameClass(documents, documentClass);
+			
+			final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
+			final String searchDomain = documentConfigurationHolder.schemaName() + "-" + documentConfiguration.namespace();
+			final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
+			for (final Document document : documents) {
+				final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
+				batchDocumentUpdateRequest.withDocument(csDocument);
+			}
+			getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+		}
+	}
 
-    /**
+    private void checkDocumentsHaveSameClass(final Collection<? extends Document> documents, final Class<? extends Document> documentClass) {
+		for(final Document document : documents){
+			if(document.getClass() != documentClass){
+				throw new IllegalArgumentException("All documents in the parameter collection should be instances of the same class.");
+			}
+		}
+	}
+
+	/**
      * Passes the query to the correct cloud search domain
      *
      * AWS could throw an exception on search for example the query may be invalid, we re throw this as

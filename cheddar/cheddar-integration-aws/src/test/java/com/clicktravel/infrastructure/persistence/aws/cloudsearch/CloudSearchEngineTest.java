@@ -54,6 +54,7 @@ import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsRequest;
 import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsResult;
 import com.amazonaws.services.cloudsearchv2.model.DomainStatus;
 import com.amazonaws.services.cloudsearchv2.model.ServiceEndpoint;
+import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.configuration.DocumentConfigurationHolder;
@@ -321,6 +322,52 @@ public class CloudSearchEngineTest {
     }
     
     @Test
+    public void shouldNotDelete_withDocumentsNotInstancesOfTheSameClass() throws Exception{
+    	// Given
+    	final Collection<Document> documents = Arrays.asList(mock(Document.class), randomStubDocument());
+    	final String namespace = randomString(10);
+        final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
+        final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
+        final Collection<DocumentConfiguration> documentConfigurations = Arrays.asList(mockStubDocumentConfiguration);
+        final String schemaName = randomString(10);
+        final DocumentConfigurationHolder documentConfigurationHolder = new DocumentConfigurationHolder(schemaName,
+                documentConfigurations);
+        final AmazonCloudSearch mockAmazonCloudSearch = mock(AmazonCloudSearch.class);
+        final AWSCredentials mockAwsCredentials = mock(AWSCredentials.class);
+        final byte[] jsonBytes = randomString().getBytes(Charset.forName("UTF-8"));
+        final String domainName = schemaName + "-" + namespace;
+        final DescribeDomainsRequest describeDomainsRequest = new DescribeDomainsRequest().withDomainNames(Arrays
+                .asList(domainName));
+        final String documentServiceEndpoint = randomString();
+        final DescribeDomainsResult describeDomainsResult = getDescribeDomainsResult(domainName,
+                documentServiceEndpoint, randomString());
+        final AmazonCloudSearchDomain mockDocumentServiceClient = mock(AmazonCloudSearchDomain.class);
+        mockStatic(JsonDocumentUpdateMarshaller.class);
+        when(JsonDocumentUpdateMarshaller.marshall(anyCollection())).thenReturn(new String(jsonBytes));
+        doReturn(StubDocument.class).when(mockStubDocumentConfiguration).documentClass();
+        when(mockStubDocumentConfiguration.namespace()).thenReturn(namespace);
+        when(mockStubDocumentConfiguration.properties()).thenReturn(properties);
+        when(mockAmazonCloudSearch.describeDomains(describeDomainsRequest)).thenReturn(describeDomainsResult);
+        mockStatic(AmazonCloudSearchDomainClientBuilder.class);
+        when(AmazonCloudSearchDomainClientBuilder.build(mockAwsCredentials, documentServiceEndpoint)).thenReturn(
+                mockDocumentServiceClient);
+        
+        final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder);
+        cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
+    	
+        // When
+    	IllegalArgumentException thrownException = null;
+    	try{
+            cloudSearchEngine.delete(documents);
+    	}catch(final IllegalArgumentException e){
+    		thrownException = e;
+    	}
+
+    	// Then
+    	assertNotNull(thrownException);
+    }
+    
+    @Test
     public void shouldDelete_withDocuments() throws Exception {
         // Given
         final Collection<StubDocument> documents = randomCollectionOfStubDocuments();
@@ -355,7 +402,7 @@ public class CloudSearchEngineTest {
         cloudSearchEngine.initialize(mockAmazonCloudSearch, mockAwsCredentials);
 
         // When
-        cloudSearchEngine.delete(documents, StubDocument.class);
+        cloudSearchEngine.delete(documents);
 
         // Then
         final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
