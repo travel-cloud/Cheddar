@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.junit.Test;
 
@@ -64,6 +65,25 @@ public class InMemoryMockDocumentSearchEngineTest {
 
         // Then
         assertFalse(documentSearchEngine.contains(document));
+    }
+    
+    @Test
+    public void shouldDelete_withDocuments() throws Exception {
+        // Given
+    	final Collection<Document> documents = Arrays.asList(mock(Document.class), mock(Document.class), mock(Document.class));
+        final InMemoryMockDocumentSearchEngine documentSearchEngine = new InMemoryMockDocumentSearchEngine();
+        for(final Document document : documents){
+        	documentSearchEngine.update(document);
+        	assertTrue(documentSearchEngine.contains(document));
+        }
+
+        // When
+        documentSearchEngine.delete(documents, Document.class);
+
+        // Then
+        for(final Document document : documents){
+        	assertFalse(documentSearchEngine.contains(document));
+        }
     }
 
     @Test

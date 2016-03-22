@@ -211,12 +211,19 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     @Override
     public void delete(final Document document) {
-        final DocumentConfiguration documentConfiguration = getDocumentConfiguration(document.getClass());
-        final String searchDomain = documentConfigurationHolder.schemaName() + "-" + documentConfiguration.namespace();
-        final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
-        final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
-        batchDocumentUpdateRequest.withDocument(csDocument);
-        getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+        delete(Arrays.asList(document), document.getClass());
+    }
+    
+    @Override
+    public void delete(final Collection<? extends Document> documents, final Class<? extends Document> documentClass) {
+    	final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
+    	final String searchDomain = documentConfigurationHolder.schemaName() + "-" + documentConfiguration.namespace();
+    	final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
+    	for(final Document document : documents){
+    		final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
+    		batchDocumentUpdateRequest.withDocument(csDocument);
+    	}
+    	getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
     }
 
     /**

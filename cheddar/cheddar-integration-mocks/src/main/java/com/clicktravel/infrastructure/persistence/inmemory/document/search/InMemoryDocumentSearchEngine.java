@@ -42,6 +42,11 @@ public class InMemoryDocumentSearchEngine implements DocumentSearchEngine {
     public void delete(final Document document) {
         allDocuments.remove(document);
     }
+    
+    @Override
+    public void delete(Collection<? extends Document> documents, Class<? extends Document> documentClass) {
+    	allDocuments.removeAll(documents);
+    }
 
     @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
