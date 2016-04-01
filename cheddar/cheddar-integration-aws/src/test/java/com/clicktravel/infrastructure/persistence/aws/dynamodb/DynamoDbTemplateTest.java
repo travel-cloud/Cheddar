@@ -1384,6 +1384,42 @@ public class DynamoDbTemplateTest {
     }
 
     @Test
+    public void shouldNotDeleteItem_withConditionalCheckFailedException() throws Exception {
+        // Given
+        final StubItem stubItem = new StubItem();
+        stubItem.setId(randomId());
+        stubItem.setVersion(randomLong());
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        when(mockAmazonDynamoDbClient.deleteItem(any(DeleteItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.class);
+
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        OptimisticLockException actualException = null;
+        try {
+            dynamoDbTemplate.delete(stubItem);
+        } catch (final OptimisticLockException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+        final ArgumentCaptor<DeleteItemRequest> deleteItemRequestArgumentCaptor = ArgumentCaptor
+                .forClass(DeleteItemRequest.class);
+        verify(mockAmazonDynamoDbClient).deleteItem(deleteItemRequestArgumentCaptor.capture());
+        final DeleteItemRequest deleteItemRequest = deleteItemRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, deleteItemRequest.getTableName());
+        assertEquals(1, deleteItemRequest.getKey().size());
+        assertEquals(new AttributeValue(stubItem.getId()), deleteItemRequest.getKey().get("id"));
+        assertEquals(new ExpectedAttributeValue(new AttributeValue().withN(String.valueOf(stubItem.getVersion()))),
+                deleteItemRequest.getExpected().get("version"));
+    }
+
+    @Test
     public void shouldNotDeleteItem_withAmazonServiceException() throws Exception {
         // Given
         final StubItem stubItem = new StubItem();
