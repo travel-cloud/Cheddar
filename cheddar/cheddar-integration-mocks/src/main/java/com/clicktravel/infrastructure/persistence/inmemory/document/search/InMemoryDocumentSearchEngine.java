@@ -44,6 +44,11 @@ public class InMemoryDocumentSearchEngine implements DocumentSearchEngine {
     }
 
     @Override
+    public void delete(final Collection<? extends Document> documents) {
+        allDocuments.removeAll(documents);
+    }
+
+    @Override
     public <T extends Document> DocumentSearchResponse<T> search(final Query query, final Integer start,
             final Integer size, final Class<T> documentClass, final SearchOptions searchOptions) {
         throw new UnsupportedOperationException();

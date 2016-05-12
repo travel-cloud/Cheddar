@@ -211,12 +211,35 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     @Override
     public void delete(final Document document) {
-        final DocumentConfiguration documentConfiguration = getDocumentConfiguration(document.getClass());
-        final String searchDomain = documentConfigurationHolder.schemaName() + "-" + documentConfiguration.namespace();
-        final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
-        final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
-        batchDocumentUpdateRequest.withDocument(csDocument);
-        getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+        delete(Arrays.asList(document));
+    }
+
+    @Override
+    public void delete(final Collection<? extends Document> documents) {
+        if (!documents.isEmpty()) {
+            final Class<? extends Document> documentClass = documents.iterator().next().getClass();
+            checkDocumentsHaveSameClass(documents, documentClass);
+
+            final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
+            final String searchDomain = documentConfigurationHolder.schemaName() + "-"
+                    + documentConfiguration.namespace();
+            final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
+            for (final Document document : documents) {
+                final DocumentUpdate csDocument = new DocumentUpdate(Type.DELETE, document.getId());
+                batchDocumentUpdateRequest.withDocument(csDocument);
+            }
+            getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+        }
+    }
+
+    private void checkDocumentsHaveSameClass(final Collection<? extends Document> documents,
+            final Class<? extends Document> documentClass) {
+        for (final Document document : documents) {
+            if (document.getClass() != documentClass) {
+                throw new IllegalArgumentException(
+                        "All documents in the parameter collection should be instances of the same class.");
+            }
+        }
     }
 
     /**
