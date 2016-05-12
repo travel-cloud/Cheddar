@@ -36,14 +36,14 @@ import com.clicktravel.cheddar.request.context.features.FeatureSetContextHolder;
 @Priority(Priorities.USER)
 public class ContainerFeatureSetRequestFilter implements ContainerRequestFilter {
 
-    private static final String TRAVEL_CLOUD_FEATURE_SET_ID_HEADER = "Travel-Cloud-Feature-Set-Id";
+    private static final String FEATURE_SET_ID_HEADER = "Feature-Set-Id";
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
         final MultivaluedMap<String, String> headersMap = requestContext.getHeaders();
         FeatureSetContextHolder.clear();
-        if (headersMap.containsKey(TRAVEL_CLOUD_FEATURE_SET_ID_HEADER)) {
-            for (final String featureSetId : headersMap.get(TRAVEL_CLOUD_FEATURE_SET_ID_HEADER)) {
+        if (headersMap.containsKey(FEATURE_SET_ID_HEADER)) {
+            for (final String featureSetId : headersMap.get(FEATURE_SET_ID_HEADER)) {
                 if (!featureSetId.isEmpty()) {
                     FeatureSetContextHolder.set(new FeatureSetContext(featureSetId));
                 }

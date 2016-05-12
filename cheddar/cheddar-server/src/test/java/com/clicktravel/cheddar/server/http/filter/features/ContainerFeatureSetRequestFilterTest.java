@@ -41,7 +41,7 @@ import com.clicktravel.cheddar.request.context.features.FeatureSetContextHolder;
 @PrepareForTest({ FeatureSetContextHolder.class })
 public class ContainerFeatureSetRequestFilterTest {
 
-    private static final String TRAVEL_CLOUD_FEATURE_SET_ID_HEADER = "Travel-Cloud-Feature-Set-Id";
+    private static final String FEATURE_SET_ID_HEADER = "Feature-Set-Id";
 
     @Test
     public void shouldSetFeatureSet_withFeatureSetHeader() throws Exception {
@@ -50,7 +50,7 @@ public class ContainerFeatureSetRequestFilterTest {
         final String featureSetId = randomId();
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final MultivaluedMap<String, String> headersMap = new MultivaluedHashMap<>();
-        headersMap.add(TRAVEL_CLOUD_FEATURE_SET_ID_HEADER, featureSetId);
+        headersMap.add(FEATURE_SET_ID_HEADER, featureSetId);
         when(mockContainerRequestContext.getHeaders()).thenReturn(headersMap);
         final ContainerFeatureSetRequestFilter containerFeatureSetRequestFilter = new ContainerFeatureSetRequestFilter();
 
