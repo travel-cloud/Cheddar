@@ -25,7 +25,7 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
 
-import com.clicktravel.cheddar.request.context.features.FeatureSetContextHolder;
+import com.clicktravel.cheddar.features.FeaturesContextHolder;
 
 @Provider
 @Priority(Priorities.USER)
@@ -34,6 +34,6 @@ public class ContainerFeatureSetResponseFilter implements ContainerResponseFilte
     @Override
     public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
             throws IOException {
-        FeatureSetContextHolder.clear();
+        FeaturesContextHolder.clear();
     }
 }

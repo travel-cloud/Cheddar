@@ -14,26 +14,18 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.request.context.features;
+package com.clicktravel.cheddar.features;
 
 /**
- * Retains the security context for the scope of a request.
+ * Interface to define a Feature.
+ *
+ * A Feature represents business logic which may be toggled.
  */
-public class FeatureSetContextHolder {
+public interface Feature {
 
-    private final static ThreadLocal<FeatureSetContext> FEATURE_SET_ID_CONTEXT = new ThreadLocal<FeatureSetContext>() {
-    };
-
-    public static void set(final FeatureSetContext featureSetContext) {
-        FEATURE_SET_ID_CONTEXT.set(featureSetContext);
-    }
-
-    public static FeatureSetContext get() {
-        return FEATURE_SET_ID_CONTEXT.get();
-    }
-
-    public static void clear() {
-        FEATURE_SET_ID_CONTEXT.remove();
-    }
+    /**
+     * @return The name of this feature
+     */
+    String name();
 
 }

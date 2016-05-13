@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.request.context.features;
+package com.clicktravel.cheddar.features;
 
 import static com.clicktravel.common.random.Randoms.randomId;
 import static org.hamcrest.core.Is.is;
@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
+
+import com.clicktravel.cheddar.features.FeaturesContext;
 
 public class FeatureSetContextTest {
 
@@ -31,11 +33,11 @@ public class FeatureSetContextTest {
         final String featureSetId = randomId();
 
         // When
-        final FeatureSetContext featureSetContext = new FeatureSetContext(featureSetId);
+        final FeaturesContext featuresContext = new FeaturesContext(featureSetId);
 
         // Then
-        assertNotNull(featureSetContext);
-        assertThat(featureSetContext.featureSetId(), is(featureSetId));
+        assertNotNull(featuresContext);
+        assertThat(featuresContext.featureSetId(), is(featureSetId));
     }
 
 }

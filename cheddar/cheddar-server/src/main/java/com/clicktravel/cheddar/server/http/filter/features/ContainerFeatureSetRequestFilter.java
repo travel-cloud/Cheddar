@@ -25,12 +25,12 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
-import com.clicktravel.cheddar.request.context.features.FeatureSetContext;
-import com.clicktravel.cheddar.request.context.features.FeatureSetContextHolder;
+import com.clicktravel.cheddar.features.FeaturesContext;
+import com.clicktravel.cheddar.features.FeaturesContextHolder;
 
 /**
  * Intercept each HTTP request to extract the feature set header and set its value within
- * {@link com.clicktravel.cheddar.request.context.features.FeatureSetContextHolder}
+ * {@link com.clicktravel.cheddar.features.FeaturesContextHolder}
  */
 @Provider
 @Priority(Priorities.USER)
@@ -41,11 +41,11 @@ public class ContainerFeatureSetRequestFilter implements ContainerRequestFilter 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
         final MultivaluedMap<String, String> headersMap = requestContext.getHeaders();
-        FeatureSetContextHolder.clear();
+        FeaturesContextHolder.clear();
         if (headersMap.containsKey(FEATURE_SET_ID_HEADER)) {
             for (final String featureSetId : headersMap.get(FEATURE_SET_ID_HEADER)) {
                 if (!featureSetId.isEmpty()) {
-                    FeatureSetContextHolder.set(new FeatureSetContext(featureSetId));
+                    FeaturesContextHolder.set(new FeaturesContext(featureSetId));
                 }
             }
         }

@@ -28,16 +28,16 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.clicktravel.cheddar.request.context.features.FeatureSetContextHolder;
+import com.clicktravel.cheddar.features.FeaturesContextHolder;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ FeatureSetContextHolder.class })
+@PrepareForTest({ FeaturesContextHolder.class })
 public class ContainerFeatureSetResponseFilterTest {
 
     @Test
     public void shouldClearPrincipal_onFilter() throws Exception {
         // Given
-        mockStatic(FeatureSetContextHolder.class);
+        mockStatic(FeaturesContextHolder.class);
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final ContainerResponseContext mockContainerResponseContext = mock(ContainerResponseContext.class);
         final ContainerFeatureSetResponseFilter containerFeatureSetResponseFilter = new ContainerFeatureSetResponseFilter();
@@ -47,6 +47,6 @@ public class ContainerFeatureSetResponseFilterTest {
 
         // Then
         verifyStatic();
-        FeatureSetContextHolder.clear();
+        FeaturesContextHolder.clear();
     }
 }

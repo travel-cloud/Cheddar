@@ -14,18 +14,26 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.request.context.features;
+package com.clicktravel.cheddar.features;
 
-public class FeatureSetContext {
+/**
+ * Retains the features context for the scope of the current execution thread.
+ */
+public class FeaturesContextHolder {
 
-    private final String featureSetId;
+    private final static ThreadLocal<FeaturesContext> FEATURES_CONTEXT = new ThreadLocal<FeaturesContext>() {
+    };
 
-    public FeatureSetContext(final String featureSetId) {
-        this.featureSetId = featureSetId;
+    public static void set(final FeaturesContext featuresContext) {
+        FEATURES_CONTEXT.set(featuresContext);
     }
 
-    public String featureSetId() {
-        return featureSetId;
+    public static FeaturesContext get() {
+        return FEATURES_CONTEXT.get();
+    }
+
+    public static void clear() {
+        FEATURES_CONTEXT.remove();
     }
 
 }
