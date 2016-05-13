@@ -26,4 +26,10 @@ import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
  */
 public class NewAppInstancesDeployedEvent extends AbstractSystemEvent {
 
+    @Override
+    public String toString() {
+        return "NewAppInstancesDeployedEvent [getTargetApplicationName()=" + getTargetApplicationName()
+                + ", getTargetApplicationVersion()=" + getTargetApplicationVersion() + "]";
+    }
+
 }

@@ -26,4 +26,10 @@ import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
  */
 public class OldAppInstancesEventProcessingHaltedEvent extends AbstractSystemEvent {
 
+    @Override
+    public String toString() {
+        return "OldAppInstancesEventProcessingHaltedEvent [getTargetApplicationName()=" + getTargetApplicationName()
+                + ", getTargetApplicationVersion()=" + getTargetApplicationVersion() + "]";
+    }
+
 }

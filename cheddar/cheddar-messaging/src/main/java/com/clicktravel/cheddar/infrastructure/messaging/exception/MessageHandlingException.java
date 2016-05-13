@@ -20,6 +20,14 @@ public class MessageHandlingException extends MessagingException {
 
     private static final long serialVersionUID = 5991755885193413206L;
 
+    public MessageHandlingException(final String message) {
+        super(message);
+    }
+
+    public MessageHandlingException(final Throwable cause) {
+        super(cause);
+    }
+
     public MessageHandlingException(final String message, final Throwable cause) {
         super(message, cause);
     }

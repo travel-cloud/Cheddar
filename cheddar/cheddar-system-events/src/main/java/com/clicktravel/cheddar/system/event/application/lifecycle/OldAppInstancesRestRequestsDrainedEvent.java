@@ -26,4 +26,10 @@ import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
  */
 public class OldAppInstancesRestRequestsDrainedEvent extends AbstractSystemEvent {
 
+    @Override
+    public String toString() {
+        return "OldAppInstancesRestRequestsDrainedEvent [getTargetApplicationName()=" + getTargetApplicationName()
+                + ", getTargetApplicationVersion()=" + getTargetApplicationVersion() + "]";
+    }
+
 }

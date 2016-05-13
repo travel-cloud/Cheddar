@@ -25,4 +25,10 @@ import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
  */
 public class OldAppInstancesTerminatedEvent extends AbstractSystemEvent {
 
+    @Override
+    public String toString() {
+        return "OldAppInstancesTerminatedEvent [getTargetApplicationName()=" + getTargetApplicationName()
+                + ", getTargetApplicationVersion()=" + getTargetApplicationVersion() + "]";
+    }
+
 }

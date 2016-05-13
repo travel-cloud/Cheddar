@@ -16,9 +16,6 @@
  */
 package com.clicktravel.infrastructure.messaging.aws.sns;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.services.sns.AmazonSNS;
@@ -35,7 +32,6 @@ public class SnsTopicResource {
 
     private static final String TOPIC_POLICY_ATTRIBUTE = "Policy";
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String topicName;
     private final String topicArn;
     private final AmazonSNS amazonSnsClient;
@@ -54,8 +50,6 @@ public class SnsTopicResource {
      */
     public void publish(final String subject, final String message) throws AmazonClientException {
         amazonSnsClient.publish(new PublishRequest().withTopicArn(topicArn).withSubject(subject).withMessage(message));
-        logger.debug("Successfully published message; subject:[" + subject + "] message:[" + message + "] snsName:["
-                + topicName + "]");
     }
 
     /**
@@ -74,8 +68,8 @@ public class SnsTopicResource {
      * @throws AmazonClientException
      */
     public void setPolicy(final Policy policy) throws AmazonClientException {
-        amazonSnsClient.setTopicAttributes(new SetTopicAttributesRequest(topicArn, TOPIC_POLICY_ATTRIBUTE, policy
-                .toJson()));
+        amazonSnsClient
+                .setTopicAttributes(new SetTopicAttributesRequest(topicArn, TOPIC_POLICY_ATTRIBUTE, policy.toJson()));
     }
 
     /**

@@ -26,4 +26,10 @@ import com.clicktravel.cheddar.system.event.AbstractSystemEvent;
  */
 public class NewAppInstancesBecomingHealthyEvent extends AbstractSystemEvent {
 
+    @Override
+    public String toString() {
+        return "NewAppInstancesBecomingHealthyEvent [getTargetApplicationName()=" + getTargetApplicationName()
+                + ", getTargetApplicationVersion()=" + getTargetApplicationVersion() + "]";
+    }
+
 }
