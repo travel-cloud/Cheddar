@@ -31,4 +31,11 @@ public class ApplicationInstanceStartedEvent extends AbstractPlatformManagementE
         this.applicationInstanceName = applicationInstanceName;
     }
 
+    @Override
+    public String toString() {
+        return "ApplicationInstanceStartedEvent [applicationInstanceName=" + applicationInstanceName
+                + ", getTargetApplicationName()=" + getTargetApplicationName() + ", getTargetApplicationVersion()="
+                + getTargetApplicationVersion() + "]";
+    }
+
 }
