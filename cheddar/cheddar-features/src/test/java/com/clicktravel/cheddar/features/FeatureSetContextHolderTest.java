@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.request.context.features;
+package com.clicktravel.cheddar.features;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -22,27 +22,30 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
+import com.clicktravel.cheddar.features.FeaturesContext;
+import com.clicktravel.cheddar.features.FeaturesContextHolder;
+
 public class FeatureSetContextHolderTest {
 
     @Test
     public void shouldSetFeatureSetContext_withOneThread() {
         // Given
-        final FeatureSetContext featureSetContext = mock(FeatureSetContext.class);
+        final FeaturesContext featuresContext = mock(FeaturesContext.class);
 
         // When
-        FeatureSetContextHolder.set(featureSetContext);
-        final FeatureSetContext resultFeatureSetContext = FeatureSetContextHolder.get();
+        FeaturesContextHolder.set(featuresContext);
+        final FeaturesContext resultFeatureSetContext = FeaturesContextHolder.get();
 
         // Then
         assertNotNull(resultFeatureSetContext);
-        assertEquals(featureSetContext, resultFeatureSetContext);
+        assertEquals(featuresContext, resultFeatureSetContext);
     }
 
     @Test
     public void shouldSetFeatureSetContext_withTwoThreads() throws Exception {
         // Given
-        final FeatureSetContext featureSetContext1 = mock(FeatureSetContext.class);
-        final FeatureSetContext featureSetContext2 = mock(FeatureSetContext.class);
+        final FeaturesContext featureSetContext1 = mock(FeaturesContext.class);
+        final FeaturesContext featureSetContext2 = mock(FeaturesContext.class);
 
         // When
         final ContextTestThread thread1 = new ContextTestThread(featureSetContext1);
@@ -53,8 +56,8 @@ public class FeatureSetContextHolderTest {
         Thread.sleep(1000);
         thread1.carryOn();
         Thread.sleep(1000);
-        final FeatureSetContext resultFeatureSetContext1 = thread1.getResultFeatureSetContext();
-        final FeatureSetContext resultFeatureSetContext2 = thread2.getResultFeatureSetContext();
+        final FeaturesContext resultFeatureSetContext1 = thread1.getResultFeatureSetContext();
+        final FeaturesContext resultFeatureSetContext2 = thread2.getResultFeatureSetContext();
 
         // Then
         assertNotNull(resultFeatureSetContext1);
@@ -65,12 +68,12 @@ public class FeatureSetContextHolderTest {
 
     private static class ContextTestThread extends Thread {
 
-        private final FeatureSetContext featureSetContext;
-        private FeatureSetContext resultFeatureSetContext;
+        private final FeaturesContext featuresContext;
+        private FeaturesContext resultFeatureSetContext;
         private boolean notRunning = true;
 
-        public ContextTestThread(final FeatureSetContext featureSetContext) {
-            this.featureSetContext = featureSetContext;
+        public ContextTestThread(final FeaturesContext featuresContext) {
+            this.featuresContext = featuresContext;
         }
 
         public void carryOn() {
@@ -79,7 +82,7 @@ public class FeatureSetContextHolderTest {
 
         @Override
         public void run() {
-            FeatureSetContextHolder.set(featureSetContext);
+            FeaturesContextHolder.set(featuresContext);
             while (notRunning) {
                 try {
                     // Give the other thread time to process
@@ -87,10 +90,10 @@ public class FeatureSetContextHolderTest {
                 } catch (final InterruptedException e) {
                 }
             }
-            resultFeatureSetContext = FeatureSetContextHolder.get();
+            resultFeatureSetContext = FeaturesContextHolder.get();
         }
 
-        public FeatureSetContext getResultFeatureSetContext() {
+        public FeaturesContext getResultFeatureSetContext() {
             return resultFeatureSetContext;
         }
 
