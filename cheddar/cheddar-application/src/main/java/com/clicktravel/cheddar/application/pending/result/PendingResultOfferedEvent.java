@@ -45,7 +45,7 @@ public class PendingResultOfferedEvent extends AbstractSystemEvent {
 
     @Override
     public String toString() {
-        return "PendingResultOfferedEvent [pendingResultId=" + pendingResultId + ", resultXml=" + resultXml + "]";
+        return "PendingResultOfferedEvent [pendingResultId=" + pendingResultId + "]";
     }
 
 }
