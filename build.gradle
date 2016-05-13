@@ -104,7 +104,9 @@ task checkAllWithIntegrationIfNeeded {
 integrationTestTask.mustRunAfter checkAll
 
 // Upload source and binaries for all subprojects
-task uploadAll { dependsOn { subproj.uploadArchives } }
+task uploadAll (dependsOn: subproj.uploadArchives) << {
+    println "Uploaded Cheddar version ${version}"
+}
 
 // Upload source and binaries, but only if checks pass for all subprojects
 task checkAndUploadAll { dependsOn { [checkAllWithIntegrationIfNeeded, uploadAll] } }
