@@ -34,11 +34,11 @@ import org.mockito.ArgumentCaptor;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.clicktravel.cheddar.request.context.features.FeatureSetContext;
-import com.clicktravel.cheddar.request.context.features.FeatureSetContextHolder;
+import com.clicktravel.cheddar.features.FeaturesContext;
+import com.clicktravel.cheddar.features.FeaturesContextHolder;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ FeatureSetContextHolder.class })
+@PrepareForTest({ FeaturesContextHolder.class })
 public class ContainerFeatureSetRequestFilterTest {
 
     private static final String FEATURE_SET_ID_HEADER = "Feature-Set-Id";
@@ -46,7 +46,7 @@ public class ContainerFeatureSetRequestFilterTest {
     @Test
     public void shouldSetFeatureSet_withFeatureSetHeader() throws Exception {
         // Given
-        mockStatic(FeatureSetContextHolder.class);
+        mockStatic(FeaturesContextHolder.class);
         final String featureSetId = randomId();
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final MultivaluedMap<String, String> headersMap = new MultivaluedHashMap<>();
@@ -58,17 +58,16 @@ public class ContainerFeatureSetRequestFilterTest {
         containerFeatureSetRequestFilter.filter(mockContainerRequestContext);
 
         // Then
-        final ArgumentCaptor<FeatureSetContext> featureSetContextCaptor = ArgumentCaptor
-                .forClass(FeatureSetContext.class);
+        final ArgumentCaptor<FeaturesContext> featuresContextCaptor = ArgumentCaptor.forClass(FeaturesContext.class);
         verifyStatic();
-        FeatureSetContextHolder.set(featureSetContextCaptor.capture());
-        assertThat(featureSetContextCaptor.getValue().featureSetId(), is(featureSetId));
+        FeaturesContextHolder.set(featuresContextCaptor.capture());
+        assertThat(featuresContextCaptor.getValue().featureSetId(), is(featureSetId));
     }
 
     @Test
     public void shouldNotSetFeatureSet_withNoHeader() throws Exception {
         // Given
-        mockStatic(FeatureSetContextHolder.class);
+        mockStatic(FeaturesContextHolder.class);
         final ContainerRequestContext mockContainerRequestContext = mock(ContainerRequestContext.class);
         final MultivaluedMap<String, String> headersMap = new MultivaluedHashMap<>();
         when(mockContainerRequestContext.getHeaders()).thenReturn(headersMap);
@@ -79,6 +78,6 @@ public class ContainerFeatureSetRequestFilterTest {
 
         // Then
         verifyStatic();
-        FeatureSetContextHolder.clear();
+        FeaturesContextHolder.clear();
     }
 }
