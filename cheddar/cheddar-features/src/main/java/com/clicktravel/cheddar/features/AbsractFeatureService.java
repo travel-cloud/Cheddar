@@ -20,10 +20,10 @@ import java.util.Set;
 
 public abstract class AbsractFeatureService {
 
-    public abstract Set<Feature> supportedFeatures(final FeaturesContext featuresContext);
+    public abstract Set<Feature> enabledFeatures(final FeaturesContext featuresContext);
 
-    public boolean enabled(final Feature feature) {
-        return supportedFeatures(FeaturesContextHolder.get()).contains(feature);
+    public boolean isEnabled(final Feature feature) {
+        return enabledFeatures(FeaturesContextHolder.get()).contains(feature);
     }
 
 }
