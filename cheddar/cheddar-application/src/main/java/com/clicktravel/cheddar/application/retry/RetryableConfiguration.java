@@ -16,16 +16,16 @@
  */
 package com.clicktravel.cheddar.application.retry;
 
-public class RetryableUtils {
+public class RetryableConfiguration {
 
-    private static boolean retryableDisabled = false;
+    private static boolean retryableEnabled = true;
 
-    public static boolean isRetryableDisabled() {
-        return retryableDisabled;
+    public static boolean isRetryableEnabled() {
+        return retryableEnabled;
     }
 
-    public static void setRetryableDisabled(final boolean retryableDisabled) {
-        RetryableUtils.retryableDisabled = retryableDisabled;
+    public static void setRetryableEnabled(final boolean retryableEnabled) {
+        RetryableConfiguration.retryableEnabled = retryableEnabled;
     }
 
 }

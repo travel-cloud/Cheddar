@@ -79,7 +79,7 @@ public class RetryableAspect {
 
     private boolean shouldRetryMethod(final Class<? extends Throwable> thrownClass, final Retryable retryable,
             final int attempts) {
-        if (RetryableUtils.isRetryableDisabled() || attempts >= retryable.maxAttempts()) {
+        if (!RetryableConfiguration.isRetryableEnabled() || attempts >= retryable.maxAttempts()) {
             return false;
         }
         final HashSet<Class<? extends Throwable>> failClasses = new HashSet<>(
