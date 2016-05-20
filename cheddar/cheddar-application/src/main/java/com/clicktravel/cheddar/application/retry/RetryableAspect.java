@@ -60,8 +60,8 @@ public class RetryableAspect {
     }
 
     @Around("@annotation(retryable)")
-    public Object attemptMethodAndRetryIfNeeded(final ProceedingJoinPoint proceedingJoinPoint, final Retryable retryable)
-            throws Throwable {
+    public Object attemptMethodAndRetryIfNeeded(final ProceedingJoinPoint proceedingJoinPoint,
+            final Retryable retryable) throws Throwable {
         int attempts = 0;
         do {
             try {
@@ -79,11 +79,11 @@ public class RetryableAspect {
 
     private boolean shouldRetryMethod(final Class<? extends Throwable> thrownClass, final Retryable retryable,
             final int attempts) {
-        if (attempts >= retryable.maxAttempts()) {
+        if (RetryableUtils.isRetryableDisabled() || attempts >= retryable.maxAttempts()) {
             return false;
         }
-        final HashSet<Class<? extends Throwable>> failClasses = new HashSet<>(Arrays.asList(retryable
-                .failImmediatelyOn()));
+        final HashSet<Class<? extends Throwable>> failClasses = new HashSet<>(
+                Arrays.asList(retryable.failImmediatelyOn()));
         failClasses.addAll(alwaysImmediateFailureExceptionClasses);
         for (final Class<? extends Throwable> failClass : failClasses) {
             if (failClass.isAssignableFrom(thrownClass)) {
