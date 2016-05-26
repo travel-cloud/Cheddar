@@ -18,12 +18,15 @@ package com.clicktravel.cheddar.features;
 
 import java.util.Set;
 
-public abstract class AbsractFeatureService {
+public abstract class AbstractFeatureService {
 
-    public abstract Set<Feature> enabledFeatures(final FeaturesContext featuresContext);
+    public abstract Set<String> featureSetIds();
+
+    public abstract Set<Feature> enabledFeatures(final String featureSetId);
 
     public boolean isEnabled(final Feature feature) {
-        return enabledFeatures(FeaturesContextHolder.get()).contains(feature);
+        final FeaturesContext featuresContext = FeaturesContextHolder.get();
+        return featuresContext != null && enabledFeatures(featuresContext.featureSetId()).contains(feature);
     }
 
 }
