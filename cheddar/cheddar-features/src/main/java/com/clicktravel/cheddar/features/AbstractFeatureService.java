@@ -25,7 +25,8 @@ public abstract class AbstractFeatureService {
     public abstract Set<Feature> enabledFeatures(final String featureSetId);
 
     public boolean isEnabled(final Feature feature) {
-        return enabledFeatures(FeaturesContextHolder.get().featureSetId()).contains(feature);
+        final FeaturesContext featuresContext = FeaturesContextHolder.get();
+        return featuresContext != null && enabledFeatures(featuresContext.featureSetId()).contains(feature);
     }
 
 }
