@@ -94,7 +94,7 @@ public class S3FileStore implements InternetFileStore {
             }
             throw e;
         } catch (final IOException e1) {
-            logger.error("Error occured while closing S3Object Stream");
+            logger.warn("Error closing S3Object", e1);
         }
         return fileItem;
     }
