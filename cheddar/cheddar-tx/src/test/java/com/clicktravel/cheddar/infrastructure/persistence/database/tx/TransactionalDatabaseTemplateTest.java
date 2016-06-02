@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.junit.Test;
+import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.internal.util.collections.Sets;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.DatabaseTemplate;
@@ -187,7 +188,8 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldCreate_withPersistenceExceptionHandlers() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
 
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
                 mockDatabaseTemplate);
@@ -245,9 +247,11 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldCommitCreate_withPersistenceExceptionHandler() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
+        when(persistenceExceptionHandler.getExceptionClass()).thenAnswer(new Returns(PersistenceException.class));
         when(mockDatabaseTemplate.create(item)).thenThrow(persistenceException);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
                 mockDatabaseTemplate);
@@ -264,9 +268,11 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldNotCommitCreate_withPersistenceExceptionHandlerThrowingException() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
+        when(persistenceExceptionHandler.getExceptionClass()).thenAnswer(new Returns(PersistenceException.class));
         when(mockDatabaseTemplate.create(item)).thenThrow(persistenceException);
         final RuntimeException runtimeException = mock(RuntimeException.class);
         doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
@@ -313,7 +319,8 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldUpdate_withPersistenceExceptionHandler() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
 
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
                 mockDatabaseTemplate);
@@ -371,8 +378,10 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldCommitUpdate_withPersistenceExceptionHandler() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
+        when(persistenceExceptionHandler.getExceptionClass()).thenAnswer(new Returns(PersistenceException.class));
         final PersistenceException persistenceException = mock(PersistenceException.class);
         when(mockDatabaseTemplate.update(item)).thenThrow(persistenceException);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
@@ -390,9 +399,11 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldNotCommitUpdate_withPersistenceExceptionHandlerThrowingException() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
+        when(persistenceExceptionHandler.getExceptionClass()).thenAnswer(new Returns(PersistenceException.class));
         when(mockDatabaseTemplate.update(item)).thenThrow(persistenceException);
         final RuntimeException runtimeException = mock(RuntimeException.class);
         doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);
@@ -496,9 +507,11 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldCommitDelete_withPersistenceExceptionHandler() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
+        when(persistenceExceptionHandler.getExceptionClass()).thenAnswer(new Returns(PersistenceException.class));
         doThrow(persistenceException).when(mockDatabaseTemplate).delete(item);
         final TransactionalDatabaseTemplate transactionalDatabaseTemplate = new TransactionalDatabaseTemplate(
                 mockDatabaseTemplate);
@@ -515,9 +528,11 @@ public class TransactionalDatabaseTemplateTest {
     @Test
     public void shouldNotCommitDelete_withPersistenceExceptionHandlerThrowingException() throws Exception {
         // Given
-        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(PersistenceExceptionHandler.class);
+        final PersistenceExceptionHandler<PersistenceException> persistenceExceptionHandler = mock(
+                PersistenceExceptionHandler.class);
         final StubItem item = randomStubItem();
         final PersistenceException persistenceException = mock(PersistenceException.class);
+        when(persistenceExceptionHandler.getExceptionClass()).thenAnswer(new Returns(PersistenceException.class));
         doThrow(persistenceException).when(mockDatabaseTemplate).delete(item);
         final RuntimeException runtimeException = mock(RuntimeException.class);
         doThrow(runtimeException).when(persistenceExceptionHandler).handle(persistenceException);

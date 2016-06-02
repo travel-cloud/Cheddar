@@ -39,6 +39,11 @@ public class InMemoryDocumentSearchEngine implements DocumentSearchEngine {
     }
 
     @Override
+    public void update(final Collection<? extends Document> documents) {
+        allDocuments.addAll(documents);
+    }
+
+    @Override
     public void delete(final Document document) {
         allDocuments.remove(document);
     }
