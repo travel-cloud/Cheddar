@@ -64,8 +64,8 @@ public abstract class DatabaseAction<T> {
             final PersistenceException persistenceException) throws NoSuchMethodException {
         for (final Method method : persistenceExceptionHandler.getClass().getMethods()) {
             final Class<?>[] parameterTypes = method.getParameterTypes();
-            if (method.getName().equals("handle") && parameterTypes.length == 1
-                    && parameterTypes[0].isAssignableFrom(persistenceException.getClass())) {
+            if (method.getName().equals("handle") && parameterTypes.length == 1 && persistenceExceptionHandler
+                    .getExceptionClass().isAssignableFrom(persistenceException.getClass())) {
                 return method;
             }
         }

@@ -868,7 +868,7 @@ public class CloudSearchEngineTest {
 
     private Collection<StubDocument> randomCollectionOfStubDocuments() {
         final Collection<StubDocument> documents = new ArrayList<>();
-        final int numberOfDocuments = Randoms.randomInt(10);
+        final int numberOfDocuments = Randoms.randomIntInRange(1, 10);
         for (int i = 0; i < numberOfDocuments; i++) {
             documents.add(randomStubDocument());
         }
