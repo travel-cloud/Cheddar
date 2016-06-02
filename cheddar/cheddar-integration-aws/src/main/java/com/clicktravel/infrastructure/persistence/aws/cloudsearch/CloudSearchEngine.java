@@ -162,7 +162,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
 
             for (final Document document : documents) {
-                final DocumentUpdate csDocument = new DocumentUpdate(Type.ADD, document.getId());
+                final DocumentUpdate documentUpdate = new DocumentUpdate(Type.ADD, document.getId());
                 final Collection<Field> fields = new ArrayList<>();
                 for (final IndexDefinition indexDefinition : documentConfiguration.indexDefinitions()) {
                     final String indexName = indexDefinition.getName();
@@ -173,8 +173,8 @@ public class CloudSearchEngine implements DocumentSearchEngine {
                     final Field field = new Field(indexName, getPropertyValue(document, propertyDescriptor));
                     fields.add(field);
                 }
-                csDocument.withFields(fields);
-                batchDocumentUpdateRequest.withDocument(csDocument);
+                documentUpdate.withFields(fields);
+                batchDocumentUpdateRequest.withDocument(documentUpdate);
             }
             getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
         }
