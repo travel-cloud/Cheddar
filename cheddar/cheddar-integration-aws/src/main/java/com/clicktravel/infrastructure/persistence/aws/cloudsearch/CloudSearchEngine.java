@@ -147,23 +147,37 @@ public class CloudSearchEngine implements DocumentSearchEngine {
 
     @Override
     public void update(final Document document) {
-        final DocumentConfiguration documentConfiguration = getDocumentConfiguration(document.getClass());
-        final String searchDomain = documentConfigurationHolder.schemaName() + "-" + documentConfiguration.namespace();
-        final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
-        final DocumentUpdate csDocument = new DocumentUpdate(Type.ADD, document.getId());
-        final Collection<Field> fields = new ArrayList<>();
-        for (final IndexDefinition indexDefinition : documentConfiguration.indexDefinitions()) {
-            final String indexName = indexDefinition.getName();
-            final PropertyDescriptor propertyDescriptor = documentConfiguration.properties().get(indexName);
-            if (propertyDescriptor == null) {
-                throw new IllegalStateException("No property found for index: " + indexName);
+        update(Arrays.asList(document));
+    }
+
+    @Override
+    public void update(final Collection<? extends Document> documents) {
+        if (!documents.isEmpty()) {
+            final Class<? extends Document> documentClass = documents.iterator().next().getClass();
+            checkDocumentsHaveSameClass(documents, documentClass);
+
+            final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
+            final String searchDomain = documentConfigurationHolder.schemaName() + "-"
+                    + documentConfiguration.namespace();
+            final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
+
+            for (final Document document : documents) {
+                final DocumentUpdate documentUpdate = new DocumentUpdate(Type.ADD, document.getId());
+                final Collection<Field> fields = new ArrayList<>();
+                for (final IndexDefinition indexDefinition : documentConfiguration.indexDefinitions()) {
+                    final String indexName = indexDefinition.getName();
+                    final PropertyDescriptor propertyDescriptor = documentConfiguration.properties().get(indexName);
+                    if (propertyDescriptor == null) {
+                        throw new IllegalStateException("No property found for index: " + indexName);
+                    }
+                    final Field field = new Field(indexName, getPropertyValue(document, propertyDescriptor));
+                    fields.add(field);
+                }
+                documentUpdate.withFields(fields);
+                batchDocumentUpdateRequest.withDocument(documentUpdate);
             }
-            final Field field = new Field(indexName, getPropertyValue(document, propertyDescriptor));
-            fields.add(field);
+            getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
         }
-        csDocument.withFields(fields);
-        batchDocumentUpdateRequest.withDocument(csDocument);
-        getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
     }
 
     private AmazonCloudSearchDomain getDocumentServiceClient(final String domainName) {
