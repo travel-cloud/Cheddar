@@ -50,6 +50,11 @@ public class CreateActionTest {
             }
 
             @Override
+            public Class<OptimisticLockException> getExceptionClass() {
+                return OptimisticLockException.class;
+            }
+
+            @Override
             public String toString() {
                 return "OptimisticLockExceptionHandler";
             }
@@ -60,6 +65,11 @@ public class CreateActionTest {
             @Override
             public void handle(final ItemConstraintViolationException exception) {
                 handlersCalled.add(toString());
+            }
+
+            @Override
+            public Class<ItemConstraintViolationException> getExceptionClass() {
+                return ItemConstraintViolationException.class;
             }
 
             @Override
@@ -99,6 +109,11 @@ public class CreateActionTest {
             }
 
             @Override
+            public Class<PersistenceException> getExceptionClass() {
+                return PersistenceException.class;
+            }
+
+            @Override
             public String toString() {
                 return "PersistenceExceptionHandler";
             }
@@ -109,6 +124,11 @@ public class CreateActionTest {
             @Override
             public void handle(final ItemConstraintViolationException exception) {
                 handlersCalled.add(toString());
+            }
+
+            @Override
+            public Class<ItemConstraintViolationException> getExceptionClass() {
+                return ItemConstraintViolationException.class;
             }
 
             @Override

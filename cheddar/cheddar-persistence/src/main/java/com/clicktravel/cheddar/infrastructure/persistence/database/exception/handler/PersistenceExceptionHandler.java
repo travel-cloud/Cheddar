@@ -22,8 +22,6 @@ public interface PersistenceExceptionHandler<T extends PersistenceException> {
 
     abstract void handle(T exception);
 
-    default Class<? extends PersistenceException> getExceptionClass() {
-        return PersistenceException.class;
-    }
+    Class<T> getExceptionClass();
 
 }
