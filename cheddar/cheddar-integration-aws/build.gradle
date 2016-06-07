@@ -2,6 +2,7 @@ apply from: '../../test.gradle'
 apply from: '../../logging-api.gradle'
 
 def springVersion = '4.1.1.RELEASE'
+def awsSdkVersion = '1.11.6'
 
 dependencies {
     compile project(':commons:commons-lang')
@@ -9,14 +10,14 @@ dependencies {
     compile project(':cheddar:cheddar-messaging')
     compile project(':cheddar:cheddar-persistence')
 
-    compile 'com.amazonaws:aws-java-sdk-s3:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-dynamodb:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-ses:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-sns:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-sqs:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-cloudsearch:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-cloudwatch:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-lambda:1.10.20'
+    compile "com.amazonaws:aws-java-sdk-s3:${awsSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-dynamodb:${awsSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-ses:${awsSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-sns:${awsSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-sqs:${awsSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-cloudsearch:${awsSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-cloudwatch:${awsSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-lambda:${awsSdkVersion}"
     compile "org.springframework:spring-context-support:${springVersion}"
     compile "org.springframework:spring-aop:${springVersion}"
 

@@ -35,7 +35,6 @@ import com.amazonaws.services.cloudsearchv2.AmazonCloudSearch;
 import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsRequest;
 import com.amazonaws.services.cloudsearchv2.model.DescribeDomainsResult;
 import com.amazonaws.services.cloudsearchv2.model.DomainStatus;
-import com.amazonaws.util.json.JSONObject;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchEngine;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.DocumentSearchResponse;
@@ -49,6 +48,8 @@ import com.clicktravel.cheddar.infrastructure.persistence.document.search.sort.S
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.*;
 import com.clicktravel.infrastructure.persistence.aws.cloudsearch.client.DocumentUpdate.Type;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CloudSearchEngine implements DocumentSearchEngine {
 
@@ -62,6 +63,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
     private AWSCredentials awsCredentials; // set to null when using default credentials provider chain
     private boolean domainEndpointsCached;
     private final JsonDocumentSearchResponseUnmarshaller fieldParser;
+    private final ObjectMapper objectMapper;
 
     @Deprecated
     public CloudSearchEngine(final DocumentConfigurationHolder documentConfigurationHolder) {
@@ -74,6 +76,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             documentConfigurations.put(documentConfiguration.documentClass(), documentConfiguration);
         }
         fieldParser = new JsonDocumentSearchResponseUnmarshaller();
+        objectMapper = new ObjectMapper();
     }
 
     public CloudSearchEngine(final DocumentConfigurationHolder documentConfigurationHolder,
@@ -283,7 +286,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             searchRequest.setSize((long) size);
 
             if (!options.getExpressions().isEmpty()) {
-                searchRequest.setExpr(new JSONObject(options.getExpressions()).toString());
+                searchRequest.setExpr(objectMapper.writeValueAsString(options.getExpressions()));
             }
 
             if (options.getSortOrder() != SortOrder.DEFAULT) {
@@ -324,7 +327,7 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             final long totalResults = searchResult.getHits().getFound();
             final String cursor = searchResult.getHits().getCursor();
             return new DocumentSearchResponse<T>((int) totalResults, cursor, documents);
-        } catch (final AmazonServiceException e) {
+        } catch (final AmazonServiceException | JsonProcessingException e) {
             throw new PersistenceResourceFailureException("Unable to perform CloudSearch query", e);
         }
     }
