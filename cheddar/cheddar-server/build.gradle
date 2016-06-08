@@ -1,8 +1,6 @@
 apply from: '../../test.gradle'
 apply from: '../../logging-api.gradle'
 
-def jerseyVersion = '2.22.1'
-
 dependencies {
     compile project(':cheddar:cheddar-rest')
     compile project(':cheddar:cheddar-messaging')
@@ -12,4 +10,5 @@ dependencies {
     compile "org.glassfish.jersey.ext:jersey-spring3:${jerseyVersion}"
     compile "org.glassfish.jersey.containers:jersey-container-grizzly2-http:${jerseyVersion}"
     compile 'javax.servlet:javax.servlet-api:3.1.0'
+    compile "org.slf4j:jul-to-slf4j:${slf4jVersion}"
 }

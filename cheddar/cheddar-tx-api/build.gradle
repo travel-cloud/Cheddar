@@ -1,5 +1,3 @@
-def springVersion = '4.1.1.RELEASE'
-
 dependencies {
     compile project(':commons:commons-lang')
 

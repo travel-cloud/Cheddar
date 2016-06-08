@@ -1,8 +1,6 @@
 apply from: '../../test.gradle'
 apply from: '../../logging-api.gradle'
 
-def springVersion = '4.1.1.RELEASE'
-
 dependencies {
     compile "org.springframework:spring-context:${springVersion}"
     compile project(':commons:commons-lang')
