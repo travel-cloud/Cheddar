@@ -1,7 +1,5 @@
 apply from: '../../test.gradle'
 
-def jerseyVersion = '2.22.1'
-
 dependencies {
     compile project(':commons:commons-lang')
     compile project(':commons:commons-httpclient')
