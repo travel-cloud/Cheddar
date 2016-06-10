@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import org.joda.time.DateTime;
@@ -135,21 +136,23 @@ public class S3FileStoreTest {
         final ArgumentCaptor<PutObjectRequest> putObjectRequestArgumentCaptor = ArgumentCaptor
                 .forClass(PutObjectRequest.class);
         verify(mockAmazonS3Client).putObject(putObjectRequestArgumentCaptor.capture());
-        assertEquals(bucketSchema + "-" + filePath.directory(),
-                putObjectRequestArgumentCaptor.getValue().getBucketName());
-        assertEquals(filePath.filename(), putObjectRequestArgumentCaptor.getValue().getKey());
-        final InputStream inputStream = putObjectRequestArgumentCaptor.getValue().getInputStream();
+        final PutObjectRequest putObjectRequest = putObjectRequestArgumentCaptor.getValue();
+        assertEquals(bucketSchema + "-" + filePath.directory(), putObjectRequest.getBucketName());
+        assertEquals(filePath.filename(), putObjectRequest.getKey());
+        final InputStream inputStream = putObjectRequest.getInputStream();
         assertEquals(fileContent, inputStreamToString(inputStream));
-        assertEquals(2, putObjectRequestArgumentCaptor.getValue().getMetadata().getUserMetadata().size());
-        assertEquals(fileItem.filename(),
-                putObjectRequestArgumentCaptor.getValue().getMetadata().getUserMetadata().get("filename"));
+        final ObjectMetadata objectMetadata = putObjectRequest.getMetadata();
+        assertEquals(2, objectMetadata.getUserMetadata().size());
+        assertEquals(fileItem.filename(), objectMetadata.getUserMetadata().get("filename"));
         assertEquals(formatter.print(fileItem.lastUpdatedTime()),
-                putObjectRequestArgumentCaptor.getValue().getMetadata().getUserMetadata().get("last-updated-time"));
+                objectMetadata.getUserMetadata().get("last-updated-time"));
+        assertEquals(fileContent.getBytes(Charset.forName("UTF-8")).length, objectMetadata.getContentLength());
+        assertEquals("attachment; filename=\"" + fileItem.filename() + "\"", objectMetadata.getContentDisposition());
     }
 
     @SuppressWarnings("resource")
     private String inputStreamToString(final InputStream inputStream) throws Exception {
-        final Scanner s = new Scanner(inputStream).useDelimiter("\\A");
+        final Scanner s = new Scanner(inputStream, "UTF-8").useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
     }
 

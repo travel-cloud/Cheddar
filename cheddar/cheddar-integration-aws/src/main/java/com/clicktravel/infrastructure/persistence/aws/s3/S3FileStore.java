@@ -145,6 +145,7 @@ public class S3FileStore implements InternetFileStore {
         metadata.addUserMetadata(USER_METADATA_FILENAME, fileItem.filename());
         metadata.addUserMetadata(USER_METADATA_LAST_UPDATED_TIME, formatter.print(fileItem.lastUpdatedTime()));
         metadata.setContentLength(fileItem.getBytes().length);
+        metadata.setContentDisposition("attachment; filename=\"" + fileItem.filename() + "\"");
         final InputStream is = new ByteArrayInputStream(fileItem.getBytes());
         final String bucketName = bucketNameForFilePath(filePath);
         if (!amazonS3Client.doesBucketExist(bucketName)) {
