@@ -24,12 +24,11 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.ArgumentMarshaller.BinaryAttributeMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.ArgumentMarshaller.BinarySetAttributeMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.ArgumentMarshaller.NumberAttributeMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.ArgumentMarshaller.NumberSetAttributeMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.ArgumentMarshaller.StringAttributeMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.ArgumentMarshaller.StringSetAttributeMarshaller;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
+import com.amazonaws.services.dynamodbv2.datamodeling.ArgumentMarshaller.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.unmarshallers.DynamoDBUnmarshallerUtil;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.util.DateUtils;
@@ -190,6 +189,12 @@ public class DynamoDBReflectorUtil {
             } else {
                 unmarshaller = DynamoDBUnmarshallerUtil.getCalendarSUnmarshaller();
             }
+        } else if (DateTime.class.isAssignableFrom(paramType)) {
+            if (isCollection) {
+                unmarshaller = DynamoDBUnmarshallerUtil.getDateTimeSSUnmarshaller();
+            } else {
+                unmarshaller = DynamoDBUnmarshallerUtil.getDateTimeSUnmarshaller();
+            }
         } else if (ByteBuffer.class.isAssignableFrom(paramType)) {
             if (isCollection) {
                 unmarshaller = DynamoDBUnmarshallerUtil.getByteBufferBSUnmarshaller();
@@ -329,6 +334,20 @@ public class DynamoDBReflectorUtil {
                         return new AttributeValue().withSS(timestamps);
                     }
                 };
+            } else if (DateTime.class.isAssignableFrom(returnType)) {
+                marshaller = new StringSetAttributeMarshaller() {
+
+                    private final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime();
+
+                    @Override
+                    public AttributeValue marshall(final Object obj) {
+                        final List<String> timestamps = new LinkedList<String>();
+                        for (final Object o : (Set<?>) obj) {
+                            timestamps.add(dateTimeFormatter.print((DateTime) o));
+                        }
+                        return new AttributeValue().withSS(timestamps);
+                    }
+                };
             } else if (boolean.class.isAssignableFrom(returnType) || Boolean.class.isAssignableFrom(returnType)) {
                 marshaller = new NumberSetAttributeMarshaller() {
 
@@ -404,6 +423,16 @@ public class DynamoDBReflectorUtil {
                     @Override
                     public AttributeValue marshall(final Object obj) {
                         return new AttributeValue().withS(DateUtils.formatISO8601Date(((Calendar) obj).getTime()));
+                    }
+                };
+            } else if (DateTime.class.isAssignableFrom(returnType)) {
+                marshaller = new StringAttributeMarshaller() {
+
+                    private final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime();
+
+                    @Override
+                    public AttributeValue marshall(final Object obj) {
+                        return new AttributeValue().withS(dateTimeFormatter.print((DateTime) obj));
                     }
                 };
             } else if (boolean.class.isAssignableFrom(returnType) || Boolean.class.isAssignableFrom(returnType)) {
