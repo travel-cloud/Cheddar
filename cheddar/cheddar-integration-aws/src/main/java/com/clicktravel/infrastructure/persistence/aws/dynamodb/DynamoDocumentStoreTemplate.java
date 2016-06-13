@@ -49,7 +49,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 
-@Deprecated
 public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

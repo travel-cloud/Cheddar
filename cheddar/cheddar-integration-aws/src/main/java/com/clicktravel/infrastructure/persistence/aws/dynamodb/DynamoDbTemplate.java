@@ -39,6 +39,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.han
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
+@Deprecated
 public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchDatabaseTemplate {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
