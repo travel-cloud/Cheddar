@@ -2,6 +2,7 @@ include (
 
     "commons:commons-lang",
     "commons:commons-httpclient",
+    "commons:commons-json-provider",
     "commons:commons-test",
     
     "cheddar:cheddar-metrics",
