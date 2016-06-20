@@ -65,6 +65,7 @@ configure(subproj) {
     }
 
     task sourcesJar(type: Jar, dependsOn: classes) {
+        description 'Creates a jar file of all project sources'
         classifier = 'sources'
         from sourceSets.main.allSource
     }
@@ -72,45 +73,55 @@ configure(subproj) {
     artifacts { archives sourcesJar }
 }
 
-// Aggregate Checkstyle reports and produce combined HTML report
-task checkstyleAggregate << {
-    def reportFiles = fileTree(rootDir).include('**/checkstyle/main.xml', '**/checkstyle/test.xml')
-    def reportDir = new File("${project.buildDir}/reports/checkstyle")
-    if( !reportDir.exists() ) { reportDir.mkdirs() }
-    def file = new File("${reportDir}/aggregate.xml")
-    def fileElemWriter = new PrintWriter(file)
-    fileElemWriter.print('<checkstyle version="5.6">')
-    def fileElemXml = new XmlNodePrinter(fileElemWriter)
-    reportFiles.each { reportFile ->
-        new XmlParser().parse(reportFile).file.each { fileElemXml.print(it) }
+task checkstyleAggregate {
+    description 'Aggregate Checkstyle reports and produce combined HTML report'
+    doLast {
+        def reportFiles = fileTree(rootDir).include('**/checkstyle/main.xml', '**/checkstyle/test.xml')
+        def reportDir = new File("${project.buildDir}/reports/checkstyle")
+        if( !reportDir.exists() ) { reportDir.mkdirs() }
+        def file = new File("${reportDir}/aggregate.xml")
+        def fileElemWriter = new PrintWriter(file)
+        fileElemWriter.print('<checkstyle version="5.6">')
+        def fileElemXml = new XmlNodePrinter(fileElemWriter)
+        reportFiles.each { reportFile ->
+            new XmlParser().parse(reportFile).file.each { fileElemXml.print(it) }
+        }
+        fileElemWriter.print('</checkstyle>')
+        fileElemWriter.flush()
+        ant.xslt(in: file, style: "${checkstyleConfigDir}/checkstyle.xsl", out: "${reportDir}/checkstyle.html")
     }
-    fileElemWriter.print('</checkstyle>')
-    fileElemWriter.flush()
-    ant.xslt(in: file, style: "${checkstyleConfigDir}/checkstyle.xsl", out: "${reportDir}/checkstyle.html")
 }
 checkstyleAggregate.dependsOn { subproj.check }
 
 ext.runIntegrationTests = System.properties['runIntegrationTests'] != null
 
-// Execute check on all subprojects
-task checkAll { dependsOn { subproj.check } }
+task checkAll {
+    description 'Check all subprojects'
+    dependsOn { subproj.check }
+}
 
-// Execute check on all subprojects and follow with integration tests if needed
 def integrationTestTask = tasks.getByPath(':cheddar:cheddar-integration-aws:integrationTest')
 task checkAllWithIntegrationIfNeeded {
+    description 'Check all subprojects and follow with integration tests if needed'
     dependsOn { checkAll }
     if (runIntegrationTests) { dependsOn { integrationTestTask } }
 }
 integrationTestTask.mustRunAfter checkAll
 
-// Upload source and binaries for all subprojects
-task uploadAll (dependsOn: subproj.uploadArchives) << {
-    println "Uploaded Cheddar version ${version}"
+task uploadAll (dependsOn: subproj.uploadArchives) {
+    description 'Upload source and binaries for all subprojects'
+    doLast {
+        println "Uploaded Cheddar version ${version}"
+    }
 }
 
-// Upload source and binaries, but only if checks pass for all subprojects
-task checkAndUploadAll { dependsOn { [checkAllWithIntegrationIfNeeded, uploadAll] } }
+task checkAndUploadAll {
+    description 'Upload source and binaries, but only if checks pass for all subprojects'
+    dependsOn { [checkAllWithIntegrationIfNeeded, uploadAll] }
+}
 uploadAll.mustRunAfter checkAllWithIntegrationIfNeeded
 
-// Produce Gradle Wrapper scripts for running Gradle on machines that don't have Gradle installed
-task wrapper(type: Wrapper) { gradleVersion = '2.9' }
+task wrapper(type: Wrapper) {
+    description "Produce Gradle Wrapper scripts for running Gradle on machines that don't have Gradle installed"
+    gradleVersion = '2.9'
+}

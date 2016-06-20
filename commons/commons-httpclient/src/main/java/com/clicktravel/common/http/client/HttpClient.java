@@ -24,7 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.net.ssl.*;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
@@ -43,10 +46,12 @@ import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow.Phase;
 import org.glassfish.jersey.client.oauth2.OAuth2Parameters;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clicktravel.common.http.application.ObjectMapperProvider;
 import com.clicktravel.common.http.client.authentication.AuthenticationException;
 import com.clicktravel.common.http.client.authentication.oauth2.OAuthConfiguration;
 
@@ -64,7 +69,7 @@ public class HttpClient {
 
     /**
      * Private constructor to initiate a HttpClient with a base URL.
-     * 
+     *
      * @param baseUri The base URL to which all HTTP requests are to be made
      * @param ignoreSslErrors Flag can be set to true when any SSL-related errors should be ignored.
      * @param accept The media type which is acceptable for all request by this given HTTP client
@@ -78,6 +83,8 @@ public class HttpClient {
         }
         final Client client = clientBuilder.withConfig(clientConfig()).build();
         client.register(MultiPartFeature.class);
+        client.register(ObjectMapperProvider.class);
+        client.register(JacksonFeature.class);
         target = client.target(baseUri);
         clientHeaders = mapHeadersToClientHeaders(headers);
         this.headers = headers;
@@ -96,7 +103,7 @@ public class HttpClient {
 
     /**
      * Private constructor to initiate HttpClient with base URL and HTTP basic authentication
-     * 
+     *
      * @param baseUri The base URL to which all HTTP requests are to be made
      * @param username The username part of HTTP basic authentication
      * @param password The password part of HTTP basic authentication
@@ -111,13 +118,12 @@ public class HttpClient {
 
     /**
      * Private constructor to initiate HttpClient with base URL and OAuth 2.0 authentication.
-     * 
+     *
      * @param baseUri The base URL to which all HTTP requests are to be made
      * @param accept The media type which is acceptable for all request by this given HTTP client
      * @param headers The header values found within the HTTP request
      * @param oauthConfiguration The configuration for OAuth authentication
      */
-
     private HttpClient(final String baseUri, final boolean ignoreSslErrors, final MediaType accept,
             final MultivaluedMap<String, String> headers, final OAuthConfiguration oauthConfiguration) {
         target = getOAuthAuthenticatedTarget(baseUri, oauthConfiguration);
@@ -133,8 +139,8 @@ public class HttpClient {
         final String state = randomId();
         final OAuth2CodeGrantFlow oauth2GrantFlow = OAuth2ClientSupport
                 .authorizationCodeGrantFlowBuilder(oauthConfiguration.clientIdentifier(),
-                        oauthConfiguration.authorisationUri(), oauthConfiguration.accessTokenUri()).client(client)
-                .redirectUri(oauthConfiguration.redirectUri()).scope("Default")
+                        oauthConfiguration.authorisationUri(), oauthConfiguration.accessTokenUri())
+                .client(client).redirectUri(oauthConfiguration.redirectUri()).scope("Default")
                 .refreshTokenUri(oauthConfiguration.refreshTokenUri())
                 .property(Phase.ALL, OAuth2Parameters.STATE, state).build();
 
@@ -150,7 +156,11 @@ public class HttpClient {
         final String authCode = oauthConfiguration.oauthUserAgent().authenticate(authenticationServerUri);
 
         oauth2GrantFlow.finish(authCode, state);
-        return oauth2GrantFlow.getAuthorizedClient().target(baseUri);
+        final Client authorizedClient = oauth2GrantFlow.getAuthorizedClient();
+        authorizedClient.register(ObjectMapperProvider.class);
+        authorizedClient.register(JacksonFeature.class);
+        // TODO Ask if possible bug here : Should this client have config as done in clientConfig() ?
+        return authorizedClient.target(baseUri);
     }
 
     /**
@@ -176,12 +186,7 @@ public class HttpClient {
         try {
             final SSLContext sslContext = SSLContext.getInstance("SSL");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            final HostnameVerifier verifier = new HostnameVerifier() {
-                @Override
-                public boolean verify(final String string, final SSLSession ssls) {
-                    return true;
-                }
-            };
+            final HostnameVerifier verifier = (string, ssls) -> true;
             clientBuilder.sslContext(sslContext).hostnameVerifier(verifier);
         } catch (final Exception e) {
             throw new IllegalStateException(e);
@@ -195,7 +200,7 @@ public class HttpClient {
 
     /**
      * Returns the redirect from a GET request, or <code>null</code> if no redirect is available.
-     * 
+     *
      * @param path The path which wil be requested via GET
      * @param params The URL params which will be passed in the request
      * @return The URI for the redirect or <code>null</code> if there is no redirect
@@ -214,9 +219,9 @@ public class HttpClient {
 
     /**
      * Convenience method to return redirect URL without specifying any query parameters.
-     * 
+     *
      * @see#getRedirectLocation(String, Map)
-     * 
+     *
      * @param path The path which will be requested via GET
      * @return The URI returned for the redirect. Returns null if there is no redirect
      */
@@ -238,7 +243,7 @@ public class HttpClient {
     /**
      * Convenience method to get hold of the client directly allowing you to call more complex methods on the client
      * such as a post entity with variant language headers
-     * 
+     *
      * @param path The path to which the request needs to be made, required
      * @param params The query parameters appended to the path, required but can be empty
      * @return
@@ -249,9 +254,9 @@ public class HttpClient {
 
     /**
      * Convenience method to make HTTP GET request to a given URL without specifying any query parameters.
-     * 
+     *
      * @see #get(String, Map)
-     * 
+     *
      * @param path The path to which the GET request needs to be made
      * @return The HTTP response which is returned as a result of the GET request
      */
@@ -262,7 +267,7 @@ public class HttpClient {
 
     /**
      * Makes a HTTP GET request to a given URL
-     * 
+     *
      * @param path The path to which the GET request needs to be made
      * @return The HTTP response which is returned as a result of the GET request
      */
@@ -273,9 +278,9 @@ public class HttpClient {
 
     /**
      * Convenience method to make HTTP DELETE request to a given URL without specifying any query parameters.
-     * 
+     *
      * @see #get(String, Map)
-     * 
+     *
      * @param path The path to which the DELETE request needs to be made
      * @return The HTTP response which is returned as a result of the DELETE request
      */
@@ -286,7 +291,7 @@ public class HttpClient {
 
     /**
      * Makes a HTTP DELETE request to a given URL
-     * 
+     *
      * @param path The path to which the DELETE request needs to be made
      * @return The HTTP response which is returned as a result of the DELETE request
      */
@@ -297,23 +302,23 @@ public class HttpClient {
 
     /**
      * Makes HTTP POST request with a specified entity
-     * 
+     *
      * @see #put(String, Object, MediaType)
-     * 
+     *
      * @param path The path to which the request should be made
      * @param entity The entity which is to be POSTed
      * @param contentType The content type of the entity to be POSTed
      * @return The HTTP response which is returned as a result of the POST request
      */
     public Response post(final String path, final Object entity, final MediaType contentType) {
-        final Response response = requestBuilder(path, new MultivaluedHashMap<String, String>()).post(
-                Entity.entity(entity, contentType));
+        final Response response = requestBuilder(path, new MultivaluedHashMap<String, String>())
+                .post(Entity.entity(entity, contentType));
         return response;
     }
 
     /**
      * Makes HTTP POST request with a specified entity
-     * 
+     *
      * @param path The path to which the request should be made
      * @param params The query parameters appended to the path
      * @param entity The entity which is to be POSTed
@@ -328,17 +333,17 @@ public class HttpClient {
 
     /**
      * Makes HTTP PUT request with a specified entity
-     * 
+     *
      * @see post(String, Object, MediaType)
-     * 
+     *
      * @param path The path to which the request should be made
      * @param entity The entity which is to be PUT
      * @param contentType The content type of the entity to be PUT
      * @return The HTTP response which is returned as a result of the PUT request
      */
     public Response put(final String path, final Object entity, final MediaType contentType) {
-        final Response response = requestBuilder(path, new MultivaluedHashMap<String, String>()).put(
-                Entity.entity(entity, contentType));
+        final Response response = requestBuilder(path, new MultivaluedHashMap<String, String>())
+                .put(Entity.entity(entity, contentType));
         return response;
     }
 
