@@ -276,7 +276,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 scanSpec = generateScanSpec(query, itemClass);
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                throw new PersistenceResourceFailureException("Could not create ScanSpec for query: " + query, e);
+                throw new PersistenceResourceFailureException(
+                        "Could not create ScanSpec on table " + tableName + " for query: " + query, e);
             }
             final ItemCollection<ScanOutcome> scanOutcome = table.scan(scanSpec);
 

@@ -54,8 +54,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             final T item = marshallIntoObject(itemClass, attributeMap);
             return item;
         } catch (final ItemClassDiscriminatorMismatchException e) {
-            throw new NonExistentItemException(String.format("The item of type [%s] with id [%s] does not exist",
-                    itemClass.getName(), itemId));
+            throw new NonExistentItemException(
+                    String.format("The item of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
         }
 
     }
@@ -78,12 +78,13 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         try {
             getItemResult = amazonDynamoDbClient.getItem(getItemRequest);
         } catch (final AmazonServiceException e) {
-            throw new PersistenceResourceFailureException("Failure while attempting to read from DynamoDB table", e);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting to read from DynamoDB table (" + tableName + ")", e);
         }
 
         if (getItemResult == null || getItemResult.getItem() == null) {
-            throw new NonExistentItemException(String.format("The item of type [%s] with id [%s] does not exist",
-                    itemClass.getName(), itemId));
+            throw new NonExistentItemException(
+                    String.format("The item of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
         } else {
             return getItemResult.getItem();
         }
@@ -107,8 +108,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         final AttributeValue supportingKeyValue = new AttributeValue();
         if (CompoundPrimaryKeyDefinition.class.isAssignableFrom(primaryKeyDefinition.getClass())) {
             final CompoundPrimaryKeyDefinition compoundPrimaryKeyDefinition = (CompoundPrimaryKeyDefinition) primaryKeyDefinition;
-            final ScalarAttributeType supportingKeyAttributeType = getAttributeType(compoundPrimaryKeyDefinition
-                    .propertyType());
+            final ScalarAttributeType supportingKeyAttributeType = getAttributeType(
+                    compoundPrimaryKeyDefinition.propertyType());
             switch (supportingKeyAttributeType) {
                 case N:
                     supportingKeyValue.withN(itemId.supportingValue());
@@ -135,11 +136,10 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             }
         } else if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
-            final AttributeValue discriminatorAttribute = itemAttributeMap.get(variantItemConfiguration
-                    .parentItemConfiguration().discriminator());
-            if (discriminatorAttribute == null
-                    || !((VariantItemConfiguration) itemConfiguration).discriminatorValue().equals(
-                            discriminatorAttribute.getS())) {
+            final AttributeValue discriminatorAttribute = itemAttributeMap
+                    .get(variantItemConfiguration.parentItemConfiguration().discriminator());
+            if (discriminatorAttribute == null || !((VariantItemConfiguration) itemConfiguration).discriminatorValue()
+                    .equals(discriminatorAttribute.getS())) {
                 throw new ItemClassDiscriminatorMismatchException();
             }
         }
@@ -170,7 +170,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
     }
 
     @Override
-    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T create(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
                 itemConfiguration);
@@ -188,8 +189,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             throw new ItemConstraintViolationException(itemConfiguration.primaryKeyDefinition().propertyName(),
                     "Failure to create item as store already contains item with matching primary key");
         } catch (final AmazonServiceException amazonServiceException) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb put (create)",
-                    amazonServiceException);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb put (create: " + tableName + ")", amazonServiceException);
         } finally {
             if (!itemRequestSucceeded) {
                 try {
@@ -220,8 +221,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         }
         if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
-            attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(), new AttributeValue(
-                    variantItemConfiguration.discriminatorValue()));
+            attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(),
+                    new AttributeValue(variantItemConfiguration.discriminatorValue()));
         }
         return attributeMap;
     }
@@ -232,17 +233,15 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         for (final PropertyDescriptor propertyDescriptor : itemConfiguration.propertyDescriptors()) {
             final String propertyName = propertyDescriptor.getName();
             if (propertyName.equals(VERSION_ATTRIBUTE)) {
-                attributeMap.put(
-                        propertyName,
-                        new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                                new AttributeValue().withN(String.valueOf(version))));
+                attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                        .withValue(new AttributeValue().withN(String.valueOf(version))));
             } else if (propertyDescriptor.getWriteMethod() != null) {
                 final AttributeValue attributeValue = DynamoDbPropertyMarshaller.getValue(item, propertyDescriptor);
                 if (attributeMap != null) {
                     // TODO Only add to attribute map if there is a difference
                     if (attributeValue != null) {
-                        attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.PUT)
-                                .withValue(attributeValue));
+                        attributeMap.put(propertyName,
+                                new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(attributeValue));
                     } else {
                         attributeMap.put(propertyName, new AttributeValueUpdate().withAction(AttributeAction.DELETE));
                     }
@@ -251,16 +250,16 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         }
         if (VariantItemConfiguration.class.isAssignableFrom(itemConfiguration.getClass())) {
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
-            attributeMap.put(
-                    variantItemConfiguration.parentItemConfiguration().discriminator(),
-                    new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(
-                            new AttributeValue(variantItemConfiguration.discriminatorValue())));
+            attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(),
+                    new AttributeValueUpdate().withAction(AttributeAction.PUT)
+                            .withValue(new AttributeValue(variantItemConfiguration.discriminatorValue())));
         }
         return attributeMap;
     }
 
     @Override
-    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T update(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         if (item.getVersion() == null) {
             return create(item);
@@ -297,8 +296,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
             throw new OptimisticLockException("Conflicting write detected while updating item");
         } catch (final AmazonServiceException amazonServiceException) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Put (update item)",
-                    amazonServiceException);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb Put (update item: " + tableName + ")", amazonServiceException);
         } finally {
             if (!itemRequestSucceeded) {
                 try {
@@ -333,13 +332,13 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         try {
             return marshallIntoObject(itemClass, attributeMap);
         } catch (final ItemClassDiscriminatorMismatchException e) {
-            throw new NonExistentItemException(String.format("The item of type [%s] with id [%s] does not exist",
-                    itemClass.getName(), itemId));
+            throw new NonExistentItemException(
+                    String.format("The item of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
         }
     }
 
-    public <T extends Item> Collection<UniqueConstraint> getUpdatedUniqueConstraints(final T item,
-            final T previousItem, final ItemConfiguration itemConfiguration) {
+    public <T extends Item> Collection<UniqueConstraint> getUpdatedUniqueConstraints(final T item, final T previousItem,
+            final ItemConfiguration itemConfiguration) {
         final Map<String, AttributeValue> previousItemAttributeMap = getAttributeMap(previousItem, itemConfiguration,
                 item.getVersion());
         if (!previousItemAttributeMap.get(VERSION_ATTRIBUTE).getN().equals(String.valueOf(item.getVersion()))) {
@@ -393,7 +392,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         key.put(primaryKeyDefinition.propertyName(), new AttributeValue(itemId.value()));
         if (CompoundPrimaryKeyDefinition.class.isAssignableFrom(primaryKeyDefinition.getClass())) {
             final CompoundPrimaryKeyDefinition compoundPrimaryKeyDefinition = (CompoundPrimaryKeyDefinition) primaryKeyDefinition;
-            key.put(compoundPrimaryKeyDefinition.supportingPropertyName(), new AttributeValue(itemId.supportingValue()));
+            key.put(compoundPrimaryKeyDefinition.supportingPropertyName(),
+                    new AttributeValue(itemId.supportingValue()));
         }
         final Map<String, ExpectedAttributeValue> expectedResults = new HashMap<>();
         expectedResults.put(VERSION_ATTRIBUTE,
@@ -404,7 +404,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         try {
             amazonDynamoDbClient.deleteItem(deleteItemRequest);
         } catch (final AmazonServiceException e) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Delete", e);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb Delete (" + tableName + "):", e);
         }
 
         deleteUniqueConstraintIndexes(item, itemConfiguration);
@@ -479,7 +480,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 try {
                     queryResult = amazonDynamoDbClient.query(queryRequest);
                 } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Query", e);
+                    throw new PersistenceResourceFailureException(
+                            "Failure while attempting DynamoDb Query (" + tableName + ")", e);
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, queryResult.getItems()));
                 lastEvaluatedKey = queryResult.getLastEvaluatedKey();
@@ -494,7 +496,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 try {
                     scanResult = amazonDynamoDbClient.scan(scanRequest);
                 } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Scan", e);
+                    throw new PersistenceResourceFailureException(
+                            "Failure while attempting DynamoDb Scan (" + tableName + ")", e);
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, scanResult.getItems()));
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
@@ -531,7 +534,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         try {
             batchGetItemResult = amazonDynamoDbClient.batchGetItem(batchGetItemRequest);
         } catch (final AmazonServiceException e) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Batch Get Item", e);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb Batch Get Item (" + tableName + ")", e);
         }
         final List<Map<String, AttributeValue>> itemAttributeMaps = batchGetItemResult.getResponses().get(tableName);
         return marshallIntoObjects(itemClass, itemAttributeMaps);
@@ -567,7 +571,9 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             final BatchWriteItemResult itemResult = amazonDynamoDbClient.batchWriteItem(itemRequest);
             removeUnprocessedItems(itemsWritten, itemVersions, itemPutRequests, itemResult);
         } catch (final AmazonServiceException amazonServiceException) {
-            throw new PersistenceResourceFailureException("Failed to do Dynamo DB batch write", amazonServiceException);
+            throw new PersistenceResourceFailureException(
+                    "Failed to do Dynamo DB batch write (" + itemConfiguration.tableName() + ")",
+                    amazonServiceException);
         }
 
         // any items that were successfully processed will need their versions setting.
