@@ -1,0 +1,68 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Error CDM",
+        "description": "Common error responses",
+        "version": "1.0.0"
+    },
+    "schemes": [
+        "https"
+    ],
+    "basePath": "/v1",
+    "produces": [
+        "application/vnd.clicktravel.schema-v1+json"
+    ],
+    "consumes": [
+        "application/vnd.clicktravel.schema-v1+json"
+    ],
+    "paths": {
+    },
+    "definitions": {
+        "ErrorResponse": {
+            "description": "Errors that occurred as a result of processing a request",
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "description" : "General errors occurred as request was processed",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Error"
+                    }
+                },
+                "validationErrors": {
+                    "description" : "Validation errors occurred when evaluating input values of request",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ValidationError"
+                    }
+                }
+            }
+        },
+        "Error": {
+            "description" : "An error that occurred when a request was performed",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "ValidationError": {
+            "description" : "Validation error found when evaluating the input values of a request", 
+            "type": "object",
+            "properties": {
+                "field": {
+                    "description" : "Names of fields in error",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "error": {
+                    "description" : "Validation error detail",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
