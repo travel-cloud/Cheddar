@@ -1,0 +1,61 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Error CDM",
+        "description": "Common error responses",
+        "version": "1.0.0"
+    },
+    "schemes": [
+        "https"
+    ],
+    "basePath": "/v1",
+    "produces": [
+        "application/vnd.clicktravel.schema-v1+json"
+    ],
+    "consumes": [
+        "application/vnd.clicktravel.schema-v1+json"
+    ],
+    "paths": {
+    },
+    "definitions": {
+        "ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Error"
+                    }
+                },
+                "validationErrors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ValidationError"
+                    }
+                }
+            }
+        },
+        "Error": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "ValidationError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "error": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
