@@ -19,15 +19,18 @@
     },
     "definitions": {
         "ErrorResponse": {
+            "description": "Errors that occurred as a result of processing a request",
             "type": "object",
             "properties": {
                 "errors": {
+                    "description" : "General errors occurred as request was processed",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/Error"
                     }
                 },
                 "validationErrors": {
+                    "description" : "Validation errors occurred when evaluating input values of request",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/ValidationError"
@@ -36,6 +39,7 @@
             }
         },
         "Error": {
+            "description" : "An error that occurred when a request was performed",
             "type": "object",
             "properties": {
                 "description": {
@@ -44,15 +48,18 @@
             }
         },
         "ValidationError": {
+            "description" : "Validation error found when evaluating the input values of a request", 
             "type": "object",
             "properties": {
                 "field": {
+                    "description" : "Names of fields in error",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "error": {
+                    "description" : "Validation error detail",
                     "type": "string"
                 }
             }
