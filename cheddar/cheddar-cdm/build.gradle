@@ -6,26 +6,29 @@ dependencies {
     codegen "io.swagger:swagger-codegen-cli:2.1.6"
 }
 
+def codegenTmpDir = 'build/tmp/swagger'
+def generatedSwaggerDir = 'build/generated/swagger'
+def swaggerSpecFile = 'src/main/swagger/common-error.swagger.json'
+
 task codegen(type: JavaExec) {
+    inputs.file swaggerSpecFile
+    outputs.dir generatedSwaggerDir
     classpath configurations.codegen
     main = "io.swagger.codegen.SwaggerCodegen"
     jvmArgs '-Dmodels'
     args 'generate',
-         '-i', 'src/main/swagger/common-error.swagger.json',
-         '-o', 'build/tmp/swagger',
+         '-i', swaggerSpecFile,
+         '-o', codegenTmpDir,
          '-l', 'java',
          '--library', 'jersey2',
          '--model-package', 'com.clicktravel.schema.canonical.data.model.v1.common'
     doLast {
-        file('build/tmp/swagger/src/main/java').renameTo(file('build/generated/swagger'))
+        file(generatedSwaggerDir).mkdirs()
+        file("${codegenTmpDir}/src/main/java").renameTo(file(generatedSwaggerDir))
     }
 }
 
 sourceSets {
-    main {
-        java {
-            srcDir 'build/generated/swagger'
-        }
-    }
+    main { java { srcDir generatedSwaggerDir } }
 }
 compileJava.dependsOn(codegen)
