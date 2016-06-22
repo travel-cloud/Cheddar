@@ -56,12 +56,13 @@ public abstract class LoggingAspect {
         final String methodCallDetail = methodCallDetail(point);
         final long startTime = System.currentTimeMillis();
         try {
+            logger.debug("Entering method call; call:[{}]", methodCallDetail);
             final Object result = point.proceed();
-            logger.debug("Method call; call:[{}] return:[{}] timeMillis:[{}]", methodCallDetail, result,
+            logger.debug("Method call returned; call:[{}] return:[{}] timeMillis:[{}]", methodCallDetail, result,
                     System.currentTimeMillis() - startTime);
             return result;
         } catch (final Throwable e) {
-            logger.debug("Method call; call:[{}] exception:[{}] timeMillis:[{}]", methodCallDetail, e,
+            logger.debug("Method call exception; call:[{}] exception:[{}] timeMillis:[{}]", methodCallDetail, e,
                     System.currentTimeMillis() - startTime);
             throw e;
         }

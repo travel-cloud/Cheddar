@@ -22,6 +22,7 @@ import java.util.Collection;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -31,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+
+import com.clicktravel.common.http.application.ObjectMapperProvider;
 
 public class RestResourceConfig extends ResourceConfig {
 
@@ -45,6 +48,8 @@ public class RestResourceConfig extends ResourceConfig {
         scanner.addIncludeFilter(new AnnotationTypeFilter(Provider.class));
         register(RequestContextFilter.class);
         register(MultiPartFeature.class);
+        register(ObjectMapperProvider.class);
+        register(JacksonFeature.class);
         registerResources("com.clicktravel.cheddar.rest.exception.mapper", "com.clicktravel.cheddar.server.http.filter",
                 "com.clicktravel.cheddar.server.rest.resource.status", "com.clicktravel.services");
         property(ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED, true);

@@ -1,7 +1,5 @@
 apply from: '../../logging-api.gradle'
 
-def jacksonVersion = '2.6.3'
-
 dependencies {
     compile project(':cheddar:cheddar-metrics')
     compile project(':commons:commons-lang')

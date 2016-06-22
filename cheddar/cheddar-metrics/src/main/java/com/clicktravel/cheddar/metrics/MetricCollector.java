@@ -25,6 +25,8 @@ public interface MetricCollector {
     void createUser(MetricUser user);
 
     void updateUser(MetricUser user);
+    
+    void deleteUser(String userId);
 
     void sendMetric(Metric metric);
 

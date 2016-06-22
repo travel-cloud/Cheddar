@@ -43,4 +43,9 @@ public class PendingResultOfferedEvent extends AbstractSystemEvent {
         this.resultXml = resultXml;
     }
 
+    @Override
+    public String toString() {
+        return "PendingResultOfferedEvent [pendingResultId=" + pendingResultId + "]";
+    }
+
 }

@@ -1,0 +1,7 @@
+dependencies {
+    compile "org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:${jacksonVersion}"
+    compile "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:${jacksonVersion}"
+    runtime "joda-time:joda-time:${jodaTimeVersion}"
+    compile "javax.ws.rs:javax.ws.rs-api:2.0.1"
+}

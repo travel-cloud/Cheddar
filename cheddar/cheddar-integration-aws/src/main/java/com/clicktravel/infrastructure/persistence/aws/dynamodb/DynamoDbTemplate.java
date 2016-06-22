@@ -39,6 +39,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.han
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
+@Deprecated
 public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchDatabaseTemplate {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -403,6 +404,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 .withExpected(expectedResults);
         try {
             amazonDynamoDbClient.deleteItem(deleteItemRequest);
+        } catch (final ConditionalCheckFailedException e) {
+            throw new OptimisticLockException("Conflicting write detected while deleting item");
         } catch (final AmazonServiceException e) {
             throw new PersistenceResourceFailureException(
                     "Failure while attempting DynamoDb Delete (" + tableName + "):", e);

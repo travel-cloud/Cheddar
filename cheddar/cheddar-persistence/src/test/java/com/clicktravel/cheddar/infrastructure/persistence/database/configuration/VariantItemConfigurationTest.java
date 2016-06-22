@@ -43,9 +43,9 @@ public class VariantItemConfigurationTest {
         final Class<? extends Item> itemClass = StubItem.class;
         final String discriminatorValue = randomString(10);
 
-        final IndexDefinition mockIndexDefinition = mock(IndexDefinition.class);
+        final IndexDefinition mockIndexDefinition = new IndexDefinition("stringProperty");
         final Collection<IndexDefinition> indexDefinitions = Arrays.asList(mockIndexDefinition);
-        final UniqueConstraint mockUniqueConstraint = mock(UniqueConstraint.class);
+        final UniqueConstraint mockUniqueConstraint = new UniqueConstraint("stringProperty");
         final Collection<UniqueConstraint> uniqueConstraints = Arrays.asList(mockUniqueConstraint);
         when(parentItemConfiguration.indexDefinitions()).thenReturn(indexDefinitions);
         when(parentItemConfiguration.uniqueConstraints()).thenReturn(uniqueConstraints);

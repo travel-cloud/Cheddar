@@ -1,30 +1,28 @@
 apply from: '../../test.gradle'
 apply from: '../../logging-api.gradle'
 
-def springVersion = '4.1.1.RELEASE'
-
 dependencies {
     compile project(':commons:commons-lang')
     compile project(':commons:commons-httpclient')
     compile project(':cheddar:cheddar-messaging')
     compile project(':cheddar:cheddar-persistence')
 
-    compile 'com.amazonaws:aws-java-sdk-s3:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-dynamodb:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-ses:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-sns:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-sqs:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-cloudsearch:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-cloudwatch:1.10.20'
-    compile 'com.amazonaws:aws-java-sdk-lambda:1.10.20'
+    compile "com.amazonaws:aws-java-sdk-s3:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-dynamodb:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-ses:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-sns:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-sqs:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-cloudsearch:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-cloudwatch:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-lambda:${awsJavaSdkVersion}"
     compile "org.springframework:spring-context-support:${springVersion}"
     compile "org.springframework:spring-aop:${springVersion}"
 
     compile "org.aspectj:aspectjrt:1.7.4"
     compile "org.aspectj:aspectjweaver:1.7.4"
     compile 'javax.mail:mail:1.4.7'
-    compile 'joda-time:joda-time:2.8.2'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3'
+    compile "joda-time:joda-time:${jodaTimeVersion}"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:${jacksonVersion}"
     compile 'net.spy:spymemcached:2.11.4' // Used to connect to memcache nodes - the aws version of this file is not in a public repo
 }
 

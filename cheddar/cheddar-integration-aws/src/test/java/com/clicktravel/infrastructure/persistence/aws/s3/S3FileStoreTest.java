@@ -23,12 +23,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import org.joda.time.DateTime;
@@ -134,21 +136,23 @@ public class S3FileStoreTest {
         final ArgumentCaptor<PutObjectRequest> putObjectRequestArgumentCaptor = ArgumentCaptor
                 .forClass(PutObjectRequest.class);
         verify(mockAmazonS3Client).putObject(putObjectRequestArgumentCaptor.capture());
-        assertEquals(bucketSchema + "-" + filePath.directory(), putObjectRequestArgumentCaptor.getValue()
-                .getBucketName());
-        assertEquals(filePath.filename(), putObjectRequestArgumentCaptor.getValue().getKey());
-        final InputStream inputStream = putObjectRequestArgumentCaptor.getValue().getInputStream();
+        final PutObjectRequest putObjectRequest = putObjectRequestArgumentCaptor.getValue();
+        assertEquals(bucketSchema + "-" + filePath.directory(), putObjectRequest.getBucketName());
+        assertEquals(filePath.filename(), putObjectRequest.getKey());
+        final InputStream inputStream = putObjectRequest.getInputStream();
         assertEquals(fileContent, inputStreamToString(inputStream));
-        assertEquals(2, putObjectRequestArgumentCaptor.getValue().getMetadata().getUserMetadata().size());
-        assertEquals(fileItem.filename(), putObjectRequestArgumentCaptor.getValue().getMetadata().getUserMetadata()
-                .get("filename"));
-        assertEquals(formatter.print(fileItem.lastUpdatedTime()), putObjectRequestArgumentCaptor.getValue()
-                .getMetadata().getUserMetadata().get("last-updated-time"));
+        final ObjectMetadata objectMetadata = putObjectRequest.getMetadata();
+        assertEquals(2, objectMetadata.getUserMetadata().size());
+        assertEquals(fileItem.filename(), objectMetadata.getUserMetadata().get("filename"));
+        assertEquals(formatter.print(fileItem.lastUpdatedTime()),
+                objectMetadata.getUserMetadata().get("last-updated-time"));
+        assertEquals(fileContent.getBytes(Charset.forName("UTF-8")).length, objectMetadata.getContentLength());
+        assertEquals("attachment; filename=\"" + fileItem.filename() + "\"", objectMetadata.getContentDisposition());
     }
 
     @SuppressWarnings("resource")
     private String inputStreamToString(final InputStream inputStream) throws Exception {
-        final Scanner s = new Scanner(inputStream).useDelimiter("\\A");
+        final Scanner s = new Scanner(inputStream, "UTF-8").useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
     }
 
@@ -179,8 +183,42 @@ public class S3FileStoreTest {
         final ArgumentCaptor<GetObjectRequest> getObjectRequestArgumentCaptor = ArgumentCaptor
                 .forClass(GetObjectRequest.class);
         verify(mockAmazonS3Client).getObject(getObjectRequestArgumentCaptor.capture());
-        assertEquals(bucketSchema + "-" + filePath.directory(), getObjectRequestArgumentCaptor.getValue()
-                .getBucketName());
+        assertEquals(bucketSchema + "-" + filePath.directory(),
+                getObjectRequestArgumentCaptor.getValue().getBucketName());
+        assertEquals(filePath.filename(), getObjectRequestArgumentCaptor.getValue().getKey());
+        assertEquals(filename, fileItem.filename());
+        assertEquals(expectedLastUpdatedTime, fileItem.lastUpdatedTime());
+    }
+
+    @Test
+    public void shouldReadFile_withCloseIOException() throws Exception {
+        // Given
+        final String filename = randomString(10);
+        final DateTime lastUpdatedTime = randomDateTime();
+        final DateTime expectedLastUpdatedTime = lastUpdatedTime.withZone(DateTimeZone.UTC).withMillisOfSecond(0);
+        final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
+        s3FileStore.initialize(mockAmazonS3Client);
+        final S3Object mockS3Object = mock(S3Object.class);
+        final ObjectMetadata mockObjectMetadata = mock(ObjectMetadata.class);
+        final Map<String, String> userMetadata = new HashMap<>();
+        userMetadata.put("filename", filename);
+        userMetadata.put("last-updated-time", formatter.print(lastUpdatedTime));
+        when(mockAmazonS3Client.getObject(any(GetObjectRequest.class))).thenReturn(mockS3Object);
+        final S3ObjectInputStream mockInputStream = mock(S3ObjectInputStream.class);
+        when(mockS3Object.getObjectContent()).thenReturn(mockInputStream);
+        when(mockS3Object.getObjectMetadata()).thenReturn(mockObjectMetadata);
+        when(mockObjectMetadata.getUserMetadata()).thenReturn(userMetadata);
+        when(mockInputStream.read(any(byte[].class))).thenReturn(-1);
+        doThrow(IOException.class).when(mockS3Object).close();
+        // When
+        final FileItem fileItem = s3FileStore.read(filePath);
+
+        // Then
+        final ArgumentCaptor<GetObjectRequest> getObjectRequestArgumentCaptor = ArgumentCaptor
+                .forClass(GetObjectRequest.class);
+        verify(mockAmazonS3Client).getObject(getObjectRequestArgumentCaptor.capture());
+        assertEquals(bucketSchema + "-" + filePath.directory(),
+                getObjectRequestArgumentCaptor.getValue().getBucketName());
         assertEquals(filePath.filename(), getObjectRequestArgumentCaptor.getValue().getKey());
         assertEquals(filename, fileItem.filename());
         assertEquals(expectedLastUpdatedTime, fileItem.lastUpdatedTime());
