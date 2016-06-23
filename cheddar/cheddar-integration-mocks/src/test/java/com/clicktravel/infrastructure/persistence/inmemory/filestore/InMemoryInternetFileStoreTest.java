@@ -45,7 +45,8 @@ public class InMemoryInternetFileStoreTest {
         final URL publicUrl = fileStore.publicUrlForFilePath(filePath);
 
         // Then
-        assertThat(publicUrl, is(new URL("http://" + filePath.directory() + "localhost/" + filePath.filename())));
+        assertThat(publicUrl,
+                is(new URL("http://" + filePath.directory() + "localhost/" + expectedFileItem.filename())));
     }
 
     @Test
