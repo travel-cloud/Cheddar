@@ -79,7 +79,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         try {
             getItemResult = amazonDynamoDbClient.getItem(getItemRequest);
         } catch (final AmazonServiceException e) {
-            throw new PersistenceResourceFailureException("Failure while attempting to read from DynamoDB table", e);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting to read from DynamoDB table (" + tableName + ")", e);
         }
 
         if (getItemResult == null || getItemResult.getItem() == null) {
@@ -189,8 +190,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             throw new ItemConstraintViolationException(itemConfiguration.primaryKeyDefinition().propertyName(),
                     "Failure to create item as store already contains item with matching primary key");
         } catch (final AmazonServiceException amazonServiceException) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb put (create)",
-                    amazonServiceException);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb put (create: " + tableName + ")", amazonServiceException);
         } finally {
             if (!itemRequestSucceeded) {
                 try {
@@ -296,8 +297,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
             throw new OptimisticLockException("Conflicting write detected while updating item");
         } catch (final AmazonServiceException amazonServiceException) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Put (update item)",
-                    amazonServiceException);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb Put (update item: " + tableName + ")", amazonServiceException);
         } finally {
             if (!itemRequestSucceeded) {
                 try {
@@ -406,7 +407,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         } catch (final ConditionalCheckFailedException e) {
             throw new OptimisticLockException("Conflicting write detected while deleting item");
         } catch (final AmazonServiceException e) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Delete", e);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb Delete (" + tableName + "):", e);
         }
 
         deleteUniqueConstraintIndexes(item, itemConfiguration);
@@ -481,7 +483,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 try {
                     queryResult = amazonDynamoDbClient.query(queryRequest);
                 } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Query", e);
+                    throw new PersistenceResourceFailureException(
+                            "Failure while attempting DynamoDb Query (" + tableName + ")", e);
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, queryResult.getItems()));
                 lastEvaluatedKey = queryResult.getLastEvaluatedKey();
@@ -496,7 +499,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 try {
                     scanResult = amazonDynamoDbClient.scan(scanRequest);
                 } catch (final AmazonServiceException e) {
-                    throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Scan", e);
+                    throw new PersistenceResourceFailureException(
+                            "Failure while attempting DynamoDb Scan (" + tableName + ")", e);
                 }
                 totalItems.addAll(marshallIntoObjects(itemClass, scanResult.getItems()));
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
@@ -533,7 +537,8 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         try {
             batchGetItemResult = amazonDynamoDbClient.batchGetItem(batchGetItemRequest);
         } catch (final AmazonServiceException e) {
-            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Batch Get Item", e);
+            throw new PersistenceResourceFailureException(
+                    "Failure while attempting DynamoDb Batch Get Item (" + tableName + ")", e);
         }
         final List<Map<String, AttributeValue>> itemAttributeMaps = batchGetItemResult.getResponses().get(tableName);
         return marshallIntoObjects(itemClass, itemAttributeMaps);
@@ -569,7 +574,9 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             final BatchWriteItemResult itemResult = amazonDynamoDbClient.batchWriteItem(itemRequest);
             removeUnprocessedItems(itemsWritten, itemVersions, itemPutRequests, itemResult);
         } catch (final AmazonServiceException amazonServiceException) {
-            throw new PersistenceResourceFailureException("Failed to do Dynamo DB batch write", amazonServiceException);
+            throw new PersistenceResourceFailureException(
+                    "Failed to do Dynamo DB batch write (" + itemConfiguration.tableName() + ")",
+                    amazonServiceException);
         }
 
         // any items that were successfully processed will need their versions setting.
