@@ -42,6 +42,7 @@ public class DefaultSnsTopicResourceFactory implements SnsTopicResourceFactory {
 
     @Override
     public SnsTopicResource createSnsTopicResource(final String name) {
+        logger.info("Looking-up ARN for SNS topic: " + name);
         final String topicArn = pollAndRetryForTopicArnForName(name);
         logger.info("Using existing SNS topic: " + name);
         return new SnsTopicResource(name, topicArn, amazonSnsClient);
