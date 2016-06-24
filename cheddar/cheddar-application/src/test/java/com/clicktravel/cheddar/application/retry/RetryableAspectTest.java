@@ -95,8 +95,8 @@ public class RetryableAspectTest {
         // Given
         final RetryableAspect retryableAspect = new RetryableAspect();
         final ProceedingJoinPoint mockProceedingJoinPoint = setupSimpleProceedingJoinPointMock();
-        final int retryMaxAttempts = randomIntInRange(2, 4);
-        final Retryable mockRetryable = setupMockRetryable(retryMaxAttempts, 2000);
+        final int maxAttempts = randomIntInRange(2, 4);
+        final Retryable mockRetryable = setupMockRetryable(maxAttempts, 2000);
 
         RetryableConfiguration.setRetryableEnabled(true);
         when(mockProceedingJoinPoint.proceed()).thenThrow(new RetryAspectTestException());
@@ -110,7 +110,7 @@ public class RetryableAspectTest {
         }
 
         // Then
-        verify(mockProceedingJoinPoint, times(retryMaxAttempts)).proceed();
+        verify(mockProceedingJoinPoint, times(maxAttempts)).proceed();
 
         assertNotNull(actualException);
     }
@@ -121,8 +121,8 @@ public class RetryableAspectTest {
         // Given
         final RetryableAspect retryableAspect = new RetryableAspect();
         final ProceedingJoinPoint mockProceedingJoinPoint = setupSimpleProceedingJoinPointMock();
-        final int retryMaxAttempts = 3;
-        final Retryable mockRetryable = setupMockRetryable(retryMaxAttempts, 2000);
+        final int maxAttempts = 3;
+        final Retryable mockRetryable = setupMockRetryable(maxAttempts, 2000);
 
         RetryableConfiguration.setRetryableEnabled(true);
         when(mockRetryable.failImmediatelyOn()).thenReturn(new Class[] { RetryAspectTestException.class });
@@ -147,7 +147,8 @@ public class RetryableAspectTest {
         // Given
         final RetryableAspect retryableAspect = new RetryableAspect();
         final ProceedingJoinPoint mockProceedingJoinPoint = setupSimpleProceedingJoinPointMock();
-        final int retryDelayInMillis = 3000;
+        final long EPSILON_MS = 300; // test timing tolerance
+        final int retryDelayInMillis = 400;
         final int maxRetries = randomIntInRange(2, 6);
         final int expectedRuntime = retryDelayInMillis * (maxRetries - 1);
         final Retryable mockRetryable = setupMockRetryable(maxRetries, retryDelayInMillis);
@@ -157,13 +158,11 @@ public class RetryableAspectTest {
 
         // When
         DateTime startDateTime = null;
-        DateTime endDateTime = null;
         RetryAspectTestException actualException = null;
         try {
             startDateTime = DateTime.now();
             retryableAspect.attemptMethodAndRetryIfNeeded(mockProceedingJoinPoint, mockRetryable);
         } catch (final RetryAspectTestException e) {
-            endDateTime = DateTime.now();
             actualException = e;
         }
 
@@ -171,7 +170,8 @@ public class RetryableAspectTest {
         verify(mockProceedingJoinPoint, times(maxRetries)).proceed();
 
         assertNotNull(actualException);
-        assertTrue(startDateTime.plusMillis(expectedRuntime).getMillis() <= endDateTime.getMillis());
+        final long elapsedMillis = DateTime.now().getMillis() - startDateTime.getMillis();
+        assertTrue(Math.abs(elapsedMillis - expectedRuntime) < EPSILON_MS);
     }
 
     @Test
@@ -203,7 +203,6 @@ public class RetryableAspectTest {
         assertTrue(retryExceptionHandler.exceptionHandlerBeenCalled);
     }
 
-    @SuppressWarnings("unchecked")
     private Retryable setupMockRetryable(final int maxAttempts, final int retryDelayInMillis) {
         final Retryable mockRetryable = mock(Retryable.class);
         when(mockRetryable.maxAttempts()).thenReturn(maxAttempts);
