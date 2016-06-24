@@ -149,9 +149,9 @@ public class RetryableAspectTest {
         final ProceedingJoinPoint mockProceedingJoinPoint = setupSimpleProceedingJoinPointMock();
         final long EPSILON_MS = 300; // test timing tolerance
         final int retryDelayInMillis = 400;
-        final int maxRetries = randomIntInRange(2, 6);
-        final int expectedRuntime = retryDelayInMillis * (maxRetries - 1);
-        final Retryable mockRetryable = setupMockRetryable(maxRetries, retryDelayInMillis);
+        final int maxAttempts = randomIntInRange(2, 6);
+        final int expectedRuntime = retryDelayInMillis * (maxAttempts - 1);
+        final Retryable mockRetryable = setupMockRetryable(maxAttempts, retryDelayInMillis);
 
         RetryableConfiguration.setRetryableEnabled(true);
         when(mockProceedingJoinPoint.proceed()).thenThrow(new RetryAspectTestException());
@@ -167,7 +167,7 @@ public class RetryableAspectTest {
         }
 
         // Then
-        verify(mockProceedingJoinPoint, times(maxRetries)).proceed();
+        verify(mockProceedingJoinPoint, times(maxAttempts)).proceed();
 
         assertNotNull(actualException);
         final long elapsedMillis = DateTime.now().getMillis() - startDateTime.getMillis();
