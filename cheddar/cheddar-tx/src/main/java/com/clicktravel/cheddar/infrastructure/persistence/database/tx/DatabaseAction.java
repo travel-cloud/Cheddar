@@ -41,6 +41,7 @@ public abstract class DatabaseAction<T> {
         if (persistenceExceptionHandlers.isEmpty()) {
             throw persistenceException;
         }
+        boolean foundPersistenceExceptionHandlerMethod = false;
         for (final PersistenceExceptionHandler<?> persistenceExceptionHandler : persistenceExceptionHandlers) {
             Method method;
             try {
@@ -49,6 +50,7 @@ public abstract class DatabaseAction<T> {
                 continue;
             }
             try {
+                foundPersistenceExceptionHandlerMethod = true;
                 method.setAccessible(true);
                 method.invoke(persistenceExceptionHandler, persistenceException);
             } catch (IllegalAccessException | IllegalArgumentException e) {
@@ -56,6 +58,9 @@ public abstract class DatabaseAction<T> {
             } catch (final InvocationTargetException handlerException) {
                 throw handlerException.getCause();
             }
+        }
+        if (!foundPersistenceExceptionHandlerMethod) {
+            throw persistenceException;
         }
     }
 
