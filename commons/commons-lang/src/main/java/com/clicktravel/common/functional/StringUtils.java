@@ -61,6 +61,7 @@ public class StringUtils {
 
     /**
      * Parses a single enum name from a string. Case is ignored, spaces are changed to '_'
+     * @param <E> The enum type whose constant is to be returned
      * @param s The string to scan
      * @param enumClass The class of enum constants
      * @return Enum constant, or {@code null} if input string is blank
@@ -72,6 +73,26 @@ public class StringUtils {
         }
         final E value = E.valueOf(enumClass, t);
         return value;
+    }
+
+    /**
+     * Returns the enum constant of the specified enum type with a string representation matching a specified value.
+     * This is similar to {@link Enum#valueOf(Class, String)} but matches on {@link Enum#toString()} rather than
+     * {@link Enum#name()}
+     * @param <E> The enum type whose constant is to be returned
+     * @param enumClass the {@code Class} object of the enum type from which to return a constant
+     * @param value the String value of the constant to return
+     * @return the enum constant of the specified enum type with the specified String value
+     * @throws IllegalArgumentException if no enum constant with the specified String value is found
+     */
+    public static <E extends Enum<E>> E fromValue(final Class<E> enumClass, final String value) {
+        for (final E enumConstant : enumClass.getEnumConstants()) {
+            if (enumConstant.toString().equals(value)) {
+                return enumConstant;
+            }
+        }
+        throw new IllegalArgumentException(
+                String.format("Unknown value %s for enum class %s", value, enumClass.getName()));
     }
 
     /**
