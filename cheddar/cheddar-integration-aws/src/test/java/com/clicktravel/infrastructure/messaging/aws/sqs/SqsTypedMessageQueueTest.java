@@ -16,6 +16,7 @@
  */
 package com.clicktravel.infrastructure.messaging.aws.sqs;
 
+import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
@@ -163,14 +164,17 @@ public class SqsTypedMessageQueueTest {
         final List<com.amazonaws.services.sqs.model.Message> mockSqsMessages = new LinkedList<>();
         final List<String> messageTypes = new LinkedList<>();
         final List<String> payloads = new LinkedList<>();
+        final List<String> messageIds = new LinkedList<>();
         final List<String> receiptHandles = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             final String messageType = randomString();
             final String payload = randomString();
-            final String receiptHandle = randomString();
-            mockSqsMessages.add(mockSqsMessage(messageType, payload, receiptHandle));
+            final String messageId = randomId();
+            final String receiptHandle = randomId();
+            mockSqsMessages.add(mockSqsMessage(messageType, payload, messageId, receiptHandle));
             messageTypes.add(messageType);
             payloads.add(payload);
+            messageIds.add(messageId);
             receiptHandles.add(receiptHandle);
         }
         when(mockSqsQueueResource.receiveMessages()).thenReturn(mockSqsMessages);
@@ -185,6 +189,7 @@ public class SqsTypedMessageQueueTest {
             final TypedMessage receivedMessage = receivedMessages.get(i);
             assertEquals(messageTypes.get(i), receivedMessage.getType());
             assertEquals(payloads.get(i), receivedMessage.getPayload());
+            assertEquals(messageIds.get(i), receivedMessage.getMessageId());
             assertEquals(receiptHandles.get(i), receivedMessage.getReceiptHandle());
         }
     }
@@ -231,20 +236,23 @@ public class SqsTypedMessageQueueTest {
     }
 
     private com.amazonaws.services.sqs.model.Message mockSqsMessage(final String type, final String payload,
-            final String receiptHandle) throws Exception {
+            final String messageId, final String receiptHandle) throws Exception {
         final ObjectMapper mapper = new ObjectMapper();
         final ObjectNode rootNode = mapper.createObjectNode();
         rootNode.put("Subject", type);
         rootNode.put("Message", payload);
         final String body = mapper.writeValueAsString(rootNode);
-        final com.amazonaws.services.sqs.model.Message mockSqsMessage = mock(com.amazonaws.services.sqs.model.Message.class);
+        final com.amazonaws.services.sqs.model.Message mockSqsMessage = mock(
+                com.amazonaws.services.sqs.model.Message.class);
+        when(mockSqsMessage.getMessageId()).thenReturn(messageId);
         when(mockSqsMessage.getReceiptHandle()).thenReturn(receiptHandle);
         when(mockSqsMessage.getBody()).thenReturn(body);
         return mockSqsMessage;
     }
 
     private com.amazonaws.services.sqs.model.Message mockSqsMessageWithMalformedBody(final String receiptHandle) {
-        final com.amazonaws.services.sqs.model.Message mockSqsMessage = mock(com.amazonaws.services.sqs.model.Message.class);
+        final com.amazonaws.services.sqs.model.Message mockSqsMessage = mock(
+                com.amazonaws.services.sqs.model.Message.class);
         when(mockSqsMessage.getReceiptHandle()).thenReturn(receiptHandle);
         when(mockSqsMessage.getBody()).thenReturn(randomString());
         return mockSqsMessage;
@@ -274,7 +282,7 @@ public class SqsTypedMessageQueueTest {
         final int maxMessages = 1 + randomInt(10);
         final List<com.amazonaws.services.sqs.model.Message> mockSqsMessages = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
-            mockSqsMessages.add(mockSqsMessage(randomString(), randomString(), randomString()));
+            mockSqsMessages.add(mockSqsMessage(randomString(), randomString(), randomId(), randomId()));
         }
         when(mockSqsQueueResource.receiveMessages(waitTimeSeconds, maxMessages)).thenReturn(mockSqsMessages);
 
