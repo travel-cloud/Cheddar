@@ -28,4 +28,9 @@ public interface Message {
      *         used to delete this message from the queue.
      */
     String getReceiptHandle();
+
+    /**
+     * @return Unique identifier for the message
+     */
+    String getMessageId();
 }

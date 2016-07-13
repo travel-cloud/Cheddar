@@ -50,15 +50,16 @@ public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
     @Override
     protected TypedMessage toMessage(final com.amazonaws.services.sqs.model.Message sqsMessage) {
         final String receiptHandle = sqsMessage.getReceiptHandle();
+        final String messageId = sqsMessage.getMessageId();
         try {
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode jsonNode = mapper.readTree(sqsMessage.getBody());
             final String messageType = jsonNode.get("Subject").textValue();
             final String messagePayload = jsonNode.get("Message").textValue();
-            return new SimpleMessage(messageType, messagePayload, receiptHandle);
+            return new SimpleMessage(messageType, messagePayload, messageId, receiptHandle);
         } catch (final Exception e) {
-            return new InvalidTypedMessage(receiptHandle, new MessageParseException(
-                    "Could not parse message from SQS message: " + sqsMessage.getBody()));
+            return new InvalidTypedMessage(messageId, receiptHandle,
+                    new MessageParseException("Could not parse message from SQS message: " + sqsMessage.getBody()));
         }
     }
 

@@ -22,8 +22,9 @@ public abstract class InvalidMessage extends AbstractMessage {
 
     private final MessageParseException messageParseException;
 
-    public InvalidMessage(final String receiptHandle, final MessageParseException messageParseException) {
-        super(receiptHandle);
+    public InvalidMessage(final String messageId, final String receiptHandle,
+            final MessageParseException messageParseException) {
+        super(messageId, receiptHandle);
         this.messageParseException = messageParseException;
     }
 

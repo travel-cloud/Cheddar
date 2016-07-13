@@ -33,7 +33,7 @@ public class SqsBasicMessageQueue extends SqsMessageQueue<BasicMessage> {
 
     @Override
     protected BasicMessage toMessage(final Message sqsMessage) {
-        return new SimpleBasicMessage(sqsMessage.getBody(), sqsMessage.getReceiptHandle());
+        return new SimpleBasicMessage(sqsMessage.getBody(), sqsMessage.getMessageId(), sqsMessage.getReceiptHandle());
     }
 
 }

@@ -16,6 +16,7 @@
  */
 package com.clicktravel.infrastructure.messaging.aws.sqs;
 
+import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,14 +63,19 @@ public class SqsBasicMessageQueueTest {
         final List<com.amazonaws.services.sqs.model.Message> mockSqsMessages = new LinkedList<>();
         final List<String> bodies = new LinkedList<>();
         final List<String> receiptHandles = new LinkedList<>();
+        final List<String> messageIds = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             final String body = randomString();
-            final String receiptHandle = randomString();
-            final com.amazonaws.services.sqs.model.Message mockSqsMessage = mock(com.amazonaws.services.sqs.model.Message.class);
+            final String messageId = randomId();
+            final String receiptHandle = randomId();
+            final com.amazonaws.services.sqs.model.Message mockSqsMessage = mock(
+                    com.amazonaws.services.sqs.model.Message.class);
+            when(mockSqsMessage.getMessageId()).thenReturn(messageId);
             when(mockSqsMessage.getReceiptHandle()).thenReturn(receiptHandle);
             when(mockSqsMessage.getBody()).thenReturn(body);
             mockSqsMessages.add(mockSqsMessage);
             bodies.add(body);
+            messageIds.add(messageId);
             receiptHandles.add(receiptHandle);
         }
         when(mockSqsQueueResource.receiveMessages()).thenReturn(mockSqsMessages);
@@ -83,6 +89,7 @@ public class SqsBasicMessageQueueTest {
         for (int i = 0; i < 3; i++) {
             final BasicMessage receivedMessage = receivedMessages.get(i);
             assertEquals(bodies.get(i), receivedMessage.getBody());
+            assertEquals(messageIds.get(i), receivedMessage.getMessageId());
             assertEquals(receiptHandles.get(i), receivedMessage.getReceiptHandle());
         }
     }

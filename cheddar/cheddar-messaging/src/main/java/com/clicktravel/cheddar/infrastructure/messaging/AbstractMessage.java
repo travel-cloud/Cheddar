@@ -18,10 +18,17 @@ package com.clicktravel.cheddar.infrastructure.messaging;
 
 public abstract class AbstractMessage implements Message {
 
+    private final String messageId;
     private final String receiptHandle;
 
-    public AbstractMessage(final String receiptHandle) {
+    public AbstractMessage(final String messageId, final String receiptHandle) {
+        this.messageId = messageId;
         this.receiptHandle = receiptHandle;
+    }
+
+    @Override
+    public String getMessageId() {
+        return messageId;
     }
 
     @Override
