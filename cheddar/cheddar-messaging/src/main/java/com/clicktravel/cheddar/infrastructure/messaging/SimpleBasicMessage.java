@@ -20,13 +20,13 @@ public class SimpleBasicMessage extends AbstractMessage implements BasicMessage 
 
     private final String body;
 
-    public SimpleBasicMessage(final String body, final String receiptHandle) {
-        super(receiptHandle);
+    public SimpleBasicMessage(final String body, final String messageId, final String receiptHandle) {
+        super(messageId, receiptHandle);
         this.body = body;
     }
 
     public SimpleBasicMessage(final String body) {
-        this(body, null);
+        this(body, null, null);
     }
 
     @Override
