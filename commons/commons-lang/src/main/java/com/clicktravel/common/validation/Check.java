@@ -19,8 +19,6 @@ package com.clicktravel.common.validation;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import com.boxbe.pub.email.EmailAddress;
-
 /**
  * Simple value validation methods, intended for basic checks on field values of requests on a service API.
  *
@@ -37,6 +35,8 @@ public class Check {
     private final static String IS_NOT_BETWEEN = "Value is not between the allowed minimum & maximum values";
     private final static String DOES_NOT_MATCH_PATTERN = "Value does not match pattern";
     private final static Pattern PHONE_NUMBER_PATERN = Pattern.compile("\\+?[\\d -]+");
+    private final static Pattern EMAIL_ADDRESS_PATTERN = Pattern.compile(
+            "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
 
     /**
      * Check that a string value is not empty (after trimming) or <code>null</code>
@@ -77,13 +77,15 @@ public class Check {
     }
 
     /**
-     * Check that an e-mail address has correct syntax according to RFC 2822
+     * Check that an e-mail address has correct syntax according to RFC 2822. The regular expression used to specify a
+     * valid e-mail address could be found at
+     * <a href="http://w3c.github.io/html/sec-forms.html#email-state-typeemail">w3c.github.io</a>
      * @param field Name of field to report if check fails
      * @param email E-mail address to check
      * @throws ValidationException if check fails
      */
     public static void isValidEmail(final String field, final String email) throws ValidationException {
-        if (!EmailAddress.isValidMailbox(email)) {
+        if (email == null || !EMAIL_ADDRESS_PATTERN.matcher(email).matches()) {
             final String errorMessage = String.format(INVALID_EMAIL_ADDRESS + " : value -> [%s]", email);
             throw new ValidationException(errorMessage, field);
         }
@@ -144,9 +146,9 @@ public class Check {
     public static void isBetween(final String field, final int value, final int minValue, final int maxValue)
             throws ValidationException {
         if (value < minValue || value > maxValue) {
-            final String errorMessage = String.format(IS_NOT_BETWEEN
-                    + ", allowed minValue -> [%s], allowed maxValue -> [%s], actual value -> [%s]", minValue, maxValue,
-                    value);
+            final String errorMessage = String.format(
+                    IS_NOT_BETWEEN + ", allowed minValue -> [%s], allowed maxValue -> [%s], actual value -> [%s]",
+                    minValue, maxValue, value);
             throw new ValidationException(errorMessage, field);
         }
     }
@@ -161,8 +163,8 @@ public class Check {
     public static void matchesPattern(final String field, final String value, final Pattern pattern)
             throws ValidationException {
         if (value == null || !pattern.matcher(value).matches()) {
-            final String errorMessage = String.format(DOES_NOT_MATCH_PATTERN
-                    + ", value -> [%s], expected pattern -> [%s]", value, pattern.toString());
+            final String errorMessage = String.format(
+                    DOES_NOT_MATCH_PATTERN + ", value -> [%s], expected pattern -> [%s]", value, pattern.toString());
             throw new ValidationException(errorMessage, field);
         }
     }
