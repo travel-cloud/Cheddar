@@ -236,19 +236,19 @@ public class CheckTest {
         validEmails.add("john..doe@example.com");
 
         // When
-        final List<String> wrongValidatedEmails = new ArrayList<>();
+        final List<String> invalidatedEmails = new ArrayList<>();
         for (final String email : validEmails) {
             try {
                 Check.isValidEmail(field, email);
             } catch (final ValidationException e) {
-                wrongValidatedEmails.add(email);
+                invalidatedEmails.add(email);
             }
         }
 
         // Then
-        if (!wrongValidatedEmails.isEmpty()) {
+        if (!invalidatedEmails.isEmpty()) {
             fail("Expected to validate the following email addresses, but were actually invalidated: "
-                    + wrongValidatedEmails);
+                    + invalidatedEmails);
         }
     }
 
@@ -265,20 +265,20 @@ public class CheckTest {
         invalidEmails.add("john.doe@example..com");
 
         // When
-        final List<String> wrongValidatedEmails = new ArrayList<>();
+        final List<String> validatedEmails = new ArrayList<>();
         for (final String email : invalidEmails) {
             try {
                 Check.isValidEmail(field, email);
-                wrongValidatedEmails.add(email);
+                validatedEmails.add(email);
             } catch (final ValidationException e) {
                 // expected to throw an exception for all emails
             }
         }
 
         // Then
-        if (!wrongValidatedEmails.isEmpty()) {
+        if (!validatedEmails.isEmpty()) {
             fail("Expected to invalidate the following email addresses, but were actually validated: "
-                    + wrongValidatedEmails);
+                    + validatedEmails);
         }
     }
 

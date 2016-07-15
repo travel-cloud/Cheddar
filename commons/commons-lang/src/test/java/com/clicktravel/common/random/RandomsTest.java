@@ -72,7 +72,7 @@ public class RandomsTest {
             try {
                 Check.isValidEmail("email", randomEmailAddress);
             } catch (final ValidationException e) {
-                fail("Invalid random email addredd generated: " + randomEmailAddress);
+                fail("Invalid random email address generated: " + randomEmailAddress);
             }
             randomEmailAddresses.add(randomEmailAddress);
         }
