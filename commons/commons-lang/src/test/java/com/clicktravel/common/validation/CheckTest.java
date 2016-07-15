@@ -247,7 +247,8 @@ public class CheckTest {
 
         // Then
         if (!wrongValidatedEmails.isEmpty()) {
-            fail("Email addresses not validated: " + wrongValidatedEmails);
+            fail("Expected to validate the following email addresses, but were actually invalidated: "
+                    + wrongValidatedEmails);
         }
     }
 
@@ -276,7 +277,8 @@ public class CheckTest {
 
         // Then
         if (!wrongValidatedEmails.isEmpty()) {
-            fail("Email addresses not validated: " + wrongValidatedEmails);
+            fail("Expected to invalidate the following email addresses, but were actually validated: "
+                    + wrongValidatedEmails);
         }
     }
 
