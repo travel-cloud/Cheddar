@@ -20,8 +20,11 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -29,7 +32,8 @@ import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.junit.Test;
 
-import com.boxbe.pub.email.EmailAddress;
+import com.clicktravel.common.validation.Check;
+import com.clicktravel.common.validation.ValidationException;
 
 public class RandomsTest {
 
@@ -65,7 +69,11 @@ public class RandomsTest {
         for (int n = 0; n < SAMPLE_SIZE; n++) {
             final String randomEmailAddress = Randoms.randomEmailAddress();
             assertNotNull(randomEmailAddress);
-            assertTrue(EmailAddress.isValidMailbox(randomEmailAddress));
+            try {
+                Check.isValidEmail("email", randomEmailAddress);
+            } catch (final ValidationException e) {
+                fail("Invalid random email addredd generated: " + randomEmailAddress);
+            }
             randomEmailAddresses.add(randomEmailAddress);
         }
         assertEquals("Random sample e-mail addresses should be unique", SAMPLE_SIZE, randomEmailAddresses.size());
