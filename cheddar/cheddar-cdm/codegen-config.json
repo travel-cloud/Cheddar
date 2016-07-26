@@ -1,0 +1,6 @@
+{
+    "sourceFolder":"build/generated/swagger",
+    "library":"jersey2",
+    "hideGenerationTimestamp":true,
+    "dateLibrary":"joda"
+}
