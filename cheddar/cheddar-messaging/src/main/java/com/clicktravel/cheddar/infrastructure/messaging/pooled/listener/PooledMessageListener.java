@@ -152,7 +152,7 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
                     try {
                         messages = messageQueue.receive(pollSeconds, maxReceivedMessages);
                     } catch (final MessageReceiveException e) {
-                        logger.error("Error receiving messages on queue:[" + queueName() + "]", e);
+                        logger.warn("Error receiving messages on queue:[" + queueName() + "]", e);
                         Thread.sleep(RECEIVE_MESSAGE_ERROR_PAUSE_MILLIS);
                     }
 
