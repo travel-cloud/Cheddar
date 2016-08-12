@@ -58,8 +58,8 @@ public abstract class InMemoryMessageListener<T extends Message> implements Mess
             final MessageHandler<T> messageHandler = getHandlerForMessage(message);
             if (messageHandler != null) {
                 try {
-                    logger.debug("Handling received message; queue:[" + messageQueue.getName() + "] message:["
-                            + message + "]");
+                    logger.debug("Handling received message; queue:[" + messageQueue.getName() + "] message:[" + message
+                            + "]");
                     messageHandler.handle(message);
                 } catch (final Exception exception) {
                     logger.error("Error handling message: " + message, exception);
@@ -79,28 +79,18 @@ public abstract class InMemoryMessageListener<T extends Message> implements Mess
     }
 
     @Override
-    public void shutdown() {
-        // Nothing to do
-    }
-
-    @Override
     public void prepareForShutdown() {
         // Nothing to do
     }
 
     @Override
-    public void shutdownAfterQueueDrained() {
+    public void shutdownListener() {
         // Nothing to do
     }
 
     @Override
-    public boolean hasTerminated() {
-        return false;
-    }
-
-    @Override
-    public void awaitTermination() {
-        // Nothing to do
+    public boolean awaitShutdownComplete(final long timeoutMiilis) {
+        return true;
     }
 
     @Override

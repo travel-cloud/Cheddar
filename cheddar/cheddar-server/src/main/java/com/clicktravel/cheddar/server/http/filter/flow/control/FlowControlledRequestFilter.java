@@ -17,7 +17,6 @@
 package com.clicktravel.cheddar.server.http.filter.flow.control;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -38,13 +37,10 @@ import com.clicktravel.common.concurrent.RateLimiter;
 public class FlowControlledRequestFilter implements ContainerRequestFilter {
 
     private final RateLimiter restRequestRateLimiter;
-    private final CountDownLatch restAdapterStartLatch;
 
     @Inject
-    public FlowControlledRequestFilter(final RateLimiterConfiguration rateLimiterConfiguration,
-            final CountDownLatch restAdapterStartLatch) {
+    public FlowControlledRequestFilter(final RateLimiterConfiguration rateLimiterConfiguration) {
         restRequestRateLimiter = rateLimiterConfiguration.restRequestRateLimiter();
-        this.restAdapterStartLatch = restAdapterStartLatch;
     }
 
     @Override
@@ -53,7 +49,6 @@ public class FlowControlledRequestFilter implements ContainerRequestFilter {
         final boolean isStatusResource = path.matches("/status(/.*)?");
         if (!isStatusResource) {
             try {
-                restAdapterStartLatch.await(); // block until start latch released
                 restRequestRateLimiter.takeToken(); // block until allowed by rate limit
             } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
