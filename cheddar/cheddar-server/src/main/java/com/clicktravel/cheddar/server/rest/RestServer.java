@@ -33,10 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * HTTP server which exposes JAX-RS resources
+ * HTTP server which exposes JAX-RS resources.
  *
- * Deployment is done via GrizzlyHttpServer and scans various packages for candidates for JAX-RS Resources and
- * Providers. The Spring container is also initialised.
+ * A Grizzly HTTP server is used with the provided {@link ResourceConfig} configuration
  */
 public class RestServer {
 
