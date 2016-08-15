@@ -67,7 +67,7 @@ public class ApplicationLifecycleController {
         logger.info("Shutting down application");
         shutdownDeadline = DateTimeUtils.currentTimeMillis() + SHUTDOWN_TIMEOUT_MILLIS;
         messageListeners.stream().forEach(MessageListener::prepareForShutdown);
-        restServer.shutdownAndAwait(millisToDeadline());
+        restServer.shutdownAndAwait(millisToShutdownDeadline());
         logger.info("Shutting down message listeners (except system message listener)");
         shutdownAndAwait(messageListenersExcept(systemEventMessageListener));
         logger.info("Shutting down system event message listener");
@@ -78,11 +78,11 @@ public class ApplicationLifecycleController {
     private void shutdownAndAwait(final Set<MessageListener> messageListenersToShutdown) {
         messageListenersToShutdown.stream().forEach(MessageListener::shutdownListener);
         for (final MessageListener messageListener : messageListenersToShutdown) {
-            messageListener.awaitShutdownComplete(millisToDeadline());
+            messageListener.awaitShutdownComplete(millisToShutdownDeadline());
         }
     }
 
-    private long millisToDeadline() {
+    private long millisToShutdownDeadline() {
         return Math.max(0, shutdownDeadline - DateTimeUtils.currentTimeMillis());
     }
 
