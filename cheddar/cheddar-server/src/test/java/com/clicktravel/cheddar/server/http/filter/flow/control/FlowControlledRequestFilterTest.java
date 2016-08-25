@@ -22,7 +22,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
-import java.util.concurrent.CountDownLatch;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.UriInfo;
@@ -39,7 +38,6 @@ public class FlowControlledRequestFilterTest {
     private FlowControlledRequestFilter flowControlledRequestFilter;
     private RateLimiter mockRateLimiter;
     private ContainerRequestContext mockContainerRequestContext;
-    private CountDownLatch mockrestAdapterStartLatch;
 
     @Before
     public void setUp() {
@@ -47,8 +45,7 @@ public class FlowControlledRequestFilterTest {
         final RateLimiterConfiguration mockRateLimiterConfiguration = mock(RateLimiterConfiguration.class);
         mockRateLimiter = mock(RateLimiter.class);
         when(mockRateLimiterConfiguration.restRequestRateLimiter()).thenReturn(mockRateLimiter);
-        mockrestAdapterStartLatch = mock(CountDownLatch.class);
-        flowControlledRequestFilter = new FlowControlledRequestFilter(mockRateLimiterConfiguration, mockrestAdapterStartLatch);
+        flowControlledRequestFilter = new FlowControlledRequestFilter(mockRateLimiterConfiguration);
     }
 
     @Test
@@ -60,7 +57,6 @@ public class FlowControlledRequestFilterTest {
         flowControlledRequestFilter.filter(mockContainerRequestContext);
 
         // Then
-        verify(mockrestAdapterStartLatch).await();
         verify(mockRateLimiter).takeToken();
     }
 
@@ -73,7 +69,7 @@ public class FlowControlledRequestFilterTest {
         flowControlledRequestFilter.filter(mockContainerRequestContext);
 
         // Then
-        verifyZeroInteractions(mockrestAdapterStartLatch, mockRateLimiter);
+        verifyZeroInteractions(mockRateLimiter);
     }
 
     @Test
@@ -85,7 +81,7 @@ public class FlowControlledRequestFilterTest {
         flowControlledRequestFilter.filter(mockContainerRequestContext);
 
         // Then
-        verifyZeroInteractions(mockrestAdapterStartLatch, mockRateLimiter);
+        verifyZeroInteractions(mockRateLimiter);
     }
 
     private void setUpRequestPath(final String path) throws Exception {

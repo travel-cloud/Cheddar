@@ -29,19 +29,25 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.stereotype.Component;
 
 import com.clicktravel.common.http.application.ObjectMapperProvider;
 
+@Component
 public class RestResourceConfig extends ResourceConfig {
 
     final ClassPathScanningCandidateComponentProvider scanner;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public RestResourceConfig() {
+    @Autowired
+    public RestResourceConfig(final ApplicationContext applicationContext) {
+        property("contextConfig", applicationContext);
         scanner = new ClassPathScanningCandidateComponentProvider(true);
         scanner.resetFilters(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(Path.class));

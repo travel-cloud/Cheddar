@@ -22,22 +22,7 @@ public class StatusResult {
     private String version;
     private String frameworkVersion;
     private String status;
-    private boolean processingRestRequest;
-    private boolean deferrableProcessing;
     private MaximumWorkRates maximumWorkRates;
-
-    // TODO Remove the "processedRecentDeferrableEvent" property and getter/setter when deployment scripts have been
-    // updated (property has been renamed deferrableProcessing)
-    @SuppressWarnings("unused")
-    private boolean processedRecentDeferrableEvent;
-
-    public boolean isProcessedRecentDeferrableEvent() {
-        return deferrableProcessing;
-    }
-
-    public void setProcessedRecentDeferrableEvent(final boolean processedRecentDeferrableEvent) {
-        this.processedRecentDeferrableEvent = deferrableProcessing;
-    }
 
     public String getName() {
         return name;
@@ -69,22 +54,6 @@ public class StatusResult {
 
     public void setStatus(final String status) {
         this.status = status;
-    }
-
-    public boolean isProcessingRestRequest() {
-        return processingRestRequest;
-    }
-
-    public void setProcessingRestRequest(final boolean processingRestRequest) {
-        this.processingRestRequest = processingRestRequest;
-    }
-
-    public boolean isDeferrableProcessing() {
-        return deferrableProcessing;
-    }
-
-    public void setDeferrableProcessing(final boolean deferrableProcessing) {
-        this.deferrableProcessing = deferrableProcessing;
     }
 
     public MaximumWorkRates getMaximumWorkRates() {

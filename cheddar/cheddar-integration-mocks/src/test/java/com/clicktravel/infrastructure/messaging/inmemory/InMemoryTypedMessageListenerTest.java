@@ -33,6 +33,7 @@ import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 import com.clicktravel.cheddar.infrastructure.messaging.MessageQueue;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageHandlingException;
+import com.clicktravel.common.random.Randoms;
 
 @SuppressWarnings("unchecked")
 public class InMemoryTypedMessageListenerTest {
@@ -136,7 +137,7 @@ public class InMemoryTypedMessageListenerTest {
     @Test
     public void shouldReturn_onShutdown() {
         // When
-        inMemoryMessageListener.shutdown();
+        inMemoryMessageListener.shutdownListener();
 
         // Then
         // Method returns
@@ -152,27 +153,9 @@ public class InMemoryTypedMessageListenerTest {
     }
 
     @Test
-    public void shouldReturn_onShutdownAfterQueueDrained() {
+    public void shouldReturn_onAwaitShutdownComplete() {
         // When
-        inMemoryMessageListener.shutdownAfterQueueDrained();
-
-        // Then
-        // Method returns
-    }
-
-    @Test
-    public void shouldReturnFalse_onHasTerminated() {
-        // When
-        final boolean hasTerminated = inMemoryMessageListener.hasTerminated();
-
-        // Then
-        assertFalse(hasTerminated);
-    }
-
-    @Test
-    public void shouldReturn_onAwaitTermination() {
-        // When
-        inMemoryMessageListener.awaitTermination();
+        inMemoryMessageListener.awaitShutdownComplete(Randoms.randomLong());
 
         // Then
         // Method returns
