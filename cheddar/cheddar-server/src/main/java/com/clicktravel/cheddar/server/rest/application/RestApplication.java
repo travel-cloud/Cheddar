@@ -55,7 +55,6 @@ public class RestApplication {
             logger.info("Java process starting");
             logger.debug(String.format("java.version:[%s] java.vendor:[%s]", System.getProperty("java.version"),
                     System.getProperty("java.vendor")));
-            @SuppressWarnings("resource")
             final ConfigurableApplicationContext applicationContext = new ClassPathXmlApplicationContext(
                     "applicationContext.xml");
             logger.debug("Finished getting ApplicationContext");
@@ -64,6 +63,8 @@ public class RestApplication {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 logger.info("Shutdown hook invoked - Commencing graceful termination of Java process");
                 applicationLifecycleController.shutdownApplication();
+                logger.debug("Closing application context");
+                applicationContext.close();
                 logger.info("Java process terminating");
             }));
             applicationLifecycleController.startApplication(servicePort, statusPort, bindAddress);
