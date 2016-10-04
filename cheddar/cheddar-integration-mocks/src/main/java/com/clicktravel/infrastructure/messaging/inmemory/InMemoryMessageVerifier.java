@@ -16,8 +16,7 @@
  */
 package com.clicktravel.infrastructure.messaging.inmemory;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import com.clicktravel.cheddar.event.AbstractEvent;
 import com.clicktravel.cheddar.event.Event;
@@ -61,33 +60,44 @@ public class InMemoryMessageVerifier {
      * Verifies that an event equals to the one specified has been published using the given
      * {@link InMemoryMessagePublisher}
      * @param inMemoryMessagePublisher {@link InMemoryMessagePublisher} to check
-     * @param expectedEvent Event to match
+     * @param event Event to match
      * @return {@code true} if matching event has been published
      */
     public static boolean eventPublished(final InMemoryMessagePublisher<TypedMessage> inMemoryMessagePublisher,
-            final Event expectedEvent) {
-        return containsSerializedEvent(inMemoryMessagePublisher.getPublishedMessages(), expectedEvent);
+            final Event event) {
+        return publishedEvents(inMemoryMessagePublisher, event.getClass()).contains(event);
     }
 
-    private static boolean containsSerializedEvent(final List<TypedMessage> typedMessages, final Event expectedEvent) {
-        for (final TypedMessage typedMessage : typedMessages) {
-            if (typedMessage.getType().equals(expectedEvent.type())) {
-                final Event event = AbstractEvent.newEvent(expectedEvent.getClass(), typedMessage.getPayload());
-                if (expectedEvent.equals(event)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    private static boolean containsMessageOfType(final Collection<TypedMessage> messages, final String messageType) {
+        return messages.stream().anyMatch(m -> m.getType().equals(messageType));
     }
 
-    private static boolean containsMessageOfType(final Collection<TypedMessage> messages,
-            final String expectedMessageType) {
-        for (final TypedMessage message : messages) {
-            if (message.getType().equals(expectedMessageType)) {
-                return true;
+    /**
+     * Returns a filtered list of all events published using the given {@link InMemoryMessagePublisher} of the specified
+     * event types. This enables testing of published events by means other than complete equality testing.
+     * @param inMemoryMessagePublisher {@link InMemoryMessagePublisher} to get published events for
+     * @param eventClasses Event classes to filter returned list
+     * @return Filtered list of events that have been published
+     */
+    @SafeVarargs
+    public static List<Event> publishedEvents(final InMemoryMessagePublisher<TypedMessage> inMemoryMessagePublisher,
+            final Class<? extends Event>... eventClasses) {
+        final Map<String, Class<? extends Event>> typeToEventClass = new HashMap<>();
+        for (final Class<? extends Event> eventClass : eventClasses) {
+            try {
+                typeToEventClass.put(eventClass.newInstance().type(), eventClass);
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new IllegalStateException("Unable to instatiate prototype event " + eventClass.getName());
             }
         }
-        return false;
+        final List<Event> events = new LinkedList<>();
+        for (final TypedMessage typedMessage : inMemoryMessagePublisher.getPublishedMessages()) {
+            final Class<? extends Event> eventClass = typeToEventClass.get(typedMessage.getType());
+            if (eventClass != null) {
+                events.add(AbstractEvent.newEvent(eventClass, typedMessage.getPayload()));
+            }
+        }
+        return events;
     }
+
 }
