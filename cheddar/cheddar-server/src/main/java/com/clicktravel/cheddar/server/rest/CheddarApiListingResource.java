@@ -45,21 +45,15 @@ import io.swagger.models.Swagger;
 import io.swagger.util.Yaml;
 
 /**
- * Click travels own version of the class com.wordnik.swagger.jaxrs.listing.ApiListingResource as that depends on a
- * servlet deployment which our apps currently do not support (i tried to setup and failed to load the resources). This
- * version just changes the fetching of the swagger class from the servlet found at @Context (null) to the scanner
- * (BeanConfig).
- *
- * THIS MAY NOT BE NEEDED NOW WE HAVE MOVED TO THE NEW VERSION OF THE LIBARARY!
- *
- * @author james
- *
+ * Cheddar's own version of the class com.wordnik.swagger.jaxrs.listing.ApiListingResource that removes the dependacy on
+ * a servlet deployment deployment which cheddar currently do not support. This version changes the fetching of the
+ * swagger object to the scanner (BeanConfig) object instead on the servlet context.
  */
 
 @Path("/")
-public class ClickApiListingResource {
+public class CheddarApiListingResource {
 
-    Logger LOGGER = LoggerFactory.getLogger(ClickApiListingResource.class);
+    Logger LOGGER = LoggerFactory.getLogger(CheddarApiListingResource.class);
 
     static boolean initialized = false;
 
