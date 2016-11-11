@@ -41,6 +41,7 @@ public abstract class DatabaseAction<T> {
         if (persistenceExceptionHandlers.isEmpty()) {
             throw persistenceException;
         }
+        boolean foundPersistenceExceptionHandlerMethod = false;
         for (final PersistenceExceptionHandler<?> persistenceExceptionHandler : persistenceExceptionHandlers) {
             Method method;
             try {
@@ -49,6 +50,7 @@ public abstract class DatabaseAction<T> {
                 continue;
             }
             try {
+                foundPersistenceExceptionHandlerMethod = true;
                 method.setAccessible(true);
                 method.invoke(persistenceExceptionHandler, persistenceException);
             } catch (IllegalAccessException | IllegalArgumentException e) {
@@ -57,6 +59,9 @@ public abstract class DatabaseAction<T> {
                 throw handlerException.getCause();
             }
         }
+        if (!foundPersistenceExceptionHandlerMethod) {
+            throw persistenceException;
+        }
     }
 
     private Method getPersistenceHandlerMethod(
@@ -64,8 +69,8 @@ public abstract class DatabaseAction<T> {
             final PersistenceException persistenceException) throws NoSuchMethodException {
         for (final Method method : persistenceExceptionHandler.getClass().getMethods()) {
             final Class<?>[] parameterTypes = method.getParameterTypes();
-            if (method.getName().equals("handle") && parameterTypes.length == 1
-                    && parameterTypes[0].isAssignableFrom(persistenceException.getClass())) {
+            if (method.getName().equals("handle") && parameterTypes.length == 1 && persistenceExceptionHandler
+                    .getExceptionClass().isAssignableFrom(persistenceException.getClass())) {
                 return method;
             }
         }

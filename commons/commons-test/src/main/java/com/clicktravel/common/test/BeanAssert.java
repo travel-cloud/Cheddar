@@ -26,13 +26,17 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.*;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
 import org.mockito.internal.util.collections.Sets;
 
 import com.clicktravel.common.random.Randoms;
 
 /**
  * Allows the testing of simple beans: no arg constructor and getter/setter pairs
- * 
+ *
  * Ensures that equals and hash code are implemented properly. Only works for sub-set of property types defined in
  * SUPPORTED_PROPERTY_TYPES
  */
@@ -58,8 +62,8 @@ public class BeanAssert {
             final Method writeMethod = propertyDescriptor.getWriteMethod();
             final Method readMethod = propertyDescriptor.getReadMethod();
             if (writeMethod == null || readMethod == null) {
-                throw new AssertionError("Invalid getter/setter pair for property: "
-                        + propertyDescriptor.getDisplayName());
+                throw new AssertionError(
+                        "Invalid getter/setter pair for property: " + propertyDescriptor.getDisplayName());
             }
             if (writeMethod.isAccessible()) {
                 throw new AssertionError("Setter is not public");
@@ -86,8 +90,8 @@ public class BeanAssert {
                 throw new AssertionError(e);
             }
             if (!propertyValue.equals(readPropertyValue)) {
-                throw new AssertionError("Read value is not same as the set value for property: "
-                        + propertyDescriptor.getName());
+                throw new AssertionError(
+                        "Read value is not same as the set value for property: " + propertyDescriptor.getName());
             }
 
         }
@@ -109,6 +113,10 @@ public class BeanAssert {
         supportedPropertyTypes.put(Set.class, Sets.newSet(randomLong(), randomLong(), randomLong()));
         supportedPropertyTypes.put(List.class, Arrays.asList(new Long[] { randomLong(), randomLong(), randomLong() }));
         supportedPropertyTypes.put(BigDecimal.class, Randoms.randomBigDecimal(10000, randomInt(5)));
+        supportedPropertyTypes.put(DateTime.class, Randoms.randomDateTime());
+        supportedPropertyTypes.put(LocalDate.class, Randoms.randomDateTime().toLocalDate());
+        supportedPropertyTypes.put(LocalTime.class, Randoms.randomDateTime().toLocalTime());
+        supportedPropertyTypes.put(LocalDateTime.class, Randoms.randomDateTime().toLocalDateTime());
 
         if (supportedPropertyTypes.containsKey(propertyClass)) {
             return supportedPropertyTypes.get(propertyClass);

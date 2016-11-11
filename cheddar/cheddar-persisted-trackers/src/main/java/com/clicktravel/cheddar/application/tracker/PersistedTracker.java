@@ -19,7 +19,6 @@ package com.clicktravel.cheddar.application.tracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.common.mapper.Mapper;
 import com.clicktravel.cheddar.infrastructure.persistence.database.DatabaseTemplate;
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
@@ -28,6 +27,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.query.Attribu
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Condition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Query;
+import com.clicktravel.common.mapper.Mapper;
 
 public class PersistedTracker<T1 extends Process, T2 extends Item> implements Tracker<T1> {
 

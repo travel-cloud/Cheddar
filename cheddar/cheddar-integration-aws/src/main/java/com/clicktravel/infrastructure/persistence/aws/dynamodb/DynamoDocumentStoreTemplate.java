@@ -20,10 +20,7 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,16 +42,26 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.han
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
-@Deprecated
 public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private DynamoDB dynamoDBClient = null;
+    private final ObjectMapper mapper;
 
     public DynamoDocumentStoreTemplate(final DatabaseSchemaHolder databaseSchemaHolder) {
         super(databaseSchemaHolder);
+        mapper = new ObjectMapper();
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.registerModule(new JodaModule());
     }
 
     @Override
@@ -65,7 +72,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
     /**
      * Simple method for splitting a list into a list of smaller lists of the supplied length
-     * 
+     *
      * @param list
      * @param length
      * @return
@@ -111,7 +118,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     @Override
-    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T create(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         item.setVersion(1l);
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
@@ -154,8 +162,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         if (tableItem != null) {
             final String tableText = tableItem.toJSON();
             if (tableText.isEmpty()) {
-                throw new NonExistentItemException(String.format(
-                        "The document of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
+                throw new NonExistentItemException(String
+                        .format("The document of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
             }
             item = stringToItem(tableText, itemClass);
         } else {
@@ -166,7 +174,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     @Override
-    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T update(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         if (item.getVersion() == null) {
             return create(item);
@@ -177,12 +186,25 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         item.setVersion(newVersion);
 
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-        final com.amazonaws.services.dynamodbv2.document.Item awsItem = com.amazonaws.services.dynamodbv2.document.Item
-                .fromJSON(itemToString(item));
-        final PutItemSpec putItemSpec = new PutItemSpec().withItem(awsItem).withExpected(expectedCondition);
+        final String itemJson = itemToString(item);
+        final PrimaryKey primaryKey = new PrimaryKey();
+        final ItemId itemId = itemConfiguration.getItemId(item);
+        final PrimaryKeyDefinition primaryKeyDefinition = itemConfiguration.primaryKeyDefinition();
+        primaryKey.addComponent(primaryKeyDefinition.propertyName(), itemId.value());
+        if (primaryKeyDefinition instanceof CompoundPrimaryKeyDefinition) {
+            primaryKey.addComponent(((CompoundPrimaryKeyDefinition) primaryKeyDefinition).supportingPropertyName(),
+                    itemId.supportingValue());
+        }
+        final Table table = dynamoDBClient.getTable(tableName);
+        final com.amazonaws.services.dynamodbv2.document.Item previousAwsItem = table.getItem(primaryKey);
+        final String previousItemJson = previousAwsItem.toJSON();
 
+        final String mergedJson = mergeJSONObjects(itemJson, previousItemJson);
+        final com.amazonaws.services.dynamodbv2.document.Item awsItem = com.amazonaws.services.dynamodbv2.document.Item
+                .fromJSON(mergedJson);
+        final PutItemSpec putItemSpec = new PutItemSpec().withItem(awsItem).withExpected(expectedCondition);
         try {
-            dynamoDBClient.getTable(tableName).putItem(putItemSpec);
+            table.putItem(putItemSpec);
         } catch (final ConditionalCheckFailedException e) {
             throw new OptimisticLockException("Conflicting write detected while updating item");
         }
@@ -193,8 +215,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     public void delete(final Item item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-        final DeleteItemSpec deleteItemSpec = new DeleteItemSpec().withPrimaryKey(getPrimaryKey(
-                itemConfiguration.getItemId(item), itemConfiguration));
+        final DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+                .withPrimaryKey(getPrimaryKey(itemConfiguration.getItemId(item), itemConfiguration));
 
         final Table table = dynamoDBClient.getTable(tableName);
         table.deleteItem(deleteItemSpec);
@@ -228,7 +250,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final List<T> totalItems = new ArrayList<>();
 
         if (itemConfiguration.hasIndexOn(query.getAttributeName())
-                && query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
+                && query.getCondition().getComparisonOperator() == Operators.EQUALS) {
 
             final QuerySpec querySpec = generateQuerySpec(query);
             final ItemCollection<QueryOutcome> queryOutcome;
@@ -253,7 +275,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 scanSpec = generateScanSpec(query, itemClass);
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                throw new PersistenceResourceFailureException("Could not create ScanSpec for query: " + query, e);
+                throw new PersistenceResourceFailureException(
+                        "Could not create ScanSpec on table " + tableName + " for query: " + query, e);
             }
             final ItemCollection<ScanOutcome> scanOutcome = table.scan(scanSpec);
 
@@ -268,8 +291,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     private QuerySpec generateQuerySpec(final AttributeQuery query) {
-        final QuerySpec querySpec = new QuerySpec().withHashKey(query.getAttributeName(), query.getCondition()
-                .getValues().iterator().next());
+        final QuerySpec querySpec = new QuerySpec().withHashKey(query.getAttributeName(),
+                query.getCondition().getValues().iterator().next());
         return querySpec;
     }
 
@@ -284,12 +307,12 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final ValueMap valueMap = new ValueMap();
         int valueMapCount = 0;
 
-        if (query.getCondition().getComparisonOperator().equals(Operators.NULL)) {
+        if (query.getCondition().getComparisonOperator() == Operators.NULL) {
             filterExpression.append("attribute_not_exists(").append(query.getAttributeName()).append(")");
-        } else if (query.getCondition().getComparisonOperator().equals(Operators.NOT_NULL)) {
+        } else if (query.getCondition().getComparisonOperator() == Operators.NOT_NULL) {
             filterExpression.append("attribute_exists(").append(query.getAttributeName()).append(")");
         } else {
-            if (query.getCondition().getComparisonOperator().equals(Operators.EQUALS)) {
+            if (query.getCondition().getComparisonOperator() == Operators.EQUALS) {
                 filterExpression.append(query.getAttributeName()).append(" IN (");
 
                 final Iterator<String> valueIterator = query.getCondition().getValues().iterator();
@@ -302,21 +325,21 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                     }
                 }
                 filterExpression.append(")");
-            } else if (query.getCondition().getComparisonOperator().equals(Operators.LESS_THAN_OR_EQUALS)) {
+            } else if (query.getCondition().getComparisonOperator() == Operators.LESS_THAN_OR_EQUALS) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" <= ").append(":").append(valueMapCount);
-                    final Object valueInstance = clazz.getConstructor(String.class).newInstance(
-                            query.getCondition().getValues().iterator().next());
+                    final Object valueInstance = clazz.getConstructor(String.class)
+                            .newInstance(query.getCondition().getValues().iterator().next());
                     valueMap.with(":" + valueMapCount, valueInstance);
                     valueMapCount++;
                 } else {
                     // throw exeption??
                 }
-            } else if (query.getCondition().getComparisonOperator().equals(Operators.GREATER_THAN_OR_EQUALS)) {
+            } else if (query.getCondition().getComparisonOperator() == Operators.GREATER_THAN_OR_EQUALS) {
                 if (query.getCondition().getValues().size() == 1) {
                     filterExpression.append(query.getAttributeName()).append(" >= ").append(":").append(valueMapCount);
-                    final Object valueInstance = clazz.getConstructor(String.class).newInstance(
-                            query.getCondition().getValues().iterator().next());
+                    final Object valueInstance = clazz.getConstructor(String.class)
+                            .newInstance(query.getCondition().getValues().iterator().next());
                     valueMap.with(":" + valueMapCount, valueInstance);
                     valueMapCount++;
                 } else {
@@ -356,8 +379,6 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
     }
 
     <T extends Item> String itemToString(final T item) {
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
         final StringBuilder value = new StringBuilder();
         try {
             value.append(mapper.writeValueAsString(item));
@@ -367,8 +388,52 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         return value.toString();
     }
 
-    <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
-        final ObjectMapper mapper = new ObjectMapper();
+    private String mergeJSONObjects(final String itemJsonString, final String previousJsonString) {
+        try {
+            final JsonNode itemJson = mapper.readTree(itemJsonString);
+            final JsonNode previousItemJson = mapper.readTree(previousJsonString);
+            final JsonNode mergedItemJson = merge(itemJson, previousItemJson);
+            return mapper.writeValueAsString(mergedItemJson);
+        } catch (final IOException e) {
+            throw new RuntimeException("JSON Exception" + e);
+        }
+    }
+
+    public JsonNode merge(final JsonNode newNode, final JsonNode oldNode) {
+        final Set<String> allFieldNames = new HashSet<>();
+        final Iterator<String> newNodeFieldNames = oldNode.fieldNames();
+        while (newNodeFieldNames.hasNext()) {
+            allFieldNames.add(newNodeFieldNames.next());
+        }
+        final Iterator<String> oldNodeFieldNames = oldNode.fieldNames();
+        while (oldNodeFieldNames.hasNext()) {
+            allFieldNames.add(oldNodeFieldNames.next());
+        }
+        final JsonNode mergedNode = newNode.deepCopy();
+        for (final String fieldName : allFieldNames) {
+            final JsonNode newNodeValue = newNode.get(fieldName);
+            final JsonNode oldNodeValue = oldNode.get(fieldName);
+            if (newNodeValue == null && oldNodeValue == null) {
+                logger.trace("Skipping (both null): " + fieldName);
+            } else if (newNodeValue == null && oldNodeValue != null) {
+                logger.trace("Using old (new is null): " + fieldName);
+                ((ObjectNode) mergedNode).set(fieldName, oldNodeValue);
+            } else if (newNodeValue != null && oldNodeValue == null) {
+                logger.trace("Using new (old is null): " + fieldName);
+                ((ObjectNode) mergedNode).set(fieldName, newNodeValue);
+            } else {
+                logger.trace("Using new: " + fieldName);
+                if (oldNodeValue.isObject()) {
+                    ((ObjectNode) mergedNode).set(fieldName, merge(newNodeValue, oldNodeValue));
+                } else {
+                    ((ObjectNode) mergedNode).set(fieldName, newNodeValue);
+                }
+            }
+        }
+        return mergedNode;
+    }
+
+    private <T extends Item> T stringToItem(final String item, final Class<T> valueType) {
         T value = null;
         try {
             value = mapper.readValue(item, valueType);

@@ -1,14 +1,16 @@
-def jerseyVersion = '2.15'
+apply from: '../../test.gradle'
+apply from: '../../logging-api.gradle'
 
 dependencies {
     compile project(':commons:commons-lang')
+    compile project(':commons:commons-json-provider')
+    
+    compile "org.glassfish.jersey.core:jersey-client:${jerseyVersion}"
+    compile "org.glassfish.jersey.media:jersey-media-multipart:${jerseyVersion}"
+    compile "org.glassfish.jersey.security:oauth2-client:${jerseyVersion}"
 
-    compile "org.glassfish.jersey.core:jersey-client:$jerseyVersion"
-    compile "org.glassfish.jersey.media:jersey-media-multipart:$jerseyVersion"
-    compile "org.glassfish.jersey.media:jersey-media-moxy:$jerseyVersion"
-    compile 'org.slf4j:slf4j-api:1.7.5'
-    
-    compile "org.glassfish.jersey.security:oauth2-client:$jerseyVersion"
-    
-    testCompile 'junit:junit:4.11'
+    // Workaround for Eclipse pulling in older Jackson dependencies
+    runtime "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    runtime "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+    runtime "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 }

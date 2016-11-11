@@ -20,13 +20,12 @@ import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomPhoneNumber;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.junit.Before;
@@ -219,38 +218,68 @@ public class CheckTest {
     }
 
     @Test
-    public void shouldThrowValidationException_givenInvalidEmail() {
+    public void shouldValidateEmailAddress_withValidEmailAddresses() {
         // Given
-        final String email = "bad.email.com";
+        final List<String> validEmails = new ArrayList<String>();
+        validEmails.add("prettyandsimple@example.com");
+        validEmails.add("very.common@example.com");
+        validEmails.add("disposable.style.email.with+symbol@example.com");
+        validEmails.add("other.email-with-dash@example.com");
+        validEmails.add("x@example.com");
+        validEmails.add("example-indeed@strange-example.com");
+        validEmails.add("admin@mailserver1");
+        validEmails.add("#!$%&'*+-/=?^_`{}|~@example.org");
+        validEmails.add("example@localhost");
+        validEmails.add("example@s.solutions");
+        validEmails.add("user@com");
+        validEmails.add("user@localserver");
+        validEmails.add("john..doe@example.com");
 
         // When
-        ValidationException actualException = null;
-        try {
-            Check.isValidEmail(field, email);
-        } catch (final ValidationException e) {
-            actualException = e;
+        final List<String> invalidatedEmails = new ArrayList<>();
+        for (final String email : validEmails) {
+            try {
+                Check.isValidEmail(field, email);
+            } catch (final ValidationException e) {
+                invalidatedEmails.add(email);
+            }
         }
 
         // Then
-        assertNotNull(actualException);
-        assertThat(actualException.getFields()[0], is(field));
+        if (!invalidatedEmails.isEmpty()) {
+            fail("Expected to validate the following email addresses, but were actually invalidated: "
+                    + invalidatedEmails);
+        }
     }
 
     @Test
-    public void shouldNotThrowValidationException_givenValidEmail() {
+    public void shouldNotValidateEmailAddress_withInvalidEmailAddresses() {
         // Given
-        final String email = "bob@example.com";
+        final List<String> invalidEmails = new ArrayList<String>();
+        invalidEmails.add("Abc.example.com");
+        invalidEmails.add("A@b@c@example.com");
+        invalidEmails.add("a\"b(c)d,e:f;g<h>i[j\\k]l@example.com");
+        invalidEmails.add("just\"not\"right@example.com");
+        invalidEmails.add("this is\"not\\allowed@example.com");
+        invalidEmails.add("this\\ still\\\"not\\allowed@example.com");
+        invalidEmails.add("john.doe@example..com");
 
         // When
-        ValidationException actualException = null;
-        try {
-            Check.isValidEmail(field, email);
-        } catch (final ValidationException e) {
-            actualException = e;
+        final List<String> validatedEmails = new ArrayList<>();
+        for (final String email : invalidEmails) {
+            try {
+                Check.isValidEmail(field, email);
+                validatedEmails.add(email);
+            } catch (final ValidationException e) {
+                // expected to throw an exception for all emails
+            }
         }
 
         // Then
-        assertNull(actualException);
+        if (!validatedEmails.isEmpty()) {
+            fail("Expected to invalidate the following email addresses, but were actually validated: "
+                    + validatedEmails);
+        }
     }
 
     @Test
@@ -556,4 +585,5 @@ public class CheckTest {
         assertEquals(1, actualException.getFields().length);
         assertEquals("phoneNumber", actualException.getFields()[0]);
     }
+
 }

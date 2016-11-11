@@ -59,6 +59,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.query.Conditi
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
 import com.clicktravel.common.random.Randoms;
 
+@SuppressWarnings({ "deprecation", "unchecked" })
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ DynamoDocumentStoreTemplate.class })
 public class DynamoDocumentStoreTemplateTest {
@@ -81,7 +82,6 @@ public class DynamoDocumentStoreTemplateTest {
                 .thenReturn(mockDynamoDBClient);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldCreate_withItem() {
         // Given
@@ -118,7 +118,6 @@ public class DynamoDocumentStoreTemplateTest {
         assertEquals(stubItem.getStringSetProperty(), returnedItem.getStringSetProperty());
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldQueryTable() {
         // Given
@@ -144,7 +143,6 @@ public class DynamoDocumentStoreTemplateTest {
         verify(mockTable.query(any(QuerySpec.class)));
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldQueryIndex() {
         // Given
@@ -176,7 +174,6 @@ public class DynamoDocumentStoreTemplateTest {
         verify(mockIndex.query(any(QuerySpec.class)));
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldNotCreate_withItem() {
         // Given
@@ -211,7 +208,6 @@ public class DynamoDocumentStoreTemplateTest {
         assertNotNull(thrownException);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldRead_withItemIdAndItemClass() throws Exception {
         // Given
@@ -251,7 +247,6 @@ public class DynamoDocumentStoreTemplateTest {
         assertEquals(stubItem.getStringSetProperty(), returnedItem.getStringSetProperty());
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldNotRead_withNonExistentItemExceptionNoItem() throws Exception {
         // Given
@@ -282,7 +277,6 @@ public class DynamoDocumentStoreTemplateTest {
         assertNotNull(thrownException);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldNotRead_withNonExistentItemExceptionNoContent() throws Exception {
         // Given
@@ -316,69 +310,73 @@ public class DynamoDocumentStoreTemplateTest {
         assertNotNull(thrownException);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldUpdate_withItem() {
         // Given
         final ItemId itemId = new ItemId(randomId());
         final StubItem stubItem = generateRandomStubItem(itemId);
-
+        final StubItem previousStubItem = generateRandomStubItem(itemId);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
-        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
-
         final Table mockTable = mock(Table.class);
-        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+        final Item mockTableItem = mock(Item.class);
+        final PrimaryKey primaryKey = new PrimaryKey();
+        primaryKey.addComponent("id", itemId.value());
+        final Item previousItem = mock(Item.class);
+
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        when(mockDynamoDBClient.getTable(schemaName + "." + tableName)).thenReturn(mockTable);
+        when(mockTable.getItem(any(PrimaryKey.class))).thenReturn(previousItem);
 
         final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
                 mockDatabaseSchemaHolder);
-        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
-
-        final Item mockTableItem = mock(Item.class);
+        when(previousItem.toJSON()).thenReturn(dynamoDocumentStoreTemplate.itemToString(previousStubItem));
         when(mockTableItem.toJSON()).thenReturn(dynamoDocumentStoreTemplate.itemToString(stubItem));
+
+        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
 
         // When
         final StubItem returnedItem = dynamoDocumentStoreTemplate.update(stubItem);
 
         // Then
-        final ArgumentCaptor<PutItemSpec> getItemRequestCaptor = ArgumentCaptor.forClass(PutItemSpec.class);
-        verify(mockTable).putItem(getItemRequestCaptor.capture());
-
-        final PutItemSpec spec = getItemRequestCaptor.getValue();
+        final ArgumentCaptor<PutItemSpec> putItemRequestCaptor = ArgumentCaptor.forClass(PutItemSpec.class);
+        verify(mockTable).putItem(putItemRequestCaptor.capture());
+        final PutItemSpec spec = putItemRequestCaptor.getValue();
         assertEquals(itemId.value(), spec.getItem().get("id"));
-
         assertEquals(itemId.value(), returnedItem.getId());
         assertEquals(stubItem.getStringProperty(), returnedItem.getStringProperty());
         assertEquals(stubItem.getStringProperty2(), returnedItem.getStringProperty2());
         assertEquals(stubItem.getStringSetProperty(), returnedItem.getStringSetProperty());
     }
 
-    @SuppressWarnings("deprecation")
     @Test
-    public void shouldNotUpdate_withItem() {
+    public void shouldNotUpdate_withPutItemException() {
         // Given
         final ItemId itemId = new ItemId(randomId());
         final StubItem stubItem = generateRandomStubItem(itemId);
-
+        final StubItem previousStubItem = generateRandomStubItem(itemId);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
-        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
-
         final Table mockTable = mock(Table.class);
-        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+        final Item mockTableItem = mock(Item.class);
+        final PrimaryKey primaryKey = new PrimaryKey();
+        primaryKey.addComponent("id", itemId.value());
+        final Item previousItem = mock(Item.class);
+
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        when(mockDynamoDBClient.getTable(schemaName + "." + tableName)).thenReturn(mockTable);
+        when(mockTable.getItem(any(PrimaryKey.class))).thenReturn(previousItem);
 
         final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
                 mockDatabaseSchemaHolder);
+        when(previousItem.toJSON()).thenReturn(dynamoDocumentStoreTemplate.itemToString(previousStubItem));
+        when(mockTableItem.toJSON()).thenReturn(dynamoDocumentStoreTemplate.itemToString(stubItem));
+        when(mockTable.putItem(any(PutItemSpec.class))).thenThrow(ConditionalCheckFailedException.class);
+
         dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
 
-        final Item mockTableItem = mock(Item.class);
-        when(mockTableItem.toJSON()).thenReturn(dynamoDocumentStoreTemplate.itemToString(stubItem));
-
-        doThrow(ConditionalCheckFailedException.class).when(mockTable).putItem(any(PutItemSpec.class));
-
-        OptimisticLockException thrownException = null;
-
         // When
+        OptimisticLockException thrownException = null;
         try {
             dynamoDocumentStoreTemplate.update(stubItem);
         } catch (final OptimisticLockException optimisticLockException) {
@@ -389,18 +387,16 @@ public class DynamoDocumentStoreTemplateTest {
         assertNotNull(thrownException);
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void shouldDelete_withItem() {
         // Given
         final ItemId itemId = new ItemId(randomId());
         final StubItem stubItem = generateRandomStubItem(itemId);
-
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
-        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
-
         final Table mockTable = mock(Table.class);
+
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
         when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
 
         final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(

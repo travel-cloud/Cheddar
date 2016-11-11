@@ -23,31 +23,43 @@ import java.util.Collection;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.stereotype.Component;
 
+import com.clicktravel.common.http.application.ObjectMapperProvider;
+
+@Component
 public class RestResourceConfig extends ResourceConfig {
 
     final ClassPathScanningCandidateComponentProvider scanner;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public RestResourceConfig() {
+    @Autowired
+    public RestResourceConfig(final ApplicationContext applicationContext) {
+        property("contextConfig", applicationContext);
         scanner = new ClassPathScanningCandidateComponentProvider(true);
         scanner.resetFilters(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(Path.class));
         scanner.addIncludeFilter(new AnnotationTypeFilter(Provider.class));
         register(RequestContextFilter.class);
         register(MultiPartFeature.class);
-        registerResources("com.clicktravel.cheddar.rest.exception.mapper",
-                "com.clicktravel.cheddar.server.http.filter", "com.clicktravel.cheddar.server.rest.resource.status",
-                "com.clicktravel.services");
+        register(ObjectMapperProvider.class);
+        register(JacksonFeature.class);
+        registerResources("com.clicktravel.cheddar.rest.exception.mapper", "com.clicktravel.cheddar.server.http.filter",
+                "com.clicktravel.cheddar.server.rest.resource.status", "com.clicktravel.services");
+        property(ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED, true);
     }
 
     private void registerResources(final String... packages) {

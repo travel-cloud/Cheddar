@@ -23,6 +23,10 @@ import java.nio.ByteBuffer;
 import java.text.ParseException;
 import java.util.*;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBReflectorUtil;
 import com.amazonaws.services.dynamodbv2.datamodeling.S3ClientCache;
 import com.amazonaws.services.dynamodbv2.datamodeling.S3Link;
@@ -303,6 +307,34 @@ public final class DynamoDBUnmarshallerUtil {
                 final Calendar cal = GregorianCalendar.getInstance();
                 cal.setTime(DateUtils.parseISO8601Date(value.getS()));
                 return cal;
+            }
+        };
+    }
+
+    public static SSUnmarshaller getDateTimeSSUnmarshaller() {
+        return new SSUnmarshaller() {
+
+            private final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime();
+
+            @Override
+            public Object unmarshall(final AttributeValue value) throws ParseException {
+                final Set<DateTime> argument = new HashSet<DateTime>();
+                for (final String s : value.getSS()) {
+                    argument.add(dateTimeFormatter.parseDateTime(s));
+                }
+                return argument;
+            }
+        };
+    }
+
+    public static SUnmarshaller getDateTimeSUnmarshaller() {
+        return new SUnmarshaller() {
+
+            private final DateTimeFormatter dateTimeFormatter = ISODateTimeFormat.dateTime();
+
+            @Override
+            public Object unmarshall(final AttributeValue value) throws ParseException {
+                return dateTimeFormatter.parseDateTime(value.getS());
             }
         };
     }

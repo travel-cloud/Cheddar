@@ -26,53 +26,90 @@ import org.joda.time.DateTime;
 public class FileItem {
 
     private final String filename;
-
+    private final byte[] contents;
     private final DateTime lastUpdatedTime;
 
-    private final byte[] contents;
+    /**
+     * Creates a file with given name, contents and last updated time
+     * @param filename Name of the file
+     * @param contents Contents of file as a byte array
+     * @param lastUpdatedTime DateTime of last update of the file
+     */
+    public FileItem(final String filename, final byte[] contents, final DateTime lastUpdatedTime) {
+        this.filename = filename;
+        this.contents = contents;
+        this.lastUpdatedTime = lastUpdatedTime == null ? DateTime.now() : lastUpdatedTime;
+    }
 
     /**
-     * Create a file item from any given string, assumes UTF-encoding
-     *
-     * @param filename the name of the file you want to create
-     * @param contents the string in UTF-8 encoding
+     * Creates a file with given name and contents, with last updated time set to now
+     * @param filename Name of the file
+     * @param contents Contents of file as a byte array
+     */
+    public FileItem(final String filename, final byte[] contents) {
+        this(filename, contents, null);
+    }
+
+    /**
+     * Creates a file with given name and contents as a UTF-8 encoded string, with last updated time set to now
+     * @param filename Name of the file
+     * @param contents Content of file as a string
      */
     public FileItem(final String filename, final String contents) {
-        this.filename = filename;
-        this.contents = contents.getBytes(StandardCharsets.UTF_8);
-        lastUpdatedTime = DateTime.now();
+        this(filename, contents.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Creates a file with given name and contents taken from an InputStream
+     * @param filename Name of the file
+     * @param inputStream Source of file content. This stream is not closed by this method
+     * @param lastUpdatedTime DateTime of last update of the file
+     * @throws IOException
+     */
     public FileItem(final String filename, final InputStream inputStream, final DateTime lastUpdatedTime)
             throws IOException {
-        if (inputStream == null) {
-            throw new IllegalArgumentException("Input stream cannot be null");
-        }
-        this.filename = filename;
-        if (lastUpdatedTime == null) {
-            this.lastUpdatedTime = DateTime.now();
-        } else {
-            this.lastUpdatedTime = lastUpdatedTime;
-        }
-        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        int read = -1;
-        final byte[] buf = new byte[1024 * 50];
-        try {
-            while ((read = inputStream.read(buf)) != -1) {
-                bout.write(buf, 0, read);
-            }
-            contents = bout.toByteArray();
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
+        this(filename, toByteArray(inputStream), lastUpdatedTime);
     }
 
+    /**
+     * Creates a file with given name and contents taken from an InputStream, with last updated time set to now
+     * @param filename Name of the file
+     * @param inputStream Source of file content. This stream is not closed by this method
+     * @throws IOException
+     */
+    public FileItem(final String filename, final InputStream inputStream) throws IOException {
+        this(filename, inputStream, null);
+    }
+
+    /**
+     * Creates a uniquely named file with contents as a UTF-8 encoded string
+     * @param contents Content of file as a string
+     */
     public FileItem(final String contents) {
         this(UUID.randomUUID().toString(), contents);
     }
 
+    /**
+     * Creates a file with given name and contents copied from an existing file on the standard file system
+     * @param filename Name of the file to create
+     * @param file Existing file with contents to be copied
+     * @throws IOException
+     */
     public FileItem(final String filename, final File file) throws IOException {
-        this(filename, new FileInputStream(file), DateTime.now());
+        this(filename, new FileInputStream(file));
+    }
+
+    private static byte[] toByteArray(final InputStream inputStream) throws IOException {
+        if (inputStream == null) {
+            throw new IllegalArgumentException("Input stream cannot be null");
+        }
+        final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        int read = -1;
+        final byte[] buf = new byte[1024 * 50];
+        while ((read = inputStream.read(buf)) != -1) {
+            bout.write(buf, 0, read);
+        }
+        return bout.toByteArray();
     }
 
     public String filename() {

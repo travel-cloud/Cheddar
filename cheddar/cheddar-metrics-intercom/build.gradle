@@ -1,7 +1,12 @@
-apply from: '../../test.gradle'
+apply from: '../../logging-api.gradle'
 
 dependencies {
     compile project(':cheddar:cheddar-metrics')
     compile project(':commons:commons-lang')
-    compile 'io.intercom:intercom-java:1.1.1'
+    compile 'io.intercom:intercom-java:1.3.1'
+
+    // Workaround for Eclipse pulling in older Jackson dependencies
+    runtime "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    runtime "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+    runtime "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 }

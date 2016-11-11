@@ -1,3 +1,5 @@
+apply from: '../../logging-api.gradle'
+
 dependencies {
 	compile project(':cheddar:cheddar-persistence')
 	compile project(':cheddar:cheddar-application')

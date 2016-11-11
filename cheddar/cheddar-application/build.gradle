@@ -1,12 +1,12 @@
 apply from: '../../test.gradle'
-
-def springVersion = '4.1.1.RELEASE'
+apply from: '../../logging-api.gradle'
 
 dependencies {
     compile project(':commons:commons-lang')
     compile project(':cheddar:cheddar-context')
     compile project(':cheddar:cheddar-system-events')
-
+    testRuntime project(':cheddar:cheddar-persistence')
+    
     compile "org.springframework:spring-core:${springVersion}"
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-context-support:${springVersion}"
@@ -16,4 +16,5 @@ dependencies {
     compile "org.aspectj:aspectjrt:1.7.4"
     compile "org.aspectj:aspectjweaver:1.7.4"
     compile 'com.thoughtworks.xstream:xstream:1.4.8'
+    
 }

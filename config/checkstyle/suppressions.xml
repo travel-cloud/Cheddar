@@ -4,6 +4,6 @@
     "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
 <suppressions>
-    <suppress checks="Header" files=".*[/\\]build[/\\]generated[/\\]jaxb[/\\].*" />
+    <suppress checks="Header" files=".*[/\\]build[/\\]generated[/\\].*" />
     <suppress checks=".*" files="com[/\\]boxbe[/\\]pub[/\\]email[/\\]EmailAddress" />
 </suppressions>

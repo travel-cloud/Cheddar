@@ -20,8 +20,9 @@ import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageParseEx
 
 public class InvalidTypedMessage extends InvalidMessage implements TypedMessage {
 
-    public InvalidTypedMessage(final String receiptHandle, final MessageParseException messageParseException) {
-        super(receiptHandle, messageParseException);
+    public InvalidTypedMessage(final String messageId, final String receiptHandle,
+            final MessageParseException messageParseException) {
+        super(messageId, receiptHandle, messageParseException);
     }
 
     @Override

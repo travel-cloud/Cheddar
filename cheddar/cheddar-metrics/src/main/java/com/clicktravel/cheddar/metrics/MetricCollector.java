@@ -22,9 +22,13 @@ public interface MetricCollector {
 
     void updateOrganisation(MetricOrganisation metricOrganisation);
 
+    void tagOrganisation(String tagName, MetricOrganisation metricOrganisation);
+
     void createUser(MetricUser user);
 
     void updateUser(MetricUser user);
+
+    void deleteUser(String userId);
 
     void sendMetric(Metric metric);
 

@@ -16,11 +16,6 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
-import io.intercom.api.Company;
-import io.intercom.api.Event;
-import io.intercom.api.Intercom;
-import io.intercom.api.User;
-
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +25,8 @@ import com.clicktravel.cheddar.metrics.MetricCollector;
 import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
 import com.clicktravel.common.functional.Equals;
+
+import io.intercom.api.*;
 
 public class IntercomMetricCollector implements MetricCollector {
     Logger logger = LoggerFactory.getLogger(getClass());
@@ -50,6 +47,11 @@ public class IntercomMetricCollector implements MetricCollector {
     }
 
     @Override
+    public void tagOrganisation(final String tagName, final MetricOrganisation metricOrganisation) {
+        Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
+    }
+
+    @Override
     public void createUser(final MetricUser user) {
         final User intercomUser = getIntercomUser(user);
         intercomUser.setSignedUpAt(DateTime.now().getMillis() / 1000);
@@ -67,6 +69,15 @@ public class IntercomMetricCollector implements MetricCollector {
             User.update(intercomUser);
         } catch (final Exception e) {
             logger.debug("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void deleteUser(final String userId) {
+        try {
+            User.delete(userId);
+        } catch (final Exception e) {
+            logger.debug("Error deleting a Intercom user: " + userId + " - " + e.getMessage());
         }
     }
 

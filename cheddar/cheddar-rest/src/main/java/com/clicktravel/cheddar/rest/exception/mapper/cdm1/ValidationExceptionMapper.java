@@ -21,8 +21,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import com.clicktravel.common.validation.ValidationException;
 import com.clicktravel.cheddar.rest.media.MediaTypes;
+import com.clicktravel.common.validation.ValidationException;
 import com.clicktravel.schema.canonical.data.model.v1.common.ErrorResponse;
 import com.clicktravel.schema.canonical.data.model.v1.common.ValidationError;
 
@@ -35,7 +35,7 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
         final ErrorResponse errorResponse = new ErrorResponse();
         final ValidationError validationError = new ValidationError();
         for (final String field : ex.getFields()) {
-            validationError.getFields().add(field);
+            validationError.getField().add(field);
         }
         validationError.setError(ex.getMessage());
         errorResponse.getValidationErrors().add(validationError);

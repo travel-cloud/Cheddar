@@ -75,33 +75,41 @@ public class S3FileStore implements InternetFileStore {
         checkInitialization();
         final GetObjectRequest getObjectRequest = new GetObjectRequest(bucketNameForFilePath(filePath),
                 filePath.filename());
-        try {
-            final S3Object s3Object = amazonS3Client.getObject(getObjectRequest);
+        FileItem fileItem = null;
+        try (final S3Object s3Object = amazonS3Client.getObject(getObjectRequest)) {
+
             final Map<String, String> userMetaData = getUserMetaData(s3Object);
             final String filename = userMetaData.get(USER_METADATA_FILENAME);
-            final String lastUpdatedTimeStr = userMetaData.get(USER_METADATA_LAST_UPDATED_TIME);
-            DateTime lastUpdatedTime = null;
-            if (lastUpdatedTimeStr != null) {
-                try {
-                    lastUpdatedTime = formatter.parseDateTime(lastUpdatedTimeStr);
-                } catch (final Exception e) {
-                    logger.warn(e.getMessage(), e);
-                }
-            }
+            final DateTime lastUpdatedTime = getLastUpdatedTime(userMetaData);
             try {
 
-                final FileItem fileItem = new FileItem(filename, s3Object.getObjectContent(), lastUpdatedTime);
-                return fileItem;
+                fileItem = new FileItem(filename, s3Object.getObjectContent(), lastUpdatedTime);
             } catch (final IOException e) {
                 throw new IllegalStateException(e);
             }
         } catch (final AmazonS3Exception e) {
             if (missingItemErrorCodes.contains(e.getErrorCode())) {
-                throw new NonExistentItemException("Item does not exist" + filePath.directory() + "->"
-                        + filePath.filename());
+                throw new NonExistentItemException(
+                        "Item does not exist" + filePath.directory() + "->" + filePath.filename());
             }
             throw e;
+        } catch (final IOException e1) {
+            logger.warn("Error closing S3Object", e1);
         }
+        return fileItem;
+    }
+
+    private DateTime getLastUpdatedTime(final Map<String, String> userMetaData) {
+        final String lastUpdatedTimeStr = userMetaData.get(USER_METADATA_LAST_UPDATED_TIME);
+        DateTime lastUpdatedTime = null;
+        if (lastUpdatedTimeStr != null) {
+            try {
+                lastUpdatedTime = formatter.parseDateTime(lastUpdatedTimeStr);
+            } catch (final Exception e) {
+                logger.warn(e.getMessage(), e);
+            }
+        }
+        return lastUpdatedTime;
     }
 
     /**
@@ -137,6 +145,7 @@ public class S3FileStore implements InternetFileStore {
         metadata.addUserMetadata(USER_METADATA_FILENAME, fileItem.filename());
         metadata.addUserMetadata(USER_METADATA_LAST_UPDATED_TIME, formatter.print(fileItem.lastUpdatedTime()));
         metadata.setContentLength(fileItem.getBytes().length);
+        metadata.setContentDisposition("attachment; filename=\"" + fileItem.filename() + "\"");
         final InputStream is = new ByteArrayInputStream(fileItem.getBytes());
         final String bucketName = bucketNameForFilePath(filePath);
         if (!amazonS3Client.doesBucketExist(bucketName)) {
@@ -153,8 +162,8 @@ public class S3FileStore implements InternetFileStore {
             amazonS3Client.deleteObject(bucketNameForFilePath(filePath), filePath.filename());
         } catch (final AmazonS3Exception e) {
             if (missingItemErrorCodes.contains(e.getErrorCode())) {
-                throw new NonExistentItemException("Item does not exist" + filePath.directory() + "->"
-                        + filePath.filename());
+                throw new NonExistentItemException(
+                        "Item does not exist" + filePath.directory() + "->" + filePath.filename());
             }
             throw e;
         }
@@ -180,8 +189,8 @@ public class S3FileStore implements InternetFileStore {
 
     @Override
     public URL publicUrlForFilePath(final FilePath filePath) throws NonExistentItemException {
-        return amazonS3Client.generatePresignedUrl(bucketNameForFilePath(filePath), filePath.filename(), DateTime.now()
-                .plusHours(1).toDate(), HttpMethod.GET);
+        return amazonS3Client.generatePresignedUrl(bucketNameForFilePath(filePath), filePath.filename(),
+                DateTime.now().plusHours(1).toDate(), HttpMethod.GET);
     }
 
     @Override
@@ -201,8 +210,9 @@ public class S3FileStore implements InternetFileStore {
             return filePathList;
 
         } catch (final AmazonS3Exception e) {
-            throw new PersistenceResourceFailureException("An error occurred obtaining a listing of directory -> "
-                    + directory + " with prefix -> " + prefix, e);
+            throw new PersistenceResourceFailureException(
+                    "An error occurred obtaining a listing of directory -> " + directory + " with prefix -> " + prefix,
+                    e);
         }
     }
 }

@@ -16,14 +16,13 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.cloudsearch;
 
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomain;
 import com.amazonaws.services.cloudsearchdomain.AmazonCloudSearchDomainClient;
 
 public class AmazonCloudSearchDomainClientBuilder {
 
-    public static AmazonCloudSearchDomain build(final AWSCredentials awsCredentials, final String endpoint) {
-        final AmazonCloudSearchDomain amazonCloudSearchDomain = new AmazonCloudSearchDomainClient(awsCredentials);
+    public static AmazonCloudSearchDomain build(final String endpoint) {
+        final AmazonCloudSearchDomain amazonCloudSearchDomain = new AmazonCloudSearchDomainClient();
         amazonCloudSearchDomain.setEndpoint(endpoint);
         return amazonCloudSearchDomain;
     }

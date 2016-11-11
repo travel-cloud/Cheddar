@@ -21,17 +21,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import com.amazonaws.auth.policy.*;
-import com.amazonaws.auth.policy.Statement.Effect;
-import com.amazonaws.auth.policy.actions.SNSActions;
 import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.model.CreateTopicRequest;
 import com.amazonaws.services.sns.model.ListTopicsResult;
 import com.amazonaws.services.sns.model.Topic;
 
-@Component
 public class DefaultSnsTopicResourceFactory implements SnsTopicResourceFactory {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -43,68 +37,14 @@ public class DefaultSnsTopicResourceFactory implements SnsTopicResourceFactory {
     }
 
     @Override
-    public SnsTopicResource createSnsTopicResourceForExistingAwsSnsTopic(final String name) {
-        final String topicArn = pollAndRetryForTopicArnForName(name);
+    public SnsTopicResource createSnsTopicResource(final String name) {
+        logger.info("Looking-up ARN for SNS topic: " + name);
+        final String topicArn = topicArnForName(name);
         logger.info("Using existing SNS topic: " + name);
         return new SnsTopicResource(name, topicArn, amazonSnsClient);
     }
 
-    @Override
-    public SnsTopicResource createSnsTopicResourceAndAwsSnsTopicIfAbsent(final String name) {
-        String topicArn = pollForTopicArnForName(name);
-        if (topicArn == null) {
-            topicArn = createAwsSnsTopic(name);
-            final SnsTopicResource snsTopicResource = new SnsTopicResource(name, topicArn, amazonSnsClient);
-            snsTopicResource.setPolicy(allowAllQueuesPolicy(snsTopicResource)); // policy is set once, on creation of
-                                                                                // SNS topic
-            return snsTopicResource;
-        } else {
-            logger.info("Using existing SNS topic: " + name);
-            return new SnsTopicResource(name, topicArn, amazonSnsClient);
-        }
-    }
-
-    private Policy allowAllQueuesPolicy(final SnsTopicResource snsTopicResource) {
-        final String topicArn = snsTopicResource.getTopicArn();
-        final String[] topicArnParts = topicArn.split(":");
-        final String sourceOwner = topicArnParts[topicArnParts.length - 2];
-        final Condition condition = new Condition().withType("StringEquals").withConditionKey("AWS:SourceOwner")
-                .withValues(sourceOwner);
-        final Action receiveAction = new Action() {
-            @Override
-            public String getActionName() {
-                return "sns:Receive";
-            }
-        };
-        final Statement recieveStatement = new Statement(Effect.Allow).withPrincipals(Principal.AllUsers)
-                .withActions(receiveAction).withResources(new Resource(topicArn)).withConditions(condition);
-        final Statement subscribeStatement = new Statement(Effect.Allow).withPrincipals(Principal.AllUsers)
-                .withActions(SNSActions.Subscribe);
-        return new Policy().withStatements(recieveStatement, subscribeStatement);
-    }
-
-    private String createAwsSnsTopic(final String name) {
-        logger.info("Creating SNS topic: " + name);
-        return amazonSnsClient.createTopic(new CreateTopicRequest(name)).getTopicArn();
-    }
-
-    private String pollAndRetryForTopicArnForName(final String name) {
-        for (int i = 0; i < 300; i++) {
-            final String topicArn = pollForTopicArnForName(name);
-            if (topicArn != null) {
-                return topicArn;
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (final InterruptedException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        logger.error("SNS topic is unresponsive: " + name);
-        throw new IllegalStateException("Could not create subscriptions for missing SNS topic: " + name);
-    }
-
-    private String pollForTopicArnForName(final String name) {
+    private String topicArnForName(final String name) {
         String nextToken = null;
         String topicArn = null;
         while (topicArn == null) {

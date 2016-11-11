@@ -17,12 +17,14 @@
 package com.clicktravel.infrastructure.messaging.inmemory;
 
 import static com.clicktravel.common.random.Randoms.randomString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -72,9 +74,9 @@ public class InMemoryMessageVerifierTest {
         // Given
         final InMemoryMessagePublisher<TypedMessage> inMemoryMessagePublisher = mock(InMemoryMessagePublisher.class);
         final List<TypedMessage> mockPublishedMessages = new ArrayList<>();
-        final TypedMessage mockPublishedMessage = mock(TypedMessage.class);
-        when(mockPublishedMessage.getType()).thenReturn(StubEvent.type);
-        mockPublishedMessages.add(mockPublishedMessage);
+        final StubEvent stubEvent = new StubEvent();
+        stubEvent.setEventField(randomString());
+        addSerializedEventMessage(mockPublishedMessages, stubEvent);
         when(inMemoryMessagePublisher.getPublishedMessages()).thenReturn(mockPublishedMessages);
         final Class<? extends Event> eventClass = StubEvent.class;
 
@@ -107,19 +109,13 @@ public class InMemoryMessageVerifierTest {
         // Given
         final InMemoryMessagePublisher<TypedMessage> inMemoryMessagePublisher = mock(InMemoryMessagePublisher.class);
         final List<TypedMessage> mockPublishedMessages = new ArrayList<>();
-        final TypedMessage mockPublishedMessage = mock(TypedMessage.class);
         final StubEvent publishedEvent = new StubEvent();
-        final String eventFieldValue = randomString();
-        publishedEvent.setEventField(eventFieldValue);
-        when(mockPublishedMessage.getType()).thenReturn(StubEvent.type);
-        when(mockPublishedMessage.getPayload()).thenReturn(publishedEvent.serialize());
-        mockPublishedMessages.add(mockPublishedMessage);
+        publishedEvent.setEventField(randomString());
+        addSerializedEventMessage(mockPublishedMessages, publishedEvent);
         when(inMemoryMessagePublisher.getPublishedMessages()).thenReturn(mockPublishedMessages);
-        final StubEvent expectedEvent = new StubEvent();
-        expectedEvent.setEventField(eventFieldValue);
 
         // When
-        final boolean eventPublished = InMemoryMessageVerifier.eventPublished(inMemoryMessagePublisher, expectedEvent);
+        final boolean eventPublished = InMemoryMessageVerifier.eventPublished(inMemoryMessagePublisher, publishedEvent);
 
         // Then
         assertTrue(eventPublished);
@@ -139,5 +135,54 @@ public class InMemoryMessageVerifierTest {
 
         // Then
         assertFalse(eventPublished);
+    }
+
+    @Test
+    public void shouldReturnPublishedEvents() {
+        // Given
+        final InMemoryMessagePublisher<TypedMessage> inMemoryMessagePublisher = mock(InMemoryMessagePublisher.class);
+        final List<TypedMessage> mockPublishedMessages = new ArrayList<>();
+        final StubEvent stubEvent = new StubEvent();
+        stubEvent.setEventField(randomString());
+        addSerializedEventMessage(mockPublishedMessages, stubEvent);
+        final StubOtherEvent stubOtherEvent = new StubOtherEvent();
+        addSerializedEventMessage(mockPublishedMessages, stubOtherEvent);
+        when(inMemoryMessagePublisher.getPublishedMessages()).thenReturn(mockPublishedMessages);
+
+        // When
+        final List<Event> publishedEvents = InMemoryMessageVerifier.publishedEvents(inMemoryMessagePublisher,
+                StubEvent.class, StubOtherEvent.class);
+
+        // Then
+        final List<Event> expectedEvents = Arrays.asList(stubEvent, stubOtherEvent);
+        assertEquals(expectedEvents, publishedEvents);
+    }
+
+    private void addSerializedEventMessage(final List<TypedMessage> messages, final Event event) {
+        final TypedMessage mockPublishedMessage = mock(TypedMessage.class);
+        when(mockPublishedMessage.getType()).thenReturn(event.type());
+        when(mockPublishedMessage.getPayload()).thenReturn(event.serialize());
+        messages.add(mockPublishedMessage);
+    }
+
+    @Test
+    public void shouldReturnFilteredPublishedEvents() {
+        // Given
+        final InMemoryMessagePublisher<TypedMessage> inMemoryMessagePublisher = mock(InMemoryMessagePublisher.class);
+        final List<TypedMessage> mockPublishedMessages = new ArrayList<>();
+        final StubEvent stubEvent = new StubEvent();
+        stubEvent.setEventField(randomString());
+        addSerializedEventMessage(mockPublishedMessages, stubEvent);
+        final StubOtherEvent stubOtherEvent = new StubOtherEvent();
+        addSerializedEventMessage(mockPublishedMessages, stubOtherEvent);
+        when(inMemoryMessagePublisher.getPublishedMessages()).thenReturn(mockPublishedMessages);
+
+        // When
+        final List<Event> publishedEvents = InMemoryMessageVerifier.publishedEvents(inMemoryMessagePublisher,
+                StubOtherEvent.class);
+
+        // Then
+        final List<Event> expectedEvents = Arrays.asList(stubOtherEvent);
+        assertEquals(expectedEvents, publishedEvents);
     }
 }

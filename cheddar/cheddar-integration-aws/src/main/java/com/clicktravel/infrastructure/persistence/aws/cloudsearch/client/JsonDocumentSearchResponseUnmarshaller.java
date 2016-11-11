@@ -20,14 +20,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
-
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.Document;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class JsonDocumentSearchResponseUnmarshaller {
 
@@ -35,9 +33,7 @@ public class JsonDocumentSearchResponseUnmarshaller {
 
     public JsonDocumentSearchResponseUnmarshaller() {
         mapper = new ObjectMapper();
-        final SimpleModule module = new SimpleModule();
-        module.addDeserializer(DateTime.class, new JodaDateTimeDeserializer());
-        mapper.registerModule(module);
+        mapper.registerModule(new JodaModule());
         mapper.configure(SerializationFeature.WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED, true);
         mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         mapper.setPropertyNamingStrategy(new LowerCasePropertyNamingStrategy());

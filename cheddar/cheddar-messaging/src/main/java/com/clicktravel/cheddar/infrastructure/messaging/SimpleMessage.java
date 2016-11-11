@@ -21,14 +21,14 @@ public class SimpleMessage extends AbstractMessage implements TypedMessage {
     private final String type;
     private final String payload;
 
-    public SimpleMessage(final String type, final String payload, final String receiptHandle) {
-        super(receiptHandle);
+    public SimpleMessage(final String type, final String payload, final String messageId, final String receiptHandle) {
+        super(messageId, receiptHandle);
         this.type = type;
         this.payload = payload;
     }
 
     public SimpleMessage(final String type, final String payload) {
-        this(type, payload, null);
+        this(type, payload, null, null);
     }
 
     @Override

@@ -67,7 +67,8 @@ public class ItemConfiguration {
         final String primaryKeyPropertyName = primaryKeyDefinition.propertyName();
         final PropertyDescriptor propertyDescriptor = properties.get(primaryKeyPropertyName);
         if (propertyDescriptor == null) {
-            throw new IllegalStateException("No property found '" + primaryKeyPropertyName + "' for item :" + itemClass);
+            throw new IllegalStateException(
+                    "No property found '" + primaryKeyPropertyName + "' for item :" + itemClass);
         }
         primaryKeyDefinition.setPropertyType(propertyDescriptor.getPropertyType());
 
@@ -76,8 +77,8 @@ public class ItemConfiguration {
             final String primaryKeySupportingPropertyName = compoundPrimaryKeyDefinition.supportingPropertyName();
             final PropertyDescriptor supportingPropertyDescriptor = properties.get(primaryKeySupportingPropertyName);
             if (supportingPropertyDescriptor == null) {
-                throw new IllegalStateException("No property found '" + primaryKeySupportingPropertyName
-                        + "' for item :" + itemClass);
+                throw new IllegalStateException(
+                        "No property found '" + primaryKeySupportingPropertyName + "' for item :" + itemClass);
             }
             compoundPrimaryKeyDefinition.setSupportingPropertyType(supportingPropertyDescriptor.getPropertyType());
         }
@@ -101,8 +102,8 @@ public class ItemConfiguration {
             final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
             final PropertyDescriptor propertyDescriptor = properties.get(uniqueConstraintPropertyName);
             if (propertyDescriptor == null) {
-                throw new IllegalStateException("No property found '" + uniqueConstraintPropertyName + "' for item :"
-                        + itemClass);
+                throw new IllegalStateException(
+                        "No property found '" + uniqueConstraintPropertyName + "' for item :" + itemClass);
             }
             uniqueConstraint.setPropertyDescriptor(propertyDescriptor);
             this.uniqueConstraints.put(uniqueConstraintPropertyName, uniqueConstraint);
@@ -110,7 +111,8 @@ public class ItemConfiguration {
     }
 
     public boolean hasIndexOn(final String propertyName) {
-        return indexDefinitions.containsKey(propertyName) || primaryKeyDefinition.propertyName().equals(propertyName);
+        return primaryKeyDefinition.propertyName().equals(propertyName)
+                || indexDefinitions().stream().map(IndexDefinition::propertyName).anyMatch(propertyName::equals);
     }
 
     public ItemId getItemId(final Item item) {
@@ -120,11 +122,11 @@ public class ItemConfiguration {
             final String itemIdValue = itemIdValueObj == null ? null : String.valueOf(itemIdValueObj);
             if (CompoundPrimaryKeyDefinition.class.isAssignableFrom(primaryKeyDefinition.getClass())) {
                 final CompoundPrimaryKeyDefinition compoundPrimaryKeyDefinition = (CompoundPrimaryKeyDefinition) primaryKeyDefinition;
-                final Method supportingReadMethod = properties.get(
-                        compoundPrimaryKeyDefinition.supportingPropertyName()).getReadMethod();
+                final Method supportingReadMethod = properties
+                        .get(compoundPrimaryKeyDefinition.supportingPropertyName()).getReadMethod();
                 final Object itemIdSupportingValueObj = supportingReadMethod.invoke(item);
-                final String itemIdSupportingValue = itemIdSupportingValueObj == null ? null : String
-                        .valueOf(itemIdSupportingValueObj);
+                final String itemIdSupportingValue = itemIdSupportingValueObj == null ? null
+                        : String.valueOf(itemIdSupportingValueObj);
                 return new ItemId(itemIdValue, itemIdSupportingValue);
             }
             return new ItemId(itemIdValue);

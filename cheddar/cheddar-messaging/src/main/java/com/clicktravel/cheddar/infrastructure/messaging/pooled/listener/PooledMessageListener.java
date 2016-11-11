@@ -66,16 +66,6 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
     private static final int SHORT_POLL_DURATION_SECONDS = 2;
 
     /**
-     * Minimum number of empty responses for consecutive receive attempts to conclude queue is empty
-     */
-    private static final int QUEUE_DRAINED_THRESHOLD = 2;
-
-    /**
-     * Maximum time (in seconds) to wait for executor to complete termination
-     */
-    private static final int TERMINATION_TIMEOUT_SECONDS = 300;
-
-    /**
      * Time (in milliseconds) to pause when receive message request returns an error
      */
     private static final long RECEIVE_MESSAGE_ERROR_PAUSE_MILLIS = 500;
@@ -83,12 +73,12 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
     /**
      * Maximum number of attempts to delete message from queue
      */
-    private static final int MAX_DELETE_MESSAGE_ATTEMPTS = 3;
+    private static final int MAX_DELETE_MESSAGE_ATTEMPTS = 5;
 
     /**
      * Time (in milliseconds) to pause when delete message request returns an error
      */
-    private static final long DELETE_MESSAGE_ERROR_PAUSE_MILLIS = 500;
+    private static final long DELETE_MESSAGE_ERROR_PAUSE_MILLIS = 1500;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final MessageQueue<T> messageQueue;
@@ -96,9 +86,8 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
     private final RateLimiter rateLimiter;
     private final Semaphore semaphore;
     private final int maxReceivedMessages;
-    private int noReceivedMessagesCount;
+    private volatile boolean started;
     private volatile boolean shutdownRequested;
-    private volatile boolean shutdownWhenQueueDrainedRequested;
     private volatile boolean shutdownRequestImminent;
 
     public PooledMessageListener(final MessageQueue<T> messageQueue, final RateLimiter rateLimiter,
@@ -122,11 +111,12 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
     @Override
     public void run() {
         try {
+            started = true;
             listenerStarted();
             final String limiterSummary = rateLimiter != null ? ("using " + rateLimiter.toString())
                     : "not rate limited";
-            logger.debug("Listener for queue [" + queueName() + "] has pool of "
-                    + threadPoolExecutor.getMaximumPoolSize() + " threads and is " + limiterSummary);
+            logger.debug(String.format("Listener for queue [%s] has pool of %d threads and is %s", queueName(),
+                    threadPoolExecutor.getMaximumPoolSize(), limiterSummary));
             processMessagesUntilShutdownRequested();
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -134,14 +124,15 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
             logger.error(e.getMessage(), e);
             throw e;
         } finally {
-            logger.debug("Message listener for queue [" + queueName()
-                    + "] has stopped receiving messages. Initiating shutdown of task executor");
+            logger.debug(String.format(
+                    "Message listener for queue [%s] has stopped receiving messages. Initiating shutdown of task executor",
+                    queueName()));
             threadPoolExecutor.shutdown();
         }
     }
 
     private void processMessagesUntilShutdownRequested() throws InterruptedException {
-        while (!(shutdownRequested || (shutdownWhenQueueDrainedRequested && queueDrained()))) {
+        while (!shutdownRequested) {
             // Block until there is capacity to handle up to maxReceivedMessages
             semaphore.acquire(maxReceivedMessages);
             List<T> messages = Collections.emptyList();
@@ -152,12 +143,8 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
                     try {
                         messages = messageQueue.receive(pollSeconds, maxReceivedMessages);
                     } catch (final MessageReceiveException e) {
-                        logger.error("Error receiving messages on queue:[" + queueName() + "]", e);
+                        logger.warn("Error receiving messages on queue:[" + queueName() + "]", e);
                         Thread.sleep(RECEIVE_MESSAGE_ERROR_PAUSE_MILLIS);
-                    }
-
-                    if (shutdownWhenQueueDrainedRequested) {
-                        noReceivedMessagesCount = messages.isEmpty() ? (noReceivedMessagesCount + 1) : 0;
                     }
                 }
             } finally {
@@ -209,11 +196,13 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
                 messageQueue.delete(message);
                 return;
             } catch (final MessageDeleteException e) {
-                logger.warn("Failed attempt to delete message from queue:[" + queueName() + "]", e);
+                logger.warn(String.format("Failed attempt to delete message with id [%s] from queue [%s]",
+                        message.getMessageId(), queueName()), e);
                 Thread.sleep(DELETE_MESSAGE_ERROR_PAUSE_MILLIS);
             }
         }
-        logger.error("Failed all attempts to delete message from queue:[" + queueName() + "]");
+        logger.error(String.format("Failed all attempts to delete message with id [%s] from queue [%s]",
+                message.getMessageId(), queueName()));
     }
 
     private void applyRateLimiter() {
@@ -226,52 +215,42 @@ public abstract class PooledMessageListener<T extends Message> implements Messag
         }
     }
 
-    private boolean queueDrained() {
-        return noReceivedMessagesCount >= QUEUE_DRAINED_THRESHOLD;
-    }
-
     protected String queueName() {
         return messageQueue.getName();
     }
 
     @Override
     public void prepareForShutdown() {
-        logger.debug("Message listener for queue [" + queueName()
-                + "] is preparing for imminent shutdown. Reducing queue poll time.");
+        logger.debug(String.format(
+                "Message listener for queue [%s] is preparing for imminent shutdown. Reducing queue poll time.",
+                queueName()));
         shutdownRequestImminent = true;
     }
 
     @Override
-    public void shutdown() {
-        logger.debug("Message listener for queue [" + queueName() + "] is shutting down");
+    public void shutdownListener() {
+        logger.debug(String.format("Message listener for queue [%s] is shutting down", queueName()));
         shutdownRequested = true;
+        if (!started) {
+            threadPoolExecutor.shutdown();
+        }
     }
 
     @Override
-    public void shutdownAfterQueueDrained() {
-        logger.debug("Message listener for queue [" + queueName() + "] will shutdown when queue is drained");
-        shutdownWhenQueueDrainedRequested = true;
-    }
-
-    @Override
-    public boolean hasTerminated() {
-        return threadPoolExecutor.isTerminated();
-    }
-
-    @Override
-    public void awaitTermination() {
-        logger.debug("Message listener for queue [" + queueName()
-                + "] is waiting for message handler worker threads to complete before terminating");
+    public boolean awaitShutdownComplete(final long timeoutMillis) {
+        boolean terminated = false;
         try {
-            if (threadPoolExecutor.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                logger.debug("Message listener for queue [" + queueName() + "] has terminated");
+            terminated = threadPoolExecutor.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS);
+            if (terminated) {
+                logger.debug(String.format("Message listener for queue [%s] shutdown has completed", queueName()));
             } else {
-                logger.warn("Message listener for queue [" + queueName()
-                        + "] has not terminated as message handler worker threads have not completed after "
-                        + TERMINATION_TIMEOUT_SECONDS + "seconds");
+                logger.warn(String.format(
+                        "Message listener for queue [%s] has not shutdown as message handler worker threads have not completed",
+                        queueName()));
             }
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        return terminated;
     }
 }

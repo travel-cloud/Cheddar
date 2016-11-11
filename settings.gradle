@@ -2,6 +2,7 @@ include (
 
     "commons:commons-lang",
     "commons:commons-httpclient",
+    "commons:commons-json-provider",
     "commons:commons-test",
     
     "cheddar:cheddar-metrics",
@@ -21,6 +22,7 @@ include (
     "cheddar:cheddar-integration-aws",
     "cheddar:cheddar-events",
     "cheddar:cheddar-system-events",
-    "cheddar:cheddar-context"
+    "cheddar:cheddar-context",
+    "cheddar:cheddar-features"
     
 )

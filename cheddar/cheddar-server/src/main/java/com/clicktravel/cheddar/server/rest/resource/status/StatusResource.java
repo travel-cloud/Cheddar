@@ -30,9 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.application.lifecycle.LifecycleStatusHolder;
-import com.clicktravel.cheddar.server.application.status.DeferrableProcessingStatusHolder;
-import com.clicktravel.cheddar.server.application.status.RestAdapterStatusHolder;
 import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
 
@@ -41,22 +38,14 @@ public class StatusResource {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ApplicationConfiguration applicationConfiguration;
-    private final LifecycleStatusHolder lifecycleStatusHolder;
-    private final RestAdapterStatusHolder restAdapterStatusHolder;
-    private final DeferrableProcessingStatusHolder deferrableProcessingStatusHolder;
     private final RateLimiter restRequestRateLimiter;
     private final RateLimiter highPriorityDomainEventHandlerRateLimiter;
     private final RateLimiter lowPriorityDomainEventHandlerRateLimiter;
 
     @Inject
     public StatusResource(final ApplicationConfiguration applicationConfiguration,
-            final LifecycleStatusHolder lifecycleStatusHolder, final RestAdapterStatusHolder restAdapterStatusHolder,
-            final DeferrableProcessingStatusHolder deferrableProcessingStatusHolder,
             final RateLimiterConfiguration rateLimiterConfiguration) throws IOException {
         this.applicationConfiguration = applicationConfiguration;
-        this.lifecycleStatusHolder = lifecycleStatusHolder;
-        this.restAdapterStatusHolder = restAdapterStatusHolder;
-        this.deferrableProcessingStatusHolder = deferrableProcessingStatusHolder;
         restRequestRateLimiter = rateLimiterConfiguration.restRequestRateLimiter();
         highPriorityDomainEventHandlerRateLimiter = rateLimiterConfiguration
                 .highPriorityDomainEventHandlerRateLimiter();
@@ -66,21 +55,11 @@ public class StatusResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStatus() {
-        // Test if REST requests other than this one are in progress
-        final boolean processingRestRequest = restAdapterStatusHolder.restRequestsInProgress() > 1;
-
-        final String lifecycleStatus = lifecycleStatusHolder.getLifecycleStatus().name();
-        final boolean isDeferrableProcessing = deferrableProcessingStatusHolder.isDeferrableProcessing();
-        logger.trace("Application instance status; version:[" + applicationConfiguration.version()
-                + "] lifecycleStatus:[" + lifecycleStatus + "] processingRestRequest:[" + processingRestRequest
-                + "] isDeferrableProcessing:[" + isDeferrableProcessing + "]");
+        logger.trace("Application version:[" + applicationConfiguration.version() + "]");
         final StatusResult status = new StatusResult();
         status.setName(applicationConfiguration.name());
         status.setVersion(applicationConfiguration.version());
         status.setFrameworkVersion(applicationConfiguration.frameworkVersion());
-        status.setStatus(lifecycleStatus);
-        status.setProcessingRestRequest(processingRestRequest);
-        status.setDeferrableProcessing(isDeferrableProcessing);
         status.setMaximumWorkRates(getMaximumWorkRates());
         final Response response = Response.status(javax.ws.rs.core.Response.Status.OK).entity(status).build();
         return response;
@@ -91,15 +70,15 @@ public class StatusResource {
         restResultMaximumWorkRate.setBucketCapacity(restRequestRateLimiter.getBucketCapacity());
         restResultMaximumWorkRate.setTokenReplacementDelay(restRequestRateLimiter.getTokenReplacementDelayMillis());
         final MaximumWorkRate highPriorityDomainEventHandlerMaximumWorkRate = new MaximumWorkRate();
-        highPriorityDomainEventHandlerMaximumWorkRate.setBucketCapacity(highPriorityDomainEventHandlerRateLimiter
-                .getBucketCapacity());
+        highPriorityDomainEventHandlerMaximumWorkRate
+                .setBucketCapacity(highPriorityDomainEventHandlerRateLimiter.getBucketCapacity());
         highPriorityDomainEventHandlerMaximumWorkRate
                 .setTokenReplacementDelay(highPriorityDomainEventHandlerRateLimiter.getTokenReplacementDelayMillis());
         final MaximumWorkRate lowPriorityDomainEventHandlerMaximumWorkRate = new MaximumWorkRate();
-        lowPriorityDomainEventHandlerMaximumWorkRate.setBucketCapacity(lowPriorityDomainEventHandlerRateLimiter
-                .getBucketCapacity());
-        lowPriorityDomainEventHandlerMaximumWorkRate.setTokenReplacementDelay(lowPriorityDomainEventHandlerRateLimiter
-                .getTokenReplacementDelayMillis());
+        lowPriorityDomainEventHandlerMaximumWorkRate
+                .setBucketCapacity(lowPriorityDomainEventHandlerRateLimiter.getBucketCapacity());
+        lowPriorityDomainEventHandlerMaximumWorkRate
+                .setTokenReplacementDelay(lowPriorityDomainEventHandlerRateLimiter.getTokenReplacementDelayMillis());
         final MaximumWorkRates maximumWorkRates = new MaximumWorkRates();
         maximumWorkRates.setRestRequest(restResultMaximumWorkRate);
         maximumWorkRates.setHighPriorityDomainEventHandler(highPriorityDomainEventHandlerMaximumWorkRate);
@@ -111,10 +90,6 @@ public class StatusResource {
     @Path("/healthCheck")
     @Produces(MediaType.TEXT_PLAIN)
     public Response getHealthCheck() {
-        if (restAdapterStatusHolder.isAcceptingRequests()) {
-            return Response.status(Status.OK).entity("Ready").build();
-        } else {
-            return Response.status(Status.SERVICE_UNAVAILABLE).build();
-        }
+        return Response.status(Status.OK).entity("Ready").build();
     }
 }

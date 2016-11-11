@@ -20,8 +20,9 @@ import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageParseEx
 
 public class InvalidBasicMessage extends InvalidMessage implements BasicMessage {
 
-    public InvalidBasicMessage(final String receiptHandle, final MessageParseException messageParseException) {
-        super(receiptHandle, messageParseException);
+    public InvalidBasicMessage(final String messageId, final String receiptHandle,
+            final MessageParseException messageParseException) {
+        super(messageId, receiptHandle, messageParseException);
     }
 
     @Override

@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.document.search;
 
+import java.util.Collection;
+
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.options.SearchOptions;
 import com.clicktravel.cheddar.infrastructure.persistence.document.search.query.Query;
 
@@ -30,12 +32,28 @@ public interface DocumentSearchEngine {
     void update(Document document);
 
     /**
+     * Updates all the specified documents that has been previously added to the store
+     *
+     * @param document - the document with the values to be updated
+     */
+
+    void update(Collection<? extends Document> documents);
+
+    /**
      * Delete a document that has been previously added to the store
      *
      * @param document - the document to be deleted
      */
 
     void delete(Document document);
+
+    /**
+     * Delete all specified documents that have been previously added to the store
+     *
+     * @param documents - the documents to be deleted
+     */
+
+    void delete(Collection<? extends Document> documents);
 
     /**
      * Search for documents based on the given query
