@@ -65,7 +65,7 @@ public class RestResourceConfig extends ResourceConfig {
     private void registerResources(final String... packages) {
         final Collection<String> resourceClassNames = getResourceClassNames(packages);
         resourceClassNames.addAll(Arrays.asList("io.swagger.jaxrs.listing.SwaggerSerializers",
-                "io.swagger.jaxrs.listing.ApiListingResource"));
+                "com.clicktravel.cheddar.server.rest.ClickApiListingResource"));
 
         for (final String resourceClassName : resourceClassNames) {
             try {

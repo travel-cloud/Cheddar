@@ -36,7 +36,6 @@ import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Info;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.OAuth2Definition;
-import io.swagger.models.parameters.HeaderParameter;
 
 /**
  * HTTP server which exposes JAX-RS resources.
@@ -64,43 +63,7 @@ public class RestServer {
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
-
-        final String localApplicationGatewayEndpiont = "http://localhost:80";
-        // The main scanner class used to scan the classes for swagger + jax-rs annoatations
-        final io.swagger.jaxrs.config.BeanConfig beanConfig = new BeanConfig();
-        // Could not get the try base path to work with swagger 2.0 as it is matched by contains in
-        // 'com.wordnik.swagger.jaxrs.config.BeanConfig.classes')'
-        beanConfig.setResourcePackage("com.clicktravel.services,com.clicktravel.services.iam.rest.resource");
-        // This affects the path that is generated in each resource adapter code so setting it to "" allows the correct
-        // paths to be appended
-        beanConfig.setHost(baseUri.getHost());
-        beanConfig.setSchemes(new String[] { "https" });
-        beanConfig.setBasePath("/");
-        final Info info = new Info();
-        info.setVersion("1.0.0");
-        beanConfig.setInfo(info);
-        beanConfig.setTitle("IAM Swagger Specification");
-        beanConfig.setVersion("1.0.0");
-
-        // The follow sets up the security schemes so they can be referenced later (doesn't affect codegen methods!)
-        final Swagger swaggerConfiguration = beanConfig.getSwagger();
-        final OAuth2Definition oauth2ImplicitDefinition = new OAuth2Definition();
-        final String authorizationUrl = String.format("%s/authorize", localApplicationGatewayEndpiont);
-
-        oauth2ImplicitDefinition.implicit(authorizationUrl);
-        oauth2ImplicitDefinition.addScope("Default", "The default scope for Oauth authentication");
-        swaggerConfiguration.addSecurityDefinition("implicit", oauth2ImplicitDefinition);
-
-        // This adds a global reference-able parameter to the spec (doesn't affect codegen methods!)
-        final HeaderParameter headerParameter = new HeaderParameter();
-        headerParameter.name("Authorization");
-        headerParameter.setRequired(true);
-        swaggerConfiguration.addParameter("authorization", headerParameter);
-
-        beanConfig.configure(swaggerConfiguration);
-        // This method sets the vales on the scanner and goes and scans the classes that fit the resource package
-        beanConfig.setScan(true);
-
+        enableAutoGenerationOfSwaggerSpecification();
         configureThreadPools(httpServer.getListener("grizzly"), SERVICE_POOL_NAME_PREFIX, SERVICE_WORKER_THREADS,
                 SERVICE_KERNEL_THREADS);
         final NetworkListener statusPortListener = new NetworkListener("status", baseUri.getHost(), statusPort);
@@ -108,6 +71,42 @@ public class RestServer {
         httpServer.addListener(statusPortListener);
         logger.info("Starting REST server; servicePort:[" + servicePort + "] statusPort:[" + statusPort + "]");
         httpServer.start();
+    }
+
+    private void enableAutoGenerationOfSwaggerSpecification() {
+        // The main scanner class used to scan the classes for swagger + jax-rs annoatations
+        final io.swagger.jaxrs.config.BeanConfig beanConfig = new BeanConfig();
+        // Could not get the try base path to work with swagger 2.0 as it is matched by contains in
+        // 'com.wordnik.swagger.jaxrs.config.BeanConfig.classes')'
+        beanConfig.setResourcePackage("com.clicktravel.services,com.clicktravel.services.*");
+        beanConfig.setSchemes(new String[] { "https" });
+        beanConfig.setBasePath("/");
+        final Info info = new Info();
+        info.setVersion("1.0.0");
+        beanConfig.setInfo(info);
+        beanConfig.setTitle("Swagger Specification");
+        beanConfig.setVersion("1.0.0");
+
+        // The follow sets up the security schemes so they can be referenced later (doesn't affect codegen methods!)
+        final Swagger swaggerConfiguration = beanConfig.getSwagger();
+        final OAuth2Definition oauth2ImplicitDefinition = new OAuth2Definition();
+        final String applicationGatewayEndpiont = "https://auth.travel.cloud";
+        final String authorizationUrl = String.format("%s/authorize", applicationGatewayEndpiont);
+
+        oauth2ImplicitDefinition.implicit(authorizationUrl);
+        oauth2ImplicitDefinition.addScope("Default", "The default scope for Oauth authentication");
+        swaggerConfiguration.addSecurityDefinition("implicit", oauth2ImplicitDefinition);
+
+        /*
+         * Issues with 3scale active docs so temporarily commenting out This adds a global reference-able parameter to
+         * the spec (doesn't affect codegen methods!) This also cuased final HeaderParameter headerParameter = new
+         * HeaderParameter(); headerParameter.name("Authorization"); headerParameter.setRequired(true);
+         * swaggerConfiguration.addParameter("authorization", headerParameter);
+         */
+
+        beanConfig.configure(swaggerConfiguration);
+        // This method sets the vales on the scanner and goes and scans the classes that fit the resource package
+        beanConfig.setScan(true);
     }
 
     private void configureThreadPools(final NetworkListener networkListener, final String poolNamePrefix,
