@@ -80,18 +80,8 @@ public class CheddarApiListingResource {
                 if (scanner instanceof SwaggerConfig) {
                     swagger = ((SwaggerConfig) scanner).configure(swagger);
                 } else {
-                    // Another reference to serlet which will always be null
-                    // final SwaggerConfig configurator = (SwaggerConfig) context.getAttribute("reader");
-                    final SwaggerConfig configurator = null;
-                    if (configurator != null) {
-                        LOGGER.debug("configuring swagger with " + configurator);
-                        configurator.configure(swagger);
-                    } else {
-                        LOGGER.debug("no configurator");
-                    }
+                    LOGGER.debug("no configurator");
                 }
-                // Commented out as swagger is already being mutated and referenced in the scannerFactory
-                // context.setAttribute("swagger", swagger);
             }
         }
         initialized = true;

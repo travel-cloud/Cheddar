@@ -76,8 +76,6 @@ public class RestServer {
     private void enableAutoGenerationOfSwaggerSpecification() {
         // The main scanner class used to scan the classes for swagger + jax-rs annoatations
         final io.swagger.jaxrs.config.BeanConfig beanConfig = new BeanConfig();
-        // Could not get the try base path to work with swagger 2.0 as it is matched by contains in
-        // 'com.wordnik.swagger.jaxrs.config.BeanConfig.classes')'
         beanConfig.setResourcePackage("com.clicktravel.services,com.clicktravel.services.*");
         beanConfig.setSchemes(new String[] { "https" });
         beanConfig.setBasePath("/");
@@ -98,14 +96,13 @@ public class RestServer {
         swaggerConfiguration.addSecurityDefinition("implicit", oauth2ImplicitDefinition);
 
         /*
-         * Issues with 3scale active docs so temporarily commenting out This adds a global reference-able parameter to
-         * the spec (doesn't affect codegen methods!) This also cuased final HeaderParameter headerParameter = new
-         * HeaderParameter(); headerParameter.name("Authorization"); headerParameter.setRequired(true);
+         * Issues with 3scale active docs so temporarily commenting out. This adds a global reference-able parameter to
+         * the spec (doesn't affect codegen methods!) final HeaderParameter headerParameter = newHeaderParameter();
+         * headerParameter.name("Authorization"); headerParameter.setRequired(true);
          * swaggerConfiguration.addParameter("authorization", headerParameter);
          */
 
         beanConfig.configure(swaggerConfiguration);
-        // This method sets the vales on the scanner and goes and scans the classes that fit the resource package
         beanConfig.setScan(true);
     }
 
