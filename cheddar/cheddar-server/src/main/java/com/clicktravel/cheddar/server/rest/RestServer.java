@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Info;
-import io.swagger.models.Swagger;
-import io.swagger.models.auth.OAuth2Definition;
 
 /**
  * HTTP server which exposes JAX-RS resources.
@@ -75,7 +73,7 @@ public class RestServer {
 
     private void enableAutoGenerationOfSwaggerSpecification() {
         // The main scanner class used to scan the classes for swagger + jax-rs annoatations
-        final io.swagger.jaxrs.config.BeanConfig beanConfig = new BeanConfig();
+        final BeanConfig beanConfig = new BeanConfig();
         beanConfig.setResourcePackage("com.clicktravel.services,com.clicktravel.services.*");
         beanConfig.setSchemes(new String[] { "https" });
         beanConfig.setBasePath("/");
@@ -84,25 +82,6 @@ public class RestServer {
         beanConfig.setInfo(info);
         beanConfig.setTitle("Swagger Specification");
         beanConfig.setVersion("1.0.0");
-
-        // The follow sets up the security schemes so they can be referenced later (doesn't affect codegen methods!)
-        final Swagger swaggerConfiguration = beanConfig.getSwagger();
-        final OAuth2Definition oauth2ImplicitDefinition = new OAuth2Definition();
-        final String applicationGatewayEndpiont = "https://auth.travel.cloud";
-        final String authorizationUrl = String.format("%s/authorize", applicationGatewayEndpiont);
-
-        oauth2ImplicitDefinition.implicit(authorizationUrl);
-        oauth2ImplicitDefinition.addScope("Default", "The default scope for Oauth authentication");
-        swaggerConfiguration.addSecurityDefinition("implicit", oauth2ImplicitDefinition);
-
-        /*
-         * Issues with 3scale active docs so temporarily commenting out. This adds a global reference-able parameter to
-         * the spec (doesn't affect codegen methods!) final HeaderParameter headerParameter = newHeaderParameter();
-         * headerParameter.name("Authorization"); headerParameter.setRequired(true);
-         * swaggerConfiguration.addParameter("authorization", headerParameter);
-         */
-
-        beanConfig.configure(swaggerConfiguration);
         beanConfig.setScan(true);
     }
 

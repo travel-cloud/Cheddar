@@ -47,13 +47,13 @@ import io.swagger.models.Swagger;
  */
 
 @Path("/")
-public class CheddarApiListingResource {
+public class SwaggerSpecResource {
 
-    Logger LOGGER = LoggerFactory.getLogger(CheddarApiListingResource.class);
+    Logger LOGGER = LoggerFactory.getLogger(SwaggerSpecResource.class);
 
     static boolean initialized = false;
 
-    protected synchronized Swagger scan(final Application app, final ServletConfig sc) {
+    protected synchronized Swagger scanResourcesForJaxrsAnnotations(final Application app, final ServletConfig sc) {
         Swagger swagger = null;
         final Scanner scanner = ScannerFactory.getScanner();
         LOGGER.debug("using scanner " + scanner);
@@ -91,7 +91,7 @@ public class CheddarApiListingResource {
             @Context final HttpHeaders headers, @Context final UriInfo uriInfo) {
         Swagger swagger = getSwagger();
         if (!initialized) {
-            swagger = scan(app, sc);
+            swagger = scanResourcesForJaxrsAnnotations(app, sc);
         }
         if (swagger != null) {
             final SwaggerSpecFilter filterImpl = FilterFactory.getFilter();
@@ -106,10 +106,11 @@ public class CheddarApiListingResource {
     }
 
     /**
-     * Method added to obtain the swagger configuration from the BeanConfig scanner found in the ScannerFactory
-     * singleton as cheddar implementations will always use this method of configuring Swagger.
+     * Will get the swagger configuration from the scanner, if it is of type BeanConfig and return the object. This will
+     * be used in the parsing and formating of the resulting swagger specification.
      *
-     * @return swagger configuration
+     * @return swagger configuration. If the scanner is not of type io.swagger.jaxrs.config.BeanConfig then null will be
+     *         returned.
      */
 
     private Swagger getSwagger() {
