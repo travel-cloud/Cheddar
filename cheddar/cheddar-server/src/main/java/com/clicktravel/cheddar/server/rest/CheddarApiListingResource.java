@@ -17,9 +17,6 @@
 
 package com.clicktravel.cheddar.server.rest;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletConfig;
@@ -92,7 +89,6 @@ public class CheddarApiListingResource {
     @Path("/swagger.json")
     public Response getListingJson(@Context final Application app, @Context final ServletConfig sc,
             @Context final HttpHeaders headers, @Context final UriInfo uriInfo) {
-
         Swagger swagger = getSwagger();
         if (!initialized) {
             swagger = scan(app, sc);
@@ -101,46 +97,12 @@ public class CheddarApiListingResource {
             final SwaggerSpecFilter filterImpl = FilterFactory.getFilter();
             if (filterImpl != null) {
                 final SpecFilter f = new SpecFilter();
-                swagger = f.filter(swagger, filterImpl, getQueryParams(uriInfo.getQueryParameters()),
-                        getCookies(headers), getHeaders(headers));
+                swagger = f.filter(swagger, filterImpl, null, null, null);
             }
             return Response.ok().entity(swagger).build();
         } else {
             return Response.status(404).build();
         }
-    }
-
-    protected Map<String, List<String>> getQueryParams(final MultivaluedMap<String, String> params) {
-        final Map<String, List<String>> output = new HashMap<String, List<String>>();
-        if (params != null) {
-            for (final String key : params.keySet()) {
-                final List<String> values = params.get(key);
-                output.put(key, values);
-            }
-        }
-        return output;
-    }
-
-    protected Map<String, String> getCookies(final HttpHeaders headers) {
-        final Map<String, String> output = new HashMap<String, String>();
-        if (headers != null) {
-            for (final String key : headers.getCookies().keySet()) {
-                final Cookie cookie = headers.getCookies().get(key);
-                output.put(key, cookie.getValue());
-            }
-        }
-        return output;
-    }
-
-    protected Map<String, List<String>> getHeaders(final HttpHeaders headers) {
-        final Map<String, List<String>> output = new HashMap<String, List<String>>();
-        if (headers != null) {
-            for (final String key : headers.getRequestHeaders().keySet()) {
-                final List<String> values = headers.getRequestHeaders().get(key);
-                output.put(key, values);
-            }
-        }
-        return output;
     }
 
     /**
