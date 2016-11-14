@@ -42,12 +42,11 @@ import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.JaxrsScanner;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import io.swagger.models.Swagger;
-import io.swagger.util.Yaml;
 
 /**
  * Cheddar's own version of the class com.wordnik.swagger.jaxrs.listing.ApiListingResource that removes the dependacy on
- * a servlet deployment deployment which cheddar currently do not support. This version changes the fetching of the
- * swagger object to the scanner (BeanConfig) object instead on the servlet context.
+ * a servlet deployment which cheddar currently do not support. This version changes the fetching of the swagger object
+ * to the scanner (BeanConfig) object instead of the servlet context.
  */
 
 @Path("/")
@@ -111,42 +110,6 @@ public class CheddarApiListingResource {
         }
     }
 
-    @GET
-    @Produces("application/yaml")
-    @Path("/swagger.yaml")
-    public Response getListingYaml(@Context final Application app, @Context final ServletConfig sc,
-            @Context final HttpHeaders headers, @Context final UriInfo uriInfo) {
-        Swagger swagger = getSwagger();
-        if (!initialized) {
-            swagger = scan(app, sc);
-        }
-        try {
-            if (swagger != null) {
-                final SwaggerSpecFilter filterImpl = FilterFactory.getFilter();
-                LOGGER.debug("using filter " + filterImpl);
-                if (filterImpl != null) {
-                    final SpecFilter f = new SpecFilter();
-                    swagger = f.filter(swagger, filterImpl, getQueryParams(uriInfo.getQueryParameters()),
-                            getCookies(headers), getHeaders(headers));
-                }
-
-                final String yaml = Yaml.mapper().writeValueAsString(swagger);
-                final String[] parts = yaml.split("\n");
-                final StringBuilder b = new StringBuilder();
-                for (final String part : parts) {
-                    final int pos = part.indexOf("!<");
-                    final int endPos = part.indexOf(">");
-                    b.append(part);
-                    b.append("\n");
-                }
-                return Response.ok().entity(b.toString()).type("text/plain").build();
-            }
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
-        return Response.status(404).build();
-    }
-
     protected Map<String, List<String>> getQueryParams(final MultivaluedMap<String, String> params) {
         final Map<String, List<String>> output = new HashMap<String, List<String>>();
         if (params != null) {
@@ -182,7 +145,7 @@ public class CheddarApiListingResource {
 
     /**
      * Method added to obtain the swagger configuration from the BeanConfig scanner found in the ScannerFactory
-     * singleton as click implementation will always use this method of configuring Swagger.
+     * singleton as cheddar implementations will always use this method of configuring Swagger.
      *
      * @return swagger configuration
      */
