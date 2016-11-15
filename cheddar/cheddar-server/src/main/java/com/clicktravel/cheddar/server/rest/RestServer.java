@@ -78,10 +78,10 @@ public class RestServer {
         beanConfig.setSchemes(new String[] { "https" });
         beanConfig.setBasePath("/");
         final Info info = new Info();
-        info.setVersion("1.0.0");
+        info.setVersion("2.0.0");
         beanConfig.setInfo(info);
         beanConfig.setTitle("Swagger Specification");
-        beanConfig.setVersion("1.0.0");
+        beanConfig.setVersion("0.0.0");
         beanConfig.setScan(true);
     }
 
