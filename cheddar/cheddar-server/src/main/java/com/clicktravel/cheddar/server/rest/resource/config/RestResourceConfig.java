@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.server.rest.resource.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import javax.ws.rs.Path;
@@ -63,6 +64,9 @@ public class RestResourceConfig extends ResourceConfig {
 
     private void registerResources(final String... packages) {
         final Collection<String> resourceClassNames = getResourceClassNames(packages);
+        resourceClassNames.addAll(Arrays.asList("io.swagger.jaxrs.listing.SwaggerSerializers",
+                "com.clicktravel.cheddar.server.rest.SwaggerSpecResource"));
+
         for (final String resourceClassName : resourceClassNames) {
             try {
                 register(Class.forName(resourceClassName));

@@ -32,6 +32,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.models.Info;
+
 /**
  * HTTP server which exposes JAX-RS resources.
  *
@@ -58,6 +61,7 @@ public class RestServer {
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
+        enableAutoGenerationOfSwaggerSpecification();
         configureThreadPools(httpServer.getListener("grizzly"), SERVICE_POOL_NAME_PREFIX, SERVICE_WORKER_THREADS,
                 SERVICE_KERNEL_THREADS);
         final NetworkListener statusPortListener = new NetworkListener("status", baseUri.getHost(), statusPort);
@@ -65,6 +69,20 @@ public class RestServer {
         httpServer.addListener(statusPortListener);
         logger.info("Starting REST server; servicePort:[" + servicePort + "] statusPort:[" + statusPort + "]");
         httpServer.start();
+    }
+
+    private void enableAutoGenerationOfSwaggerSpecification() {
+        // The main scanner class used to scan the classes for swagger + jax-rs annoatations
+        final BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setResourcePackage("com.clicktravel.services,com.clicktravel.services.*");
+        beanConfig.setSchemes(new String[] { "https" });
+        beanConfig.setBasePath("/");
+        final Info info = new Info();
+        info.setVersion("2.0.0");
+        beanConfig.setInfo(info);
+        beanConfig.setTitle("Swagger Specification");
+        beanConfig.setVersion("0.0.0");
+        beanConfig.setScan(true);
     }
 
     private void configureThreadPools(final NetworkListener networkListener, final String poolNamePrefix,
