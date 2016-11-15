@@ -28,21 +28,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.rest.media.MediaTypes;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonParseException;
 
 @Provider
 @Produces(MediaTypes.CDM_V1_JSON)
 @Priority(Integer.MAX_VALUE)
-public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProcessingException> {
+public class JsonParseExceptionMapper implements ExceptionMapper<JsonParseException> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public Response toResponse(final JsonProcessingException exception) {
+    public Response toResponse(final JsonParseException exception) {
         if (logger.isDebugEnabled()) {
             logger.debug(exception.getMessage(), exception);
         }
-
         return Response.status(Response.Status.BAD_REQUEST).entity(buildErrorResponse(exception)).build();
     }
 
