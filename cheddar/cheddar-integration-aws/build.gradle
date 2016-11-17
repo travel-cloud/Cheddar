@@ -24,6 +24,7 @@ dependencies {
     compile "joda-time:joda-time:${jodaTimeVersion}"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:${jacksonVersion}"
     compile 'net.spy:spymemcached:2.11.4' // Used to connect to memcache nodes - the aws version of this file is not in a public repo
+    compile "com.google.code.gson:gson:2.8.0"
 }
 
 test {

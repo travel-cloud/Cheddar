@@ -99,6 +99,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             }
             processBatchRead(dynamoDBClient.batchGetItem(keys), fetchedItems, tableName, itemClass);
         }
+        LoggingUtils.logReadItemFromDatabase(tableName, fetchedItems);
         return fetchedItems;
     }
 
@@ -122,6 +123,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         item.setVersion(1l);
         final ItemConfiguration itemConfiguration = getItemConfiguration(item.getClass());
+
         final Collection<PropertyDescriptor> createdConstraintPropertyDescriptors = createUniqueConstraintIndexes(item,
                 itemConfiguration);
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
@@ -132,6 +134,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final Table table = dynamoDBClient.getTable(tableName);
         boolean itemRequestSucceeded = false;
         try {
+            LoggingUtils.logWriteItemToDatabase(tableName, item);
             table.putItem(putItemSpec);
             itemRequestSucceeded = true;
         } finally {
@@ -166,6 +169,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                         .format("The document of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
             }
             item = stringToItem(tableText, itemClass);
+            LoggingUtils.logReadItemFromDatabase(tableName, item);
         } else {
             throw new NonExistentItemException(String.format("The document of type [%s] with id [%s] does not exist",
                     itemClass.getName(), itemId));
@@ -204,6 +208,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 .fromJSON(mergedJson);
         final PutItemSpec putItemSpec = new PutItemSpec().withItem(awsItem).withExpected(expectedCondition);
         try {
+            LoggingUtils.logWriteItemToDatabase(tableName, item);
             table.putItem(putItemSpec);
         } catch (final ConditionalCheckFailedException e) {
             throw new OptimisticLockException("Conflicting write detected while updating item");
@@ -219,6 +224,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 .withPrimaryKey(getPrimaryKey(itemConfiguration.getItemId(item), itemConfiguration));
 
         final Table table = dynamoDBClient.getTable(tableName);
+        LoggingUtils.logWriteItemToDatabase(tableName, item);
         table.deleteItem(deleteItemSpec);
 
         deleteUniqueConstraintIndexes(item, itemConfiguration);
@@ -442,4 +448,5 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         }
         return value;
     }
+
 }
