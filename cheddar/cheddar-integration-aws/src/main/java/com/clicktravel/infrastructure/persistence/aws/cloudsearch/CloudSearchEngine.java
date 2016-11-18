@@ -52,6 +52,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CloudSearchEngine implements DocumentSearchEngine {
 
+    private static final int UPDATE_BATCH_SIZE = 1000;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DocumentConfigurationHolder documentConfigurationHolder;
     private final Map<Class<? extends Document>, DocumentConfiguration> documentConfigurations;
@@ -145,25 +147,45 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             final DocumentConfiguration documentConfiguration = getDocumentConfiguration(documentClass);
             final String searchDomain = documentConfigurationHolder.schemaName() + "-"
                     + documentConfiguration.namespace();
-            final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
-
-            for (final Document document : documents) {
-                final DocumentUpdate documentUpdate = new DocumentUpdate(Type.ADD, document.getId());
-                final Collection<Field> fields = new ArrayList<>();
-                for (final IndexDefinition indexDefinition : documentConfiguration.indexDefinitions()) {
-                    final String indexName = indexDefinition.getName();
-                    final PropertyDescriptor propertyDescriptor = documentConfiguration.properties().get(indexName);
-                    if (propertyDescriptor == null) {
-                        throw new IllegalStateException("No property found for index: " + indexName);
-                    }
-                    final Field field = new Field(indexName, getPropertyValue(document, propertyDescriptor));
-                    fields.add(field);
-                }
-                documentUpdate.withFields(fields);
-                batchDocumentUpdateRequest.withDocument(documentUpdate);
+            for (final Collection<? extends Document> documentBatch : createDocumentBatches(documents)) {
+                uploadBatch(documentBatch, documentConfiguration, searchDomain);
             }
-            getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
         }
+    }
+
+    private void uploadBatch(final Collection<? extends Document> documents,
+            final DocumentConfiguration documentConfiguration, final String searchDomain) {
+        final BatchDocumentUpdateRequest batchDocumentUpdateRequest = new BatchDocumentUpdateRequest(searchDomain);
+
+        for (final Document document : documents) {
+            final DocumentUpdate documentUpdate = new DocumentUpdate(Type.ADD, document.getId());
+            final Collection<Field> fields = new ArrayList<>();
+            for (final IndexDefinition indexDefinition : documentConfiguration.indexDefinitions()) {
+                final String indexName = indexDefinition.getName();
+                final PropertyDescriptor propertyDescriptor = documentConfiguration.properties().get(indexName);
+                if (propertyDescriptor == null) {
+                    throw new IllegalStateException("No property found for index: " + indexName);
+                }
+                final Field field = new Field(indexName, getPropertyValue(document, propertyDescriptor));
+                fields.add(field);
+            }
+            documentUpdate.withFields(fields);
+            batchDocumentUpdateRequest.withDocument(documentUpdate);
+        }
+        getDocumentServiceClient(searchDomain).uploadDocuments(uploadDocumentsRequest(batchDocumentUpdateRequest));
+    }
+
+    private List<Collection<? extends Document>> createDocumentBatches(final Collection<? extends Document> documents) {
+        final List<? extends Document> documentList = new ArrayList<>(documents);
+        final List<Collection<? extends Document>> batches = new ArrayList<>();
+
+        for (int i = 0; i < documentList.size(); i += UPDATE_BATCH_SIZE) {
+            final List<? extends Document> batch = documentList.subList(i,
+                    Math.min(documentList.size(), i + UPDATE_BATCH_SIZE));
+            batches.add(batch);
+        }
+
+        return batches;
     }
 
     private AmazonCloudSearchDomain getDocumentServiceClient(final String domainName) {

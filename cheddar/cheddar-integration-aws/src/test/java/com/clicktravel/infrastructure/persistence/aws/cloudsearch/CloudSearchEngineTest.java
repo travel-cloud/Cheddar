@@ -24,10 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import java.beans.BeanInfo;
@@ -244,7 +241,8 @@ public class CloudSearchEngineTest {
     @Test
     public void shouldUpdate_withDocuments() throws Exception {
         // Given
-        final Collection<StubDocument> documents = randomCollectionOfStubDocuments();
+        final int numberOfDocumentsToUpdate = Randoms.randomIntInRange(1, 3000);
+        final Collection<StubDocument> documents = randomCollectionOfStubDocuments(numberOfDocumentsToUpdate);
         final String namespace = randomString(10);
         final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
         final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
@@ -280,21 +278,27 @@ public class CloudSearchEngineTest {
         final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
         final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
                 .forClass(UploadDocumentsRequest.class);
-        PowerMockito.verifyStatic();
+        final int numberOfBatches = (numberOfDocumentsToUpdate / 1000) + 1;
+        PowerMockito.verifyStatic(times(numberOfBatches));
         JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
-        verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
-        final Collection<DocumentUpdate> documentUpdates = documentUpdateCollectionCaptor.getValue();
-        assertEquals(documents.size(), documentUpdates.size());
-        for (final DocumentUpdate documentUpdate : documentUpdates) {
-            assertEquals(Type.ADD, documentUpdate.getType());
-            for (final Field field : documentUpdate.getFields()) {
-                if (field.getName().equals("stringProperty")) {
-                    assertTrue(documents.stream().anyMatch(d -> d.getStringProperty().equals(field.getValue())));
+        verify(mockDocumentServiceClient, times(numberOfBatches))
+                .uploadDocuments(uploadDocumentsRequestCaptor.capture());
+
+        for (final Collection<DocumentUpdate> documentUpdates : documentUpdateCollectionCaptor.getAllValues()) {
+            assertTrue(documentUpdates.size() <= 1000);
+            for (final DocumentUpdate documentUpdate : documentUpdates) {
+                assertEquals(Type.ADD, documentUpdate.getType());
+                for (final Field field : documentUpdate.getFields()) {
+                    if (field.getName().equals("stringProperty")) {
+                        assertTrue(documents.stream().anyMatch(d -> d.getStringProperty().equals(field.getValue())));
+                    }
                 }
             }
         }
-        final UploadDocumentsRequest uploadDocumentsRequest = uploadDocumentsRequestCaptor.getValue();
-        assertInputStreamEquals(jsonBytes, uploadDocumentsRequest.getDocuments());
+
+        for (final UploadDocumentsRequest uploadDocumentsRequest : uploadDocumentsRequestCaptor.getAllValues()) {
+            assertInputStreamEquals(jsonBytes, uploadDocumentsRequest.getDocuments());
+        }
     }
 
     @Test
@@ -446,7 +450,7 @@ public class CloudSearchEngineTest {
     @Test
     public void shouldDelete_withDocuments() throws Exception {
         // Given
-        final Collection<StubDocument> documents = randomCollectionOfStubDocuments();
+        final Collection<StubDocument> documents = randomCollectionOfStubDocuments(Randoms.randomIntInRange(1, 10));
         final String namespace = randomString(10);
         final DocumentConfiguration mockStubDocumentConfiguration = mock(DocumentConfiguration.class);
         final Map<String, PropertyDescriptor> properties = getStubDocumentPropertyDescriptors();
@@ -849,9 +853,8 @@ public class CloudSearchEngineTest {
         assertNotNull(actualException);
     }
 
-    private Collection<StubDocument> randomCollectionOfStubDocuments() {
+    private Collection<StubDocument> randomCollectionOfStubDocuments(final int numberOfDocuments) {
         final Collection<StubDocument> documents = new ArrayList<>();
-        final int numberOfDocuments = Randoms.randomIntInRange(1, 10);
         for (int i = 0; i < numberOfDocuments; i++) {
             documents.add(randomStubDocument());
         }
