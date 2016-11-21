@@ -29,11 +29,10 @@ import com.clicktravel.common.functional.Equals;
 import io.intercom.api.*;
 
 public class IntercomMetricCollector implements MetricCollector {
-    Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public IntercomMetricCollector(final String appId, final String apiKey) {
-        Intercom.setAppID(appId);
-        Intercom.setApiKey(apiKey);
+    public IntercomMetricCollector(final String personalAccessToken) {
+        Intercom.setToken(personalAccessToken);
     }
 
     @Override
