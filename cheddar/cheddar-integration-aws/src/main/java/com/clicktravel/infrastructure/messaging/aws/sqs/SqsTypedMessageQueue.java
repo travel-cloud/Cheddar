@@ -16,10 +16,17 @@
  */
 package com.clicktravel.infrastructure.messaging.aws.sqs;
 
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.clicktravel.cheddar.infrastructure.messaging.InvalidTypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.SimpleMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageParseException;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageReceiveException;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,6 +35,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * AWS SQS implementation for a {@code MessageQueue<TypedMessage>}
  */
 public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SqsBasicMessageQueue.class);
 
     public SqsTypedMessageQueue(final SqsQueueResource sqsQueueResource) {
         super(sqsQueueResource);
@@ -61,6 +70,42 @@ public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
             return new InvalidTypedMessage(messageId, receiptHandle,
                     new MessageParseException("Could not parse message from SQS message: " + sqsMessage.getBody()));
         }
+    }
+
+    @Override
+    public List<TypedMessage> receive() throws MessageReceiveException {
+        final List<TypedMessage> receivedMessages = super.receive();
+        logReceivedMessages(receivedMessages);
+        return receivedMessages;
+    }
+
+    @Override
+    public List<TypedMessage> receive(final int waitTimeSeconds, final int maxMessages) throws MessageReceiveException {
+        final List<TypedMessage> receivedMessages = super.receive(waitTimeSeconds, maxMessages);
+        logReceivedMessages(receivedMessages);
+        return receivedMessages;
+    }
+
+    @Override
+    public void send(final TypedMessage message) throws MessageSendException {
+        logSendMessage(message);
+        super.send(message);
+    }
+
+    @Override
+    public void sendDelayedMessage(final TypedMessage message, final int delaySeconds) throws MessageSendException {
+        logSendMessage(message);
+        super.sendDelayedMessage(message, delaySeconds);
+    }
+
+    private void logReceivedMessages(final List<TypedMessage> receivedMessages) {
+        for (final TypedMessage message : receivedMessages) {
+            LOGGER.debug("MSG-RECV [{}] [{}]", message.getType(), message.getPayload());
+        }
+    }
+
+    private void logSendMessage(final TypedMessage message) {
+        LOGGER.debug("MSG-SEND [{}] [{}]", message.getType(), message.getPayload());
     }
 
 }
