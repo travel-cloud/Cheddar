@@ -26,7 +26,7 @@ import com.google.gson.GsonBuilder;
 
 public class LoggingUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoggingUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingUtils.class);
     private static final Gson MAPPER;
 
     static {
@@ -54,11 +54,11 @@ public class LoggingUtils {
 
     private static void logDebug(final String template, final String tableName, final Object item) {
         try {
-            if (logger.isDebugEnabled()) {
-                logger.debug(template, tableName, MAPPER.toJson(item));
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(template, tableName, MAPPER.toJson(item));
             }
         } catch (final Exception e) {
-            // Ignore mapping exceptions so that the execution is not interrupted because of the error during logging
+            LOGGER.warn("Error during logging the interaction with DynamoDb: ", e);
         }
     }
 }
