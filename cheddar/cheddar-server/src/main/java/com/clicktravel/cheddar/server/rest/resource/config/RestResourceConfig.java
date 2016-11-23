@@ -19,12 +19,14 @@ package com.clicktravel.cheddar.server.rest.resource.config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.Level;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -59,7 +61,8 @@ public class RestResourceConfig extends ResourceConfig {
         register(ObjectMapperProvider.class);
         register(JacksonFeature.class);
         register(new LoggingFeature(
-                java.util.logging.Logger.getLogger("com.clicktravel.cheddar.server.http.filter.logging")));
+                java.util.logging.Logger.getLogger("com.clicktravel.cheddar.server.http.filter.logging"), Level.FINE,
+                Verbosity.PAYLOAD_ANY, Integer.MAX_VALUE));
         registerResources("com.clicktravel.cheddar.rest.exception.mapper", "com.clicktravel.cheddar.server.http.filter",
                 "com.clicktravel.cheddar.server.rest.resource.status", "com.clicktravel.services");
         property(ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED, true);
