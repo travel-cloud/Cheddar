@@ -99,13 +99,25 @@ public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
     }
 
     private void logReceivedMessages(final List<TypedMessage> receivedMessages) {
-        for (final TypedMessage message : receivedMessages) {
-            LOGGER.debug("MSG-RECV [{}] [{}]", message.getType(), message.getPayload());
+        if (isMessageQueueLoggable()) {
+            for (final TypedMessage message : receivedMessages) {
+                try {
+                    LOGGER.debug("MSG-RECV [{}] [{}]", message.getType(), message.getPayload());
+                } catch (final MessageParseException e) {
+                    LOGGER.debug("MSG-RECV [{}]", e.getMessage());
+                }
+            }
         }
     }
 
     private void logSendMessage(final TypedMessage message) {
-        LOGGER.debug("MSG-SEND [{}] [{}]", message.getType(), message.getPayload());
+        if (message != null && isMessageQueueLoggable()) {
+            LOGGER.debug("MSG-SEND [{}] [{}]", message.getType(), message.getPayload());
+        }
+    }
+
+    private boolean isMessageQueueLoggable() {
+        return getName() != null && (getName().contains("-low-priority-") || getName().contains("-high-priority-"));
     }
 
 }

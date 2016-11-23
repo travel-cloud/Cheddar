@@ -78,7 +78,9 @@ public class SqsBasicMessageQueue extends SqsMessageQueue<BasicMessage> {
     }
 
     private void logSendMessage(final BasicMessage message) {
-        LOGGER.debug("MSG-SEND [{}] [{}]", message.getClass().getSimpleName(), message.getBody());
+        if (message != null) {
+            LOGGER.debug("MSG-SEND [{}] [{}]", message.getClass().getSimpleName(), message.getBody());
+        }
     }
 
 }
