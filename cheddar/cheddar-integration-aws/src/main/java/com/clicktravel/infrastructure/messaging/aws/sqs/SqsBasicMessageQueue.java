@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.amazonaws.services.sqs.model.Message;
 import com.clicktravel.cheddar.infrastructure.messaging.BasicMessage;
 import com.clicktravel.cheddar.infrastructure.messaging.SimpleBasicMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageParseException;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageReceiveException;
 import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendException;
 
@@ -33,6 +34,10 @@ public class SqsBasicMessageQueue extends SqsMessageQueue<BasicMessage> {
 
     public SqsBasicMessageQueue(final SqsQueueResource sqsQueueResource) {
         super(sqsQueueResource);
+    }
+
+    public SqsBasicMessageQueue(final SqsQueueResource sqsQueueResource, final boolean logReceivedMessages) {
+        super(sqsQueueResource, logReceivedMessages);
     }
 
     @Override
@@ -72,13 +77,19 @@ public class SqsBasicMessageQueue extends SqsMessageQueue<BasicMessage> {
     }
 
     private void logReceivedMessages(final List<BasicMessage> receivedMessages) {
-        for (final BasicMessage message : receivedMessages) {
-            LOGGER.debug("MSG-RECV [{}] [{}]", message.getClass().getSimpleName(), message.getBody());
+        if (isLogReceivedMessages()) {
+            for (final BasicMessage message : receivedMessages) {
+                try {
+                    LOGGER.debug("MSG-RECV [{}] [{}]", message.getClass().getSimpleName(), message.getBody());
+                } catch (final MessageParseException e) {
+                    LOGGER.debug("MSG-RECV [{}]", e.getMessage());
+                }
+            }
         }
     }
 
     private void logSendMessage(final BasicMessage message) {
-        if (message != null) {
+        if (message != null && isLogReceivedMessages()) {
             LOGGER.debug("MSG-SEND [{}] [{}]", message.getClass().getSimpleName(), message.getBody());
         }
     }

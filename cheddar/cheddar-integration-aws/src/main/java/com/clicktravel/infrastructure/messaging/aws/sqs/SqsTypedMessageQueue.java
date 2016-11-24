@@ -42,6 +42,10 @@ public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
         super(sqsQueueResource);
     }
 
+    public SqsTypedMessageQueue(final SqsQueueResource sqsQueueResource, final boolean logReceivedMessages) {
+        super(sqsQueueResource, logReceivedMessages);
+    }
+
     @Override
     protected String toSqsMessageBody(final TypedMessage typedMessage) {
         final ObjectMapper mapper = new ObjectMapper();
@@ -99,7 +103,7 @@ public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
     }
 
     private void logReceivedMessages(final List<TypedMessage> receivedMessages) {
-        if (isMessageQueueLoggable()) {
+        if (isLogReceivedMessages()) {
             for (final TypedMessage message : receivedMessages) {
                 try {
                     LOGGER.debug("MSG-RECV [{}] [{}]", message.getType(), message.getPayload());
@@ -111,13 +115,9 @@ public class SqsTypedMessageQueue extends SqsMessageQueue<TypedMessage> {
     }
 
     private void logSendMessage(final TypedMessage message) {
-        if (message != null && isMessageQueueLoggable()) {
+        if (message != null && isLogReceivedMessages()) {
             LOGGER.debug("MSG-SEND [{}] [{}]", message.getType(), message.getPayload());
         }
-    }
-
-    private boolean isMessageQueueLoggable() {
-        return getName() != null && (getName().contains("-low-priority-") || getName().contains("-high-priority-"));
     }
 
 }
