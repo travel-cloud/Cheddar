@@ -19,29 +19,22 @@ package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class LoggingUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingUtils.class);
-    private static final Gson MAPPER;
+    private static final ObjectMapper MAPPER;
 
     static {
-        MAPPER = new GsonBuilder().addSerializationExclusionStrategy(new ExclusionStrategy() {
-
-            @Override
-            public boolean shouldSkipField(final FieldAttributes f) {
-                return "password".equalsIgnoreCase(f.getName());
-            }
-
-            @Override
-            public boolean shouldSkipClass(final Class<?> clazz) {
-                return false;
-            }
-        }).create();
+        MAPPER = new ObjectMapper();
+        MAPPER.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
+        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        MAPPER.registerModule(new JodaModule());
     }
 
     public static void logWriteItemToDatabase(final String tableName, final Object item) {
@@ -55,7 +48,7 @@ public class LoggingUtils {
     private static void logDebug(final String template, final String tableName, final Object item) {
         try {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(template, tableName, MAPPER.toJson(item));
+                LOGGER.debug(template, tableName, MAPPER.writeValueAsString(item));
             }
         } catch (final Exception e) {
             LOGGER.warn("Error during logging the interaction with DynamoDb: ", e);

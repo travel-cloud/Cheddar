@@ -80,7 +80,7 @@ public class SqsBasicMessageQueue extends SqsMessageQueue<BasicMessage> {
         if (isLogReceivedMessages()) {
             for (final BasicMessage message : receivedMessages) {
                 try {
-                    LOGGER.debug("MSG-RECV [{}] [{}]", message.getClass().getSimpleName(), message.getBody());
+                    LOGGER.debug("MSG-RECV [{}] [{}]", "", message.getBody());
                 } catch (final MessageParseException e) {
                     LOGGER.debug("MSG-RECV [{}]", e.getMessage());
                 }
@@ -90,7 +90,7 @@ public class SqsBasicMessageQueue extends SqsMessageQueue<BasicMessage> {
 
     private void logSendMessage(final BasicMessage message) {
         if (message != null && isLogReceivedMessages()) {
-            LOGGER.debug("MSG-SEND [{}] [{}]", message.getClass().getSimpleName(), message.getBody());
+            LOGGER.debug("MSG-SEND [{}] [{}]", "", message.getBody());
         }
     }
 
