@@ -20,6 +20,7 @@ include (
     "cheddar:cheddar-cdm",
     "cheddar:cheddar-integration-mocks",
     "cheddar:cheddar-integration-aws",
+	"cheddar:cheddar-integration-log4j",
     "cheddar:cheddar-events",
     "cheddar:cheddar-system-events",
     "cheddar:cheddar-context",
