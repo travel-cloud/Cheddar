@@ -696,15 +696,15 @@ public class InMemoryDatabaseTemplateTest {
         databaseTemplate.create(stubItem);
 
         // When
-        ItemConstraintViolationException actaulException = null;
+        ItemConstraintViolationException actualException = null;
         try {
             databaseTemplate.create(stubItem);
         } catch (final ItemConstraintViolationException e) {
-            actaulException = e;
+            actualException = e;
         }
 
         // Then
-        assertNotNull(actaulException);
+        assertNotNull(actualException);
     }
 
     @Test
