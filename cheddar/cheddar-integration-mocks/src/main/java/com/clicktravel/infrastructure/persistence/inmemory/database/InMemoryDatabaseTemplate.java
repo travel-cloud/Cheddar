@@ -67,13 +67,14 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
     }
 
     @Override
-    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T create(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemId itemId = getItemId(item);
         final String tableName = getItemTableName(item.getClass());
         final SerializedItem oldSerializedItem = getItemMap(tableName).get(itemId);
         if (oldSerializedItem != null) {
-            throw new IllegalAccessError("Item already exist with identifier [" + itemId.value() + "] in ["
-                    + item.getClass() + "] repository");
+            throw new ItemConstraintViolationException(itemId.value(),
+                    "Item already exist with identifier in [" + item.getClass() + "] repository");
         }
         createUniqueConstraints(item);
         item.setVersion(1L);
@@ -83,7 +84,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T update(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemId itemId = getItemId(item);
         final Class<? extends Item> itemType = item.getClass();
         final String tableName = getItemTableName(itemType);
@@ -93,8 +95,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
         }
         final T oldItem = (T) oldSerializedItem.getEntity(item.getClass());
         if (!item.getVersion().equals(oldItem.getVersion())) {
-            throw new IllegalAccessError("Expected version [" + item.getVersion() + "] but was ["
-                    + oldItem.getVersion() + "]");
+            throw new IllegalAccessError(
+                    "Expected version [" + item.getVersion() + "] but was [" + oldItem.getVersion() + "]");
         }
         deleteUniqueConstraints(oldItem);
         try {
@@ -177,7 +179,7 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
 
     /**
      * Checks the presence of a matching unique constraint for the given item property
-     * 
+     *
      * @param item The Item for which to check unique constraints
      * @param propertyName The name of the property for which the unique constraint should be checked
      * @param propertyValue The value of the property which needs to be checked for presence of unique constraint
@@ -186,8 +188,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
     boolean hasMatchingUniqueConstraint(final Item item, final String propertyName, final String propertyValue) {
         final Class<? extends Item> itemClass = item.getClass();
         final String tableName = getItemTableName(itemClass);
-        final Map<String, ItemId> uniqueConstraintsForProperty = uniqueConstraints.get(newUniqueConstraintKey(
-                tableName, propertyName));
+        final Map<String, ItemId> uniqueConstraintsForProperty = uniqueConstraints
+                .get(newUniqueConstraintKey(tableName, propertyName));
         final ItemId itemId = getItemId(item);
         for (final Entry<String, ItemId> entry : uniqueConstraintsForProperty.entrySet()) {
             if (entry.getValue().equals(itemId)) {
@@ -320,8 +322,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
                         break;
                 }
             } catch (final Exception e) {
-                throw new IllegalStateException("No getter for property [" + attribute + "] on class: ["
-                        + item.getClass() + "]");
+                throw new IllegalStateException(
+                        "No getter for property [" + attribute + "] on class: [" + item.getClass() + "]");
             }
 
         }
