@@ -337,13 +337,21 @@ public class Randoms {
     }
 
     /**
+     * @param array
+     * @return An item from the given array
+     */
+    public static <T> T randomItem(final T[] array) {
+        return array[Randoms.randomInt(array.length)];
+    }
+
+    /**
      * @param collection
      * @return An item from the given collection
      */
     public static <T> T randomItem(final Collection<T> collection) {
         @SuppressWarnings("unchecked")
         final T[] collectionAsArray = (T[]) collection.toArray();
-        return collectionAsArray[Randoms.randomInt(collectionAsArray.length)];
+        return Randoms.randomItem(collectionAsArray);
     }
 
     private static Random newRandom() {
