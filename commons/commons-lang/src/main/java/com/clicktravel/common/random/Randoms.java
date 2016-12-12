@@ -226,8 +226,8 @@ public class Randoms {
     public static BigDecimal randomPositiveBigDecimal(final int maxValue, final int precision) {
         final BigInteger maxiumValue = BigInteger.valueOf(maxValue).multiply(BigInteger.TEN.pow(precision))
                 .subtract(BigInteger.ONE);
-        return BigDecimal.valueOf(Randoms.randomInt(maxiumValue.intValue()), precision).add(
-                BigDecimal.valueOf(BigInteger.ONE.intValue(), precision));
+        return BigDecimal.valueOf(Randoms.randomInt(maxiumValue.intValue()), precision)
+                .add(BigDecimal.valueOf(BigInteger.ONE.intValue(), precision));
     }
 
     /**
@@ -334,6 +334,16 @@ public class Randoms {
      */
     public static String randomId() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * @param collection
+     * @return An item from the given collection
+     */
+    public static <T> T randomItem(final Collection<T> collection) {
+        @SuppressWarnings("unchecked")
+        final T[] collectionAsArray = (T[]) collection.toArray();
+        return collectionAsArray[Randoms.randomInt(collectionAsArray.length)];
     }
 
     private static Random newRandom() {
