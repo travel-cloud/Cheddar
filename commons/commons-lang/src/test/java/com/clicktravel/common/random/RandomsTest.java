@@ -16,15 +16,13 @@
  */
 package com.clicktravel.common.random;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -360,6 +358,36 @@ public class RandomsTest {
         for (final Entry<String, Integer> entry : knownCheckDigits.entrySet()) {
             final int checkDigit = Randoms.getCreditCardCheckDigit(entry.getKey());
             assertEquals("Check digit not as expected", entry.getValue(), Integer.valueOf(checkDigit));
+        }
+    }
+
+    @Test
+    public void shouldReturnRandomItemFromArray() {
+        final String[] itemArray = { "ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO", "FOXTROT", "GOLF", "HOTEL", "INDIA",
+                "JULIET" };
+        final List<String> itemCollection = Arrays.asList(itemArray);
+        for (int n = 0; n < SAMPLE_SIZE; n++) {
+            final String item = Randoms.randomItem(itemArray);
+            assertThat(itemCollection, hasItem(item));
+        }
+    }
+
+    @Test
+    public void shouldReturnRandomItemFromCollection() {
+        final ArrayList<String> itemCollection = new ArrayList<>();
+        itemCollection.add("ALPHA");
+        itemCollection.add("BRAVO");
+        itemCollection.add("CHARLIE");
+        itemCollection.add("DELTA");
+        itemCollection.add("ECHO");
+        itemCollection.add("FOXTROT");
+        itemCollection.add("GOLF");
+        itemCollection.add("HOTEL");
+        itemCollection.add("INDIA");
+        itemCollection.add("JULIET");
+        for (int n = 0; n < SAMPLE_SIZE; n++) {
+            final String item = Randoms.randomItem(itemCollection);
+            assertThat(itemCollection, hasItem(item));
         }
     }
 }
