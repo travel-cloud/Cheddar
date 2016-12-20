@@ -153,6 +153,26 @@ public class RandomsTest {
     }
 
     @Test
+    public void shouldReturnRandomEnumInSet_givenEnumSet() {
+        assertTrue("Need at least 5 possible enum values for viable test", TestEnum.values().length >= 5);
+
+        final Set<TestEnum> enumSet = new HashSet<>();
+        for (final TestEnum testEnum : TestEnum.values()) {
+            enumSet.add(testEnum);
+        }
+
+        final Set<TestEnum> randomEnumsInSet = new HashSet<>();
+        for (int n = 0; n < 100; n++) {
+            final TestEnum randomEnum = Randoms.randomEnumInSet(enumSet);
+            assertNotNull(randomEnum);
+            randomEnumsInSet.add(randomEnum);
+        }
+
+        assertTrue("100 random samples should not all be same enum value: " + randomEnumsInSet.iterator().next(),
+                randomEnumsInSet.size() > 1);
+    }
+
+    @Test
     public void shouldReturnRandomSubset_givenSet() {
         final Set<Object> originalSet = new HashSet<>();
         for (int n = 0; n < 30; n++) {
