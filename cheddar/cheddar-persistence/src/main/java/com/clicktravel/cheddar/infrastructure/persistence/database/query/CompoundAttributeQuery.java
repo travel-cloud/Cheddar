@@ -16,6 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
+import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.common.validation.Check;
 
 public class CompoundAttributeQuery extends AttributeQuery {
@@ -38,6 +39,10 @@ public class CompoundAttributeQuery extends AttributeQuery {
 
     public Condition getSupportingCondition() {
         return supportingCondition;
+    }
+
+    public <T extends Item> Class<?> getSupportingAttributeType(final Class<T> itemClass) {
+        return getAttributeType(supportingAttributeName, itemClass);
     }
 
     @Override

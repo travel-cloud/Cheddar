@@ -214,43 +214,6 @@ public class DynamoDocumentStoreTemplateTest {
     }
 
     @Test
-    public void shouldNotQueryIndex_withCompoundAttributeQueryAndMultipleSupportingConditionValues() {
-        // Given
-        final ItemId itemId = new ItemId(randomId());
-
-        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
-                tableName);
-        itemConfiguration.registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
-        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
-        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
-
-        final Table mockTable = mock(Table.class);
-        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
-
-        final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
-                mockDatabaseSchemaHolder);
-        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
-
-        final Set<String> conditions = new HashSet<>();
-        conditions.add(String.valueOf(randomInt(10)));
-        conditions.add(String.valueOf(randomInt(20)));
-
-        // When
-        InvalidConditionValuesException expectedException = null;
-        try {
-            dynamoDocumentStoreTemplate.fetch(
-                    new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, itemId.value()),
-                            "gsiSupportingValue", new Condition(Operators.EQUALS, conditions)),
-                    StubWithGlobalSecondaryIndexItem.class);
-        } catch (final InvalidConditionValuesException e) {
-            expectedException = e;
-        }
-
-        // Then
-        assertNotNull(expectedException);
-    }
-
-    @Test
     public void shouldNotCreate_withItem() {
         // Given
         final ItemId itemId = new ItemId(randomId());

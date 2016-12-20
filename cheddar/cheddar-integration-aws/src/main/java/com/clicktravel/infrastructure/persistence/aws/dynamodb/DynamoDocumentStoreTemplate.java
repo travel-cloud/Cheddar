@@ -18,7 +18,6 @@ package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -252,7 +251,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         if (itemConfiguration.hasIndexOn(query.getAttributeName())
                 && query.getCondition().getComparisonOperator() == Operators.EQUALS) {
 
-            final QuerySpec querySpec = generateQuerySpec(query, itemClass);
+            final QuerySpec querySpec = QuerySpecBuilder.build(query, itemClass);
             final ItemCollection<QueryOutcome> queryOutcome;
 
             if (itemConfiguration.primaryKeyDefinition().propertyName().equals(query.getAttributeName())) {
@@ -290,53 +289,10 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         return totalItems;
     }
 
-    private <T extends Item> QuerySpec generateQuerySpec(final AttributeQuery query, final Class<T> itemClass) {
-        final QuerySpec querySpec = new QuerySpec().withHashKey(query.getAttributeName(),
-                query.getCondition().getValues().iterator().next());
-
-        if (CompoundAttributeQuery.class.isAssignableFrom(query.getClass())) {
-            final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) query;
-            addRangeKeyConditionToQuerySpec(querySpec, compoundAttributeQuery, itemClass);
-        }
-
-        return querySpec;
-    }
-
-    private <T extends Item> void addRangeKeyConditionToQuerySpec(final QuerySpec querySpec,
-            final CompoundAttributeQuery compoundAttributeQuery, final Class<T> itemClass) {
-        final Set<String> supportingConditionValues = compoundAttributeQuery.getSupportingCondition().getValues();
-        validateSupportingConditionValues(supportingConditionValues);
-
-        final String supportingConditionValue = supportingConditionValues.iterator().next();
-        final Operators comparisonOperator = compoundAttributeQuery.getSupportingCondition().getComparisonOperator();
-        final Class<?> clazz = getQueryOperandType(compoundAttributeQuery.getSupportingAttributeName(), itemClass);
-
-        try {
-            final Object value = clazz.getConstructor(String.class).newInstance(supportingConditionValue);
-
-            final RangeKeyCondition rangeKeyCondition = RangeKeyConditionBuilder
-                    .build(compoundAttributeQuery.getSupportingAttributeName(), value, comparisonOperator);
-            querySpec.withRangeKeyCondition(rangeKeyCondition);
-        } catch (final Exception e) {
-            throw new PersistenceResourceFailureException(
-                    String.format("Could not add range key condition for query: %s on item %s.", compoundAttributeQuery,
-                            itemClass.getSimpleName()),
-                    e);
-        }
-    }
-
-    private void validateSupportingConditionValues(final Set<String> supportingConditionValues) {
-        if (supportingConditionValues.size() != 1) {
-            throw new InvalidConditionValuesException(String.format(
-                    "Only 1 supporting condition value allowed for a CompoundAttributeQuery.  %s supplied.",
-                    supportingConditionValues.size()));
-        }
-    }
-
     private <T extends Item> ScanSpec generateScanSpec(final AttributeQuery query, final Class<T> tableItemType)
             throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, SecurityException {
-        final Class<?> clazz = getQueryOperandType(query.getAttributeName(), tableItemType);
+        final Class<?> clazz = query.getAttributeType(tableItemType);
 
         ScanSpec scanSpec = new ScanSpec();
 
@@ -392,17 +348,6 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             scanSpec = scanSpec.withValueMap(valueMap);
         }
         return scanSpec;
-    }
-
-    private <T extends Item> Class<?> getQueryOperandType(final String fieldName, final Class<T> itemClass) {
-        Class<?> returnType = null;
-        final Field[] fieldArray = itemClass.getDeclaredFields();
-        for (final Field field : fieldArray) {
-            if (fieldName.equals(field.getName())) {
-                returnType = field.getType();
-            }
-        }
-        return returnType;
     }
 
     private PrimaryKey getPrimaryKey(final ItemId itemId, final ItemConfiguration itemConfiguration) {

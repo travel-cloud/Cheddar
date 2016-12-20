@@ -16,6 +16,10 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
+import java.lang.reflect.Field;
+
+import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
+
 public class AttributeQuery extends AbstractQuery {
 
     private final String attributeName;
@@ -27,6 +31,26 @@ public class AttributeQuery extends AbstractQuery {
 
     public String getAttributeName() {
         return attributeName;
+    }
+
+    public <T extends Item> Class<?> getAttributeType(final Class<T> itemClass) {
+        return getAttributeType(attributeName, itemClass);
+    }
+
+    protected <T extends Item> Class<?> getAttributeType(final String attribute, final Class<T> itemClass) {
+        Class<?> returnType = null;
+        final Field[] fieldArray = itemClass.getDeclaredFields();
+        for (final Field field : fieldArray) {
+            if (attribute.equals(field.getName())) {
+                returnType = field.getType();
+            }
+        }
+
+        if (returnType == null) {
+            throw new NonExistentAttributeException(attributeName, itemClass);
+        }
+
+        return returnType;
     }
 
     @Override
