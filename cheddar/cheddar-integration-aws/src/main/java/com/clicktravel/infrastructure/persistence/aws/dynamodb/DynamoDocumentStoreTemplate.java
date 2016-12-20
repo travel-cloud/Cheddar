@@ -312,10 +312,10 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final Class<?> clazz = getQueryOperandType(compoundAttributeQuery.getSupportingAttributeName(), itemClass);
 
         try {
-            final Object valueInstance = clazz.getConstructor(String.class).newInstance(supportingConditionValue);
+            final Object value = clazz.getConstructor(String.class).newInstance(supportingConditionValue);
 
             final RangeKeyCondition rangeKeyCondition = RangeKeyConditionBuilder
-                    .build(compoundAttributeQuery.getSupportingAttributeName(), valueInstance, comparisonOperator);
+                    .build(compoundAttributeQuery.getSupportingAttributeName(), value, comparisonOperator);
             querySpec.withRangeKeyCondition(rangeKeyCondition);
         } catch (final Exception e) {
             throw new PersistenceResourceFailureException(
