@@ -258,7 +258,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 // if the query is for the has then call query on table
                 queryOutcome = table.query(querySpec);
             } else {
-                final Index index = table.getIndex(query.getAttributeName() + "_idx");
+                final String indexName = IndexNameBuilder.build(query);
+                final Index index = table.getIndex(indexName);
                 queryOutcome = index.query(querySpec);
             }
 

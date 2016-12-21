@@ -153,7 +153,7 @@ public class DynamoDbDataGenerator {
             globalSecondaryIndexKeySchema.add(new KeySchemaElement("gsi", "S").withKeyType(KeyType.HASH));
             globalSecondaryIndexKeySchema
                     .add(new KeySchemaElement("gsiSupportingValue", "N").withKeyType(KeyType.RANGE));
-            globalSecondaryIndex.setIndexName("gsi_idx");
+            globalSecondaryIndex.setIndexName("gsi_gsiSupportingValue_idx");
             globalSecondaryIndex.setKeySchema(globalSecondaryIndexKeySchema);
             globalSecondaryIndex.setProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
             final Projection projection = new Projection();
