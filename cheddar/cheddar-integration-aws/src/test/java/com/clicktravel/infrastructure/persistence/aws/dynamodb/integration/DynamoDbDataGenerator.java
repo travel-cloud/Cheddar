@@ -29,16 +29,14 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.*;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubItem;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubVariantItem;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubVariantTwoItem;
-import com.clicktravel.infrastructure.persistence.aws.dynamodb.StubWithRangeItem;
+import com.clicktravel.infrastructure.persistence.aws.dynamodb.*;
 
 public class DynamoDbDataGenerator {
 
     private final String unitTestSchemaName = "unittest";
     private final String stubItemTableName = "stub_item_" + randomString(10);
     private final String stubItemWithRangeTableName = "stub_item_with_range_" + randomString(10);
+    private final String stubItemWithGsiTableName = "stub_item_with_gsi_" + randomString(10);
 
     public final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -46,27 +44,31 @@ public class DynamoDbDataGenerator {
 
     private final AmazonDynamoDBClient amazonDynamoDbClient;
 
-    DynamoDbDataGenerator(final AmazonDynamoDBClient amazonDynamoDbClient) {
+    public DynamoDbDataGenerator(final AmazonDynamoDBClient amazonDynamoDbClient) {
         this.amazonDynamoDbClient = amazonDynamoDbClient;
     }
 
-    String getUnitTestSchemaName() {
+    public String getUnitTestSchemaName() {
         return unitTestSchemaName;
     }
 
-    String getStubItemTableName() {
+    public String getStubItemTableName() {
         return stubItemTableName;
     }
 
-    String getStubItemWithRangeTableName() {
+    public String getStubItemWithRangeTableName() {
         return stubItemWithRangeTableName;
     }
 
-    Collection<String> getCreatedItemIds() {
+    public String getStubItemWithGsiTableName() {
+        return stubItemWithGsiTableName;
+    }
+
+    public Collection<String> getCreatedItemIds() {
         return createdItemIds;
     }
 
-    void createStubItemTable() throws Exception {
+    public void createStubItemTable() throws Exception {
         final String tableName = unitTestSchemaName + "." + stubItemTableName;
         boolean tableCreated = false;
         try {
@@ -96,7 +98,7 @@ public class DynamoDbDataGenerator {
         }
     }
 
-    void createStubItemWithRangeTable() throws Exception {
+    public void createStubItemWithRangeTable() throws Exception {
         final String tableName = unitTestSchemaName + "." + stubItemWithRangeTableName;
         boolean tableCreated = false;
         try {
@@ -128,17 +130,61 @@ public class DynamoDbDataGenerator {
         }
     }
 
+    public void createStubItemWithGlobalSecondaryIndexTable() throws Exception {
+        final String tableName = unitTestSchemaName + "." + stubItemWithGsiTableName;
+        boolean tableCreated = false;
+        try {
+            final DescribeTableResult result = amazonDynamoDbClient.describeTable(tableName);
+            if (isTableCreated(tableName, result)) {
+                tableCreated = true;
+            }
+        } catch (final ResourceNotFoundException e) {
+            tableCreated = false;
+        }
+        if (!tableCreated) {
+            final Collection<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+            attributeDefinitions.add(new AttributeDefinition("id", ScalarAttributeType.S));
+            attributeDefinitions.add(new AttributeDefinition("gsi", ScalarAttributeType.S));
+            attributeDefinitions.add(new AttributeDefinition("gsiSupportingValue", ScalarAttributeType.N));
+            final Collection<KeySchemaElement> keySchema = new ArrayList<>();
+            keySchema.add(new KeySchemaElement("id", "S").withKeyType(KeyType.HASH));
+            final GlobalSecondaryIndex globalSecondaryIndex = new GlobalSecondaryIndex();
+            final Collection<KeySchemaElement> globalSecondaryIndexKeySchema = new ArrayList<>();
+            globalSecondaryIndexKeySchema.add(new KeySchemaElement("gsi", "S").withKeyType(KeyType.HASH));
+            globalSecondaryIndexKeySchema
+                    .add(new KeySchemaElement("gsiSupportingValue", "N").withKeyType(KeyType.RANGE));
+            globalSecondaryIndex.setIndexName("gsi_idx");
+            globalSecondaryIndex.setKeySchema(globalSecondaryIndexKeySchema);
+            globalSecondaryIndex.setProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
+            final Projection projection = new Projection();
+            projection.setProjectionType(ProjectionType.ALL);
+            globalSecondaryIndex.setProjection(projection);
+            final CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
+                    .withAttributeDefinitions(attributeDefinitions).withKeySchema(keySchema)
+                    .withGlobalSecondaryIndexes(globalSecondaryIndex)
+                    .withProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
+            amazonDynamoDbClient.createTable(createTableRequest);
+
+            final long startTime = System.currentTimeMillis();
+            do {
+                Thread.sleep(1000);
+                final DescribeTableResult describeTableResult = amazonDynamoDbClient.describeTable(tableName);
+                tableCreated = isTableCreated(tableName, describeTableResult);
+            } while (!tableCreated && System.currentTimeMillis() - startTime < 60000);
+        }
+    }
+
     private boolean isTableCreated(final String fullStubItemTableName, final DescribeTableResult describeTableResult) {
         return fullStubItemTableName.equals(describeTableResult.getTable().getTableName())
                 && "ACTIVE".equals(describeTableResult.getTable().getTableStatus());
     }
 
-    void deletedCreatedItems() {
+    public void deletedCreatedItems() {
         for (final String id : createdItemIds) {
             final Map<String, AttributeValue> key = new HashMap<>();
             key.put("id", new AttributeValue(id));
-            final DeleteItemRequest deleteItemRequest = new DeleteItemRequest().withTableName(
-                    unitTestSchemaName + "." + stubItemTableName).withKey(key);
+            final DeleteItemRequest deleteItemRequest = new DeleteItemRequest()
+                    .withTableName(unitTestSchemaName + "." + stubItemTableName).withKey(key);
             try {
                 amazonDynamoDbClient.deleteItem(deleteItemRequest);
             } catch (final Exception e) {
@@ -147,7 +193,7 @@ public class DynamoDbDataGenerator {
         }
     }
 
-    StubItem randomStubItem() {
+    public StubItem randomStubItem() {
         final StubItem stubItem = new StubItem();
         stubItem.setId(randomId());
         stubItem.setStringProperty(randomString(10));
@@ -158,20 +204,20 @@ public class DynamoDbDataGenerator {
         return stubItem;
     }
 
-    StubItem createStubItem() {
+    public StubItem createStubItem() {
         final StubItem stubItem = randomStubItem();
         dynamoCreateItem(stubItem);
         return stubItem;
     }
 
-    StubItem createStubItemWithStringProperty(final String stringProperty) {
+    public StubItem createStubItemWithStringProperty(final String stringProperty) {
         final StubItem stubItem = randomStubItem();
         stubItem.setStringProperty(stringProperty);
         dynamoCreateItem(stubItem);
         return stubItem;
     }
 
-    StubItem createStubItemWithNullValues() {
+    public StubItem createStubItemWithNullValues() {
         final StubItem stubItem = new StubItem();
         stubItem.setId(randomId());
         stubItem.setVersion((long) randomInt(100));
@@ -179,7 +225,7 @@ public class DynamoDbDataGenerator {
         return stubItem;
     }
 
-    StubVariantItem createStubVariantItem() {
+    public StubVariantItem createStubVariantItem() {
         final StubVariantItem stubItem = new StubVariantItem();
         stubItem.setId(randomId());
         stubItem.setStringProperty(randomString(10));
@@ -195,15 +241,15 @@ public class DynamoDbDataGenerator {
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
         itemMap.put("discriminator", new AttributeValue().withS("a"));
-        final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
         return stubItem;
     }
 
-    StubVariantTwoItem createStubVariantTwoItem() {
+    public StubVariantTwoItem createStubVariantTwoItem() {
         final StubVariantTwoItem stubItem = new StubVariantTwoItem();
         stubItem.setId(randomId());
         stubItem.setStringProperty(randomString(10));
@@ -219,15 +265,15 @@ public class DynamoDbDataGenerator {
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
         itemMap.put("discriminator", new AttributeValue().withS("b"));
-        final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
         return stubItem;
     }
 
-    StubWithRangeItem createStubWithRangeItem() {
+    public StubWithRangeItem createStubWithRangeItem() {
         final StubWithRangeItem stubItem = new StubWithRangeItem();
         stubItem.setId(randomId());
         stubItem.setSupportingId(randomId());
@@ -246,15 +292,15 @@ public class DynamoDbDataGenerator {
             itemMap.put("stringSetProperty", new AttributeValue().withSS(stubItem.getStringSetProperty()));
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
-        final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                unitTestSchemaName + "." + stubItemWithRangeTableName).withItem(itemMap);
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(unitTestSchemaName + "." + stubItemWithRangeTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
         return stubItem;
     }
 
-    StubItem createStubItemWithExtraValues() {
+    public StubItem createStubItemWithExtraValues() {
         final StubItem stubItem = randomStubItem();
         final Map<String, AttributeValue> itemMap = new HashMap<>();
         itemMap.put("id", new AttributeValue(stubItem.getId()));
@@ -273,13 +319,22 @@ public class DynamoDbDataGenerator {
             itemMap.put(randomString(10), new AttributeValue(randomString()));
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
-        final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());
         return stubItem;
 
+    }
+
+    public StubWithGlobalSecondaryIndexItem randomStubWithGlobalSecondaryIndexItem() {
+        final StubWithGlobalSecondaryIndexItem stubItem = new StubWithGlobalSecondaryIndexItem();
+        stubItem.setId(randomId());
+        stubItem.setGsi(randomString(10));
+        stubItem.setGsiSupportingValue(randomInt(100));
+        stubItem.setVersion((long) randomInt(100));
+        return stubItem;
     }
 
     private void dynamoCreateItem(final StubItem stubItem) {
@@ -296,8 +351,8 @@ public class DynamoDbDataGenerator {
             itemMap.put("stringSetProperty", new AttributeValue().withSS(stubItem.getStringSetProperty()));
         }
         itemMap.put("version", new AttributeValue().withN(String.valueOf(stubItem.getVersion())));
-        final PutItemRequest putItemRequest = new PutItemRequest().withTableName(
-                unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
+        final PutItemRequest putItemRequest = new PutItemRequest()
+                .withTableName(unitTestSchemaName + "." + stubItemTableName).withItem(itemMap);
         amazonDynamoDbClient.putItem(putItemRequest);
         logger.debug("Created stub item with id: " + stubItem.getId());
         createdItemIds.add(stubItem.getId());

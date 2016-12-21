@@ -16,12 +16,12 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
-public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition implements CompoundKeyDefinition {
+public class CompoundIndexDefinition extends IndexDefinition implements CompoundKeyDefinition {
 
     private final String supportingPropertyName;
     private Class<?> supportingPropertyType;
 
-    public CompoundPrimaryKeyDefinition(final String property, final String supportingPropertyName) {
+    public CompoundIndexDefinition(final String property, final String supportingPropertyName) {
         super(property);
         this.supportingPropertyName = supportingPropertyName;
     }
@@ -34,7 +34,7 @@ public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition implement
     @Override
     public Class<?> supportingPropertyType() {
         if (supportingPropertyType == null) {
-            throw new IllegalStateException("Key not registered with ItemConfiguration");
+            throw new IllegalStateException("Index not registered with ItemConfiguration");
         }
         return supportingPropertyType;
     }
@@ -63,7 +63,7 @@ public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition implement
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final CompoundPrimaryKeyDefinition other = (CompoundPrimaryKeyDefinition) obj;
+        final CompoundIndexDefinition other = (CompoundIndexDefinition) obj;
         if (supportingPropertyName == null) {
             if (other.supportingPropertyName != null) {
                 return false;

@@ -47,13 +47,14 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
 
     @BeforeClass
     public static void createTables() throws Exception {
-        amazonDynamoDbClient = new AmazonDynamoDBClient(new BasicAWSCredentials(AwsIntegration.getAccessKeyId(),
-                AwsIntegration.getSecretKeyId()));
+        amazonDynamoDbClient = new AmazonDynamoDBClient(
+                new BasicAWSCredentials(AwsIntegration.getAccessKeyId(), AwsIntegration.getSecretKeyId()));
         amazonDynamoDbClient.setEndpoint(AwsIntegration.getDynamoDbEndpoint());
         dataGenerator = new DynamoDbDataGenerator(amazonDynamoDbClient);
 
         dataGenerator.createStubItemTable();
         dataGenerator.createStubItemWithRangeTable();
+        dataGenerator.createStubItemWithGlobalSecondaryIndexTable();
     }
 
     @Before
@@ -68,10 +69,15 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
                 dataGenerator.getStubItemWithRangeTableName(), new CompoundPrimaryKeyDefinition("id", "supportingId"));
         final ParentItemConfiguration stubParentItemConfiguration = new ParentItemConfiguration(StubParentItem.class,
                 dataGenerator.getStubItemTableName());
+        final ItemConfiguration stubItemwithGsiConfiguration = new ItemConfiguration(
+                StubWithGlobalSecondaryIndexItem.class, dataGenerator.getStubItemWithGsiTableName());
+        stubItemwithGsiConfiguration
+                .registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
         itemConfigurations.add(stubItemConfiguration);
         itemConfigurations.add(stubItemWithRangeConfiguration);
         itemConfigurations.add(stubParentItemConfiguration);
         itemConfigurations.add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantItem.class, "a"));
+        itemConfigurations.add(stubItemwithGsiConfiguration);
         databaseSchemaHolder = new DatabaseSchemaHolder(dataGenerator.getUnitTestSchemaName(), itemConfigurations);
     }
 
@@ -254,8 +260,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
 
         final List<StubItem> expectedMatchingItems = new ArrayList<StubItem>();
         final Long criteriaValue = Long.valueOf(2);
-        final Query query = new AttributeQuery("version", new Condition(Operators.GREATER_THAN_OR_EQUALS,
-                criteriaValue.toString()));
+        final Query query = new AttributeQuery("version",
+                new Condition(Operators.GREATER_THAN_OR_EQUALS, criteriaValue.toString()));
         for (int i = 0; i < 20; i++) {
             final StubItem item = dataGenerator.randomStubItem();
             if (Randoms.randomBoolean()) {
@@ -289,8 +295,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
 
         final List<StubItem> expectedMatchingItems = new ArrayList<StubItem>();
         final Long criteriaLowValue = Long.valueOf(2);
-        final Query query = new AttributeQuery("version", new Condition(Operators.LESS_THAN_OR_EQUALS,
-                criteriaLowValue.toString()));
+        final Query query = new AttributeQuery("version",
+                new Condition(Operators.LESS_THAN_OR_EQUALS, criteriaLowValue.toString()));
         for (int i = 0; i < 20; i++) {
             final StubItem item = dataGenerator.randomStubItem();
             expectedMatchingItems.add(item);
@@ -381,4 +387,120 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
             assertTrue(savedKeys.contains(i.getId()));
         }
     }
+
+    @Test
+    public void shouldFetch_withEqualsGsiCompoundAttributeQuery() {
+        // Given
+        final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final String gsiFetchCriteriaValue = Randoms.randomString(10);
+        final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(20);
+        final Query query = new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue),
+                "gsiSupportingValue", new Condition(Operators.EQUALS, gsiSupportingFetchCriteriaValue.toString()));
+
+        for (int i = 0; i < 20; i++) {
+            final StubWithGlobalSecondaryIndexItem item = dataGenerator.randomStubWithGlobalSecondaryIndexItem();
+
+            if (Randoms.randomBoolean() || item.getGsi().equals(gsiFetchCriteriaValue)) {
+                item.setGsi(gsiFetchCriteriaValue);
+
+                if (Randoms.randomBoolean() || item.getGsiSupportingValue().equals(gsiSupportingFetchCriteriaValue)) {
+                    item.setGsiSupportingValue(gsiSupportingFetchCriteriaValue);
+                    expectedMatchingItems.add(item);
+                }
+            }
+
+            dynamoDbTemplate.create(item);
+            createdItemIds.add(item.getId());
+        }
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
+                StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertEquals(expectedMatchingItems.size(), allItems.size());
+        assertTrue(allItems.containsAll(expectedMatchingItems));
+    }
+
+    @Test
+    public void shouldFetch_withLessThanOrEqualsGsiCompoundAttributeQuery() {
+        // Given
+        final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final String gsiFetchCriteriaValue = Randoms.randomString(10);
+        final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(20);
+        final Query query = new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue),
+                "gsiSupportingValue",
+                new Condition(Operators.LESS_THAN_OR_EQUALS, gsiSupportingFetchCriteriaValue.toString()));
+
+        for (int i = 0; i < 20; i++) {
+            final StubWithGlobalSecondaryIndexItem item = dataGenerator.randomStubWithGlobalSecondaryIndexItem();
+
+            if (Randoms.randomBoolean() || item.getGsi().equals(gsiFetchCriteriaValue)) {
+                item.setGsi(gsiFetchCriteriaValue);
+
+                if (Randoms.randomBoolean() || item.getGsiSupportingValue() <= gsiSupportingFetchCriteriaValue) {
+                    item.setGsiSupportingValue(Randoms.randomIntInRange(0, gsiSupportingFetchCriteriaValue + 1));
+                    expectedMatchingItems.add(item);
+                }
+            }
+
+            dynamoDbTemplate.create(item);
+            createdItemIds.add(item.getId());
+        }
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
+                StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertEquals(expectedMatchingItems.size(), allItems.size());
+        assertTrue(allItems.containsAll(expectedMatchingItems));
+    }
+
+    @Test
+    public void shouldFetch_withGreaterThanOrEqualsGsiCompoundAttributeQuery() {
+        // Given
+        final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final String gsiFetchCriteriaValue = Randoms.randomString(10);
+        final int upperValueLimit = 30;
+        final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(upperValueLimit);
+        final Query query = new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue),
+                "gsiSupportingValue",
+                new Condition(Operators.GREATER_THAN_OR_EQUALS, gsiSupportingFetchCriteriaValue.toString()));
+
+        for (int i = 0; i < 20; i++) {
+            final StubWithGlobalSecondaryIndexItem item = dataGenerator.randomStubWithGlobalSecondaryIndexItem();
+
+            if (Randoms.randomBoolean() || item.getGsi().equals(gsiFetchCriteriaValue)) {
+                item.setGsi(gsiFetchCriteriaValue);
+
+                if (Randoms.randomBoolean() || item.getGsiSupportingValue() >= gsiSupportingFetchCriteriaValue) {
+                    item.setGsiSupportingValue(
+                            Randoms.randomIntInRange(gsiSupportingFetchCriteriaValue, upperValueLimit));
+                    expectedMatchingItems.add(item);
+                }
+            }
+
+            dynamoDbTemplate.create(item);
+            createdItemIds.add(item.getId());
+        }
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
+                StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertEquals(expectedMatchingItems.size(), allItems.size());
+        assertTrue(allItems.containsAll(expectedMatchingItems));
+    }
+
 }

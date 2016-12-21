@@ -17,9 +17,11 @@
 package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 
 import static com.clicktravel.common.random.Randoms.randomId;
+import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -43,18 +45,21 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundIndexDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.DatabaseSchemaHolder;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.IndexDefinition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.ItemConfiguration;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.CompoundAttributeQuery;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Condition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
 import com.clicktravel.common.random.Randoms;
@@ -144,7 +149,7 @@ public class DynamoDocumentStoreTemplateTest {
     }
 
     @Test
-    public void shouldQueryIndex() {
+    public void shouldQueryIndex_withAttributeQuery() {
         // Given
         final ItemId itemId = new ItemId(randomId());
 
@@ -172,6 +177,51 @@ public class DynamoDocumentStoreTemplateTest {
 
         // then
         verify(mockIndex.query(any(QuerySpec.class)));
+    }
+
+    @Test
+    public void shouldQueryIndex_withCompoundAttributeQuery() {
+        // Given
+        final ItemId itemId = new ItemId(randomId());
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
+                tableName);
+        itemConfiguration.registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+
+        final Table mockTable = mock(Table.class);
+        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+
+        final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
+                mockDatabaseSchemaHolder);
+        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
+
+        final Index mockIndex = mock(Index.class);
+        when(mockTable.getIndex(anyString())).thenReturn(mockIndex);
+
+        final ItemCollection<QueryOutcome> mockOutcome = mock(ItemCollection.class);
+        when(mockIndex.query(any(QuerySpec.class))).thenReturn(mockOutcome);
+
+        final IteratorSupport<Item, QueryOutcome> mockIterator = mock(IteratorSupport.class);
+        final Item mockItem = new Item();
+        mockItem.withString(randomString(), randomString());
+
+        when(mockOutcome.iterator()).thenReturn(mockIterator);
+        when(mockIterator.hasNext()).thenReturn(true, false);
+        when(mockIterator.next()).thenReturn(mockItem);
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> stubWithGlobalSecondaryIndexItemCollection = dynamoDocumentStoreTemplate
+                .fetch(new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, itemId.value()),
+                        "gsiSupportingValue", new Condition(Operators.EQUALS, String.valueOf(randomInt(10)))),
+                        StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertTrue(stubWithGlobalSecondaryIndexItemCollection.size() == 1);
+        final ArgumentCaptor<QuerySpec> querySpecCaptor = ArgumentCaptor.forClass(QuerySpec.class);
+        verify(mockIndex).query(querySpecCaptor.capture());
+        assertNotNull(querySpecCaptor.getValue().getRangeKeyCondition());
     }
 
     @Test
