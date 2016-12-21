@@ -16,7 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
-public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition implements CompoundDefinition {
+public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition implements CompoundKeyDefinition {
 
     private final String supportingPropertyName;
     private Class<?> supportingPropertyType;

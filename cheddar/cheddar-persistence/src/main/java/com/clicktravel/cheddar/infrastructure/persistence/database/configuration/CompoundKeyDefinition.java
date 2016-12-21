@@ -17,9 +17,9 @@
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
 /**
- * Represents a type which is a compound definition within the database schema, e.g. a compound primary key.
+ * Represents a type which is a compound key definition within the database schema, e.g. a compound primary key.
  */
-public interface CompoundDefinition {
+public interface CompoundKeyDefinition {
 
     String supportingPropertyName();
 

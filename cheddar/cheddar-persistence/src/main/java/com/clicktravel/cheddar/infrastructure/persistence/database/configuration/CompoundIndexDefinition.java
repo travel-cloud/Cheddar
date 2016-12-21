@@ -16,7 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
-public class CompoundIndexDefinition extends IndexDefinition implements CompoundDefinition {
+public class CompoundIndexDefinition extends IndexDefinition implements CompoundKeyDefinition {
 
     private final String supportingPropertyName;
     private Class<?> supportingPropertyType;

@@ -44,31 +44,31 @@ public class DynamoDbDataGenerator {
 
     private final AmazonDynamoDBClient amazonDynamoDbClient;
 
-    DynamoDbDataGenerator(final AmazonDynamoDBClient amazonDynamoDbClient) {
+    public DynamoDbDataGenerator(final AmazonDynamoDBClient amazonDynamoDbClient) {
         this.amazonDynamoDbClient = amazonDynamoDbClient;
     }
 
-    String getUnitTestSchemaName() {
+    public String getUnitTestSchemaName() {
         return unitTestSchemaName;
     }
 
-    String getStubItemTableName() {
+    public String getStubItemTableName() {
         return stubItemTableName;
     }
 
-    String getStubItemWithRangeTableName() {
+    public String getStubItemWithRangeTableName() {
         return stubItemWithRangeTableName;
     }
 
-    String getStubItemWithGsiTableName() {
+    public String getStubItemWithGsiTableName() {
         return stubItemWithGsiTableName;
     }
 
-    Collection<String> getCreatedItemIds() {
+    public Collection<String> getCreatedItemIds() {
         return createdItemIds;
     }
 
-    void createStubItemTable() throws Exception {
+    public void createStubItemTable() throws Exception {
         final String tableName = unitTestSchemaName + "." + stubItemTableName;
         boolean tableCreated = false;
         try {
@@ -98,7 +98,7 @@ public class DynamoDbDataGenerator {
         }
     }
 
-    void createStubItemWithRangeTable() throws Exception {
+    public void createStubItemWithRangeTable() throws Exception {
         final String tableName = unitTestSchemaName + "." + stubItemWithRangeTableName;
         boolean tableCreated = false;
         try {
@@ -130,7 +130,7 @@ public class DynamoDbDataGenerator {
         }
     }
 
-    void createStubItemWithGlobalSecondaryIndexTable() throws Exception {
+    public void createStubItemWithGlobalSecondaryIndexTable() throws Exception {
         final String tableName = unitTestSchemaName + "." + stubItemWithGsiTableName;
         boolean tableCreated = false;
         try {
@@ -179,7 +179,7 @@ public class DynamoDbDataGenerator {
                 && "ACTIVE".equals(describeTableResult.getTable().getTableStatus());
     }
 
-    void deletedCreatedItems() {
+    public void deletedCreatedItems() {
         for (final String id : createdItemIds) {
             final Map<String, AttributeValue> key = new HashMap<>();
             key.put("id", new AttributeValue(id));
@@ -193,7 +193,7 @@ public class DynamoDbDataGenerator {
         }
     }
 
-    StubItem randomStubItem() {
+    public StubItem randomStubItem() {
         final StubItem stubItem = new StubItem();
         stubItem.setId(randomId());
         stubItem.setStringProperty(randomString(10));
@@ -204,20 +204,20 @@ public class DynamoDbDataGenerator {
         return stubItem;
     }
 
-    StubItem createStubItem() {
+    public StubItem createStubItem() {
         final StubItem stubItem = randomStubItem();
         dynamoCreateItem(stubItem);
         return stubItem;
     }
 
-    StubItem createStubItemWithStringProperty(final String stringProperty) {
+    public StubItem createStubItemWithStringProperty(final String stringProperty) {
         final StubItem stubItem = randomStubItem();
         stubItem.setStringProperty(stringProperty);
         dynamoCreateItem(stubItem);
         return stubItem;
     }
 
-    StubItem createStubItemWithNullValues() {
+    public StubItem createStubItemWithNullValues() {
         final StubItem stubItem = new StubItem();
         stubItem.setId(randomId());
         stubItem.setVersion((long) randomInt(100));
@@ -225,7 +225,7 @@ public class DynamoDbDataGenerator {
         return stubItem;
     }
 
-    StubVariantItem createStubVariantItem() {
+    public StubVariantItem createStubVariantItem() {
         final StubVariantItem stubItem = new StubVariantItem();
         stubItem.setId(randomId());
         stubItem.setStringProperty(randomString(10));
@@ -249,7 +249,7 @@ public class DynamoDbDataGenerator {
         return stubItem;
     }
 
-    StubVariantTwoItem createStubVariantTwoItem() {
+    public StubVariantTwoItem createStubVariantTwoItem() {
         final StubVariantTwoItem stubItem = new StubVariantTwoItem();
         stubItem.setId(randomId());
         stubItem.setStringProperty(randomString(10));
@@ -273,7 +273,7 @@ public class DynamoDbDataGenerator {
         return stubItem;
     }
 
-    StubWithRangeItem createStubWithRangeItem() {
+    public StubWithRangeItem createStubWithRangeItem() {
         final StubWithRangeItem stubItem = new StubWithRangeItem();
         stubItem.setId(randomId());
         stubItem.setSupportingId(randomId());
@@ -300,7 +300,7 @@ public class DynamoDbDataGenerator {
         return stubItem;
     }
 
-    StubItem createStubItemWithExtraValues() {
+    public StubItem createStubItemWithExtraValues() {
         final StubItem stubItem = randomStubItem();
         final Map<String, AttributeValue> itemMap = new HashMap<>();
         itemMap.put("id", new AttributeValue(stubItem.getId()));
@@ -328,7 +328,7 @@ public class DynamoDbDataGenerator {
 
     }
 
-    StubWithGlobalSecondaryIndexItem randomStubWithGlobalSecondaryIndexItem() {
+    public StubWithGlobalSecondaryIndexItem randomStubWithGlobalSecondaryIndexItem() {
         final StubWithGlobalSecondaryIndexItem stubItem = new StubWithGlobalSecondaryIndexItem();
         stubItem.setId(randomId());
         stubItem.setGsi(randomString(10));

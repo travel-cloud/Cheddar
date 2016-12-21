@@ -21,6 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -44,6 +45,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
@@ -198,16 +200,25 @@ public class DynamoDocumentStoreTemplateTest {
         final Index mockIndex = mock(Index.class);
         when(mockTable.getIndex(anyString())).thenReturn(mockIndex);
 
-        final ItemCollection<QueryOutcome> outcome = mock(ItemCollection.class);
-        when(mockIndex.query(any(QuerySpec.class))).thenReturn(outcome);
+        final ItemCollection<QueryOutcome> mockOutcome = mock(ItemCollection.class);
+        when(mockIndex.query(any(QuerySpec.class))).thenReturn(mockOutcome);
+
+        final IteratorSupport<Item, QueryOutcome> mockIterator = mock(IteratorSupport.class);
+        final Item mockItem = new Item();
+        mockItem.withString(randomString(), randomString());
+
+        when(mockOutcome.iterator()).thenReturn(mockIterator);
+        when(mockIterator.hasNext()).thenReturn(true, false);
+        when(mockIterator.next()).thenReturn(mockItem);
 
         // When
-        dynamoDocumentStoreTemplate.fetch(
-                new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, itemId.value()), "gsiSupportingValue",
-                        new Condition(Operators.EQUALS, String.valueOf(randomInt(10)))),
-                StubWithGlobalSecondaryIndexItem.class);
+        final Collection<StubWithGlobalSecondaryIndexItem> stubWithGlobalSecondaryIndexItemCollection = dynamoDocumentStoreTemplate
+                .fetch(new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, itemId.value()),
+                        "gsiSupportingValue", new Condition(Operators.EQUALS, String.valueOf(randomInt(10)))),
+                        StubWithGlobalSecondaryIndexItem.class);
 
         // Then
+        assertTrue(stubWithGlobalSecondaryIndexItemCollection.size() == 1);
         final ArgumentCaptor<QuerySpec> querySpecCaptor = ArgumentCaptor.forClass(QuerySpec.class);
         verify(mockIndex).query(querySpecCaptor.capture());
         assertNotNull(querySpecCaptor.getValue().getRangeKeyCondition());
