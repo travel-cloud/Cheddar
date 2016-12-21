@@ -55,16 +55,16 @@ public class QuerySpecBuilder {
 
     private static <T extends Item> void addRangeKeyConditionToQuerySpec(final QuerySpec querySpec,
             final CompoundAttributeQuery compoundAttributeQuery, final Class<T> itemClass) {
-        final String supportingConditionValue = compoundAttributeQuery.getSupportingCondition().getValues().iterator()
+        final String supportingConditionStringValue = compoundAttributeQuery.getSupportingCondition().getValues().iterator()
                 .next();
         final Operators comparisonOperator = compoundAttributeQuery.getSupportingCondition().getComparisonOperator();
-        final Class<?> clazz = compoundAttributeQuery.getSupportingAttributeType(itemClass);
+        final Class<?> supportingAttributeType = compoundAttributeQuery.getSupportingAttributeType(itemClass);
 
         try {
-            final Object value = clazz.getConstructor(String.class).newInstance(supportingConditionValue);
+            final Object supportingConditionValue = supportingAttributeType.getConstructor(String.class).newInstance(supportingConditionStringValue);
 
             final RangeKeyCondition rangeKeyCondition = RangeKeyConditionBuilder
-                    .build(compoundAttributeQuery.getSupportingAttributeName(), value, comparisonOperator);
+                    .build(compoundAttributeQuery.getSupportingAttributeName(), supportingConditionValue, comparisonOperator);
             querySpec.withRangeKeyCondition(rangeKeyCondition);
         } catch (final Exception e) {
             throw new PersistenceResourceFailureException(

@@ -22,21 +22,25 @@ import com.clicktravel.common.validation.Check;
 
 public class RangeKeyConditionBuilder {
 
-    public static RangeKeyCondition build(final String attributeName, final Object conditionValue,
+    public static RangeKeyCondition build(final String attributeName, final Object value,
             final Operators comparisonOperator) {
         Check.isNotEmptyOrNull("attributeName", attributeName);
-        Check.isNotNull("conditionValue", conditionValue);
+        Check.isNotNull("conditionValue", value);
 
         final RangeKeyCondition rangeKeyCondition = new RangeKeyCondition(attributeName);
-        if (comparisonOperator == Operators.EQUALS) {
-            rangeKeyCondition.eq(conditionValue);
-        } else if (comparisonOperator == Operators.GREATER_THAN_OR_EQUALS) {
-            rangeKeyCondition.ge(conditionValue);
-        } else if (comparisonOperator == Operators.LESS_THAN_OR_EQUALS) {
-            rangeKeyCondition.le(conditionValue);
-        } else {
-            throw new InvalidConditionOperatorException(
-                    String.format("Operation %s not valid for range key condition.", comparisonOperator.toString()));
+        switch (comparisonOperator) {
+            case EQUALS:
+                rangeKeyCondition.eq(value);
+                break;
+            case GREATER_THAN_OR_EQUALS:
+                rangeKeyCondition.ge(value);
+                break;
+            case LESS_THAN_OR_EQUALS:
+                rangeKeyCondition.le(value);
+                break;
+            default:
+                throw new InvalidConditionOperatorException(String
+                        .format("Operation %s not valid for range key condition.", comparisonOperator.toString()));
         }
 
         return rangeKeyCondition;
