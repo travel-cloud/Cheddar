@@ -21,8 +21,8 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 public class StubWithGlobalSecondaryIndexItem implements Item {
 
     private String id;
-    private String gsi;
-    private Integer gsiSupportingValue;
+    private String gsiHashProperty;
+    private Integer gsiRangeProperty;
     private Long version;
 
     public String getId() {
@@ -33,20 +33,20 @@ public class StubWithGlobalSecondaryIndexItem implements Item {
         this.id = id;
     }
 
-    public String getGsi() {
-        return gsi;
+    public String getGsiHashProperty() {
+        return gsiHashProperty;
     }
 
-    public void setGsi(final String gsi) {
-        this.gsi = gsi;
+    public void setGsiHashProperty(final String gsiHashProperty) {
+        this.gsiHashProperty = gsiHashProperty;
     }
 
-    public Integer getGsiSupportingValue() {
-        return gsiSupportingValue;
+    public Integer getGsiRangeProperty() {
+        return gsiRangeProperty;
     }
 
-    public void setGsiSupportingValue(final Integer gsiSupportingValue) {
-        this.gsiSupportingValue = gsiSupportingValue;
+    public void setGsiRangeProperty(final Integer gsiRangeProperty) {
+        this.gsiRangeProperty = gsiRangeProperty;
     }
 
     @Override
@@ -63,8 +63,8 @@ public class StubWithGlobalSecondaryIndexItem implements Item {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((gsi == null) ? 0 : gsi.hashCode());
-        result = prime * result + ((gsiSupportingValue == null) ? 0 : gsiSupportingValue.hashCode());
+        result = prime * result + ((gsiHashProperty == null) ? 0 : gsiHashProperty.hashCode());
+        result = prime * result + ((gsiRangeProperty == null) ? 0 : gsiRangeProperty.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((version == null) ? 0 : version.hashCode());
         return result;
@@ -82,18 +82,18 @@ public class StubWithGlobalSecondaryIndexItem implements Item {
             return false;
         }
         final StubWithGlobalSecondaryIndexItem other = (StubWithGlobalSecondaryIndexItem) obj;
-        if (gsi == null) {
-            if (other.gsi != null) {
+        if (gsiHashProperty == null) {
+            if (other.gsiHashProperty != null) {
                 return false;
             }
-        } else if (!gsi.equals(other.gsi)) {
+        } else if (!gsiHashProperty.equals(other.gsiHashProperty)) {
             return false;
         }
-        if (gsiSupportingValue == null) {
-            if (other.gsiSupportingValue != null) {
+        if (gsiRangeProperty == null) {
+            if (other.gsiRangeProperty != null) {
                 return false;
             }
-        } else if (!gsiSupportingValue.equals(other.gsiSupportingValue)) {
+        } else if (!gsiRangeProperty.equals(other.gsiRangeProperty)) {
             return false;
         }
         if (id == null) {

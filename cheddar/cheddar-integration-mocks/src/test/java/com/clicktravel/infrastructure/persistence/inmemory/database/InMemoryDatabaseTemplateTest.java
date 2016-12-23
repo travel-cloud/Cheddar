@@ -65,7 +65,7 @@ public class InMemoryDatabaseTemplateTest {
         final ItemConfiguration stubItemwithGsiConfiguration = new ItemConfiguration(
                 StubWithGlobalSecondaryIndexItem.class, InMemoryDbDataGenerator.STUB_ITEM_WITH_GSI_TABLE_NAME);
         stubItemwithGsiConfiguration
-                .registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
+                .registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsiHashProperty", "gsiRangeProperty"))));
         itemConfigurations.add(stubItemConfiguration);
         itemConfigurations.add(stubParentItemConfiguration);
         itemConfigurations.add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantItem.class, "a"));
@@ -301,17 +301,18 @@ public class InMemoryDatabaseTemplateTest {
         final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
         final String gsiFetchCriteriaValue = Randoms.randomString(10);
         final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(20);
-        final Query query = new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue),
-                "gsiSupportingValue", new Condition(Operators.EQUALS, gsiSupportingFetchCriteriaValue.toString()));
+        final Query query = new CompoundAttributeQuery("gsiHashProperty",
+                new Condition(Operators.EQUALS, gsiFetchCriteriaValue), "gsiRangeProperty",
+                new Condition(Operators.EQUALS, gsiSupportingFetchCriteriaValue.toString()));
 
         for (int i = 0; i < 20; i++) {
             final StubWithGlobalSecondaryIndexItem item = dataGenerator.randomStubWithGlobalSecondaryIndexItem();
 
-            if (Randoms.randomBoolean() || item.getGsi().equals(gsiFetchCriteriaValue)) {
-                item.setGsi(gsiFetchCriteriaValue);
+            if (Randoms.randomBoolean() || item.getGsiHashProperty().equals(gsiFetchCriteriaValue)) {
+                item.setGsiHashProperty(gsiFetchCriteriaValue);
 
-                if (Randoms.randomBoolean() || item.getGsiSupportingValue().equals(gsiSupportingFetchCriteriaValue)) {
-                    item.setGsiSupportingValue(gsiSupportingFetchCriteriaValue);
+                if (Randoms.randomBoolean() || item.getGsiRangeProperty().equals(gsiSupportingFetchCriteriaValue)) {
+                    item.setGsiRangeProperty(gsiSupportingFetchCriteriaValue);
                     expectedMatchingItems.add(item);
                 }
             }
