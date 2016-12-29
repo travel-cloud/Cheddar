@@ -16,17 +16,40 @@
  */
 package com.clicktravel.cheddar.request.context;
 
+import java.util.Optional;
+
 /**
- * Interface defining the minimum security information associated with the current thread of execution.
+ * Interface for retrieving information describing a security context. A security context may identify a user (also
+ * known as the principal), a team which the user is acting within and an agent user which is issuing requests on behalf
+ * of the user.
  *
- * @see {@link BasicSecurityContext} and {@link AgentSecurityContext}
+ * @see {@link DefaultSecurityContext} and {@link NullSecurityContext}
  */
 public interface SecurityContext {
 
     /**
-     * @return The user ID of the principal in the security context. Domain actions (commands or queries) are performed
-     *         'as' this user. This is the actor which any authorisation checks should be performed against.
+     * @return User ID of the principal.
+     * @deprecated Use {@link #userId} instead
      */
+    @Deprecated
     String principal();
 
+    /**
+     * @return Optional of the user ID in the security context. Domain actions (commands or queries) are performed 'as'
+     *         this user. This is the actor which any authorisation checks should be performed against.
+     */
+    Optional<String> userId();
+
+    /**
+     * @return Optional of the team ID in the security context. Domain actions (commands or queries) are performed 'as'
+     *         a user in this team.
+     */
+    Optional<String> teamId();
+
+    /**
+     * @return Optional of the agent's user ID in the security context. Agents issue requests on behalf of the user
+     *         identified by {@link #userId}. Note: This is not the user which authorisation checks are performed
+     *         against, see {@link #userId}
+     */
+    Optional<String> agentUserId();
 }

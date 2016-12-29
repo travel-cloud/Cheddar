@@ -23,6 +23,8 @@ import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import java.util.Optional;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -36,82 +38,105 @@ import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 public class SecurityCheckerTest {
 
     @Test
-    public void shouldNotPassPrincipalCheck_withNullCheckPrincipal() {
+    public void shouldPassCheckPrincipalCheck_withMatchingUserId() {
         // Given
         final String principal = randomId();
         final SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.principal()).thenReturn(principal);
+        when(mockSecurityContext.userId()).thenReturn(Optional.of(principal));
         mockStatic(SecurityContextHolder.class);
         when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
 
         // When
-        SecurityConstraintViolationException expectedException = null;
+        CredentialsMissingException thrownException = null;
         try {
-            SecurityChecker.checkPrincipal(null);
+            SecurityChecker.checkUser(principal);
+        } catch (final CredentialsMissingException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNull(thrownException);
+    }
+
+    @Test
+    public void shouldNotPassCheckPrincipalCheck_withNoUserInSecurityContext() {
+        // Given
+        final String principal = randomId();
+        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+        when(mockSecurityContext.userId()).thenReturn(Optional.empty());
+        mockStatic(SecurityContextHolder.class);
+        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
+
+        // When
+        CredentialsMissingException thrownException = null;
+        try {
+            SecurityChecker.checkUser(principal);
+        } catch (final CredentialsMissingException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldNotPassCheckPrincipalCheck_withDifferentUserId() {
+        // Given
+        final String principal = randomId();
+        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+        when(mockSecurityContext.userId()).thenReturn(Optional.of(randomId()));
+        mockStatic(SecurityContextHolder.class);
+        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
+
+        // When
+        SecurityConstraintViolationException thrownException = null;
+        try {
+            SecurityChecker.checkUser(principal);
         } catch (final SecurityConstraintViolationException e) {
-            expectedException = e;
+            thrownException = e;
         }
 
         // Then
-        assertNotNull(expectedException);
+        assertNotNull(thrownException);
     }
 
     @Test
-    public void shouldNotPassPrincipalCheck_withNullStoredPrincipal() {
+    public void shouldPassAutheticatedCheck_withUserInRquestContext() {
         // Given
-        mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.get()).thenReturn(null);
-        final String principal = randomId();
-
-        // When
-        CredentialsMissingException expectedException = null;
-        try {
-            SecurityChecker.checkPrincipal(principal);
-        } catch (final CredentialsMissingException e) {
-            expectedException = e;
-        }
-
-        // Then
-        assertNotNull(expectedException);
-    }
-
-    @Test
-    public void shouldPassAutheticatedCheck_withPrincipal() {
-        // Given
-        final String principal = randomId();
         final SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.principal()).thenReturn(principal);
+        when(mockSecurityContext.userId()).thenReturn(Optional.of(randomId()));
         mockStatic(SecurityContextHolder.class);
         when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
 
         // When
-        CredentialsMissingException unexpectedException = null;
+        CredentialsMissingException thrownException = null;
         try {
-            SecurityChecker.checkAuthenticated();
+            SecurityChecker.checkAnyUser();
         } catch (final CredentialsMissingException e) {
-            unexpectedException = e;
+            thrownException = e;
         }
 
         // Then
-        assertNull(unexpectedException);
+        assertNull(thrownException);
     }
 
     @Test
-    public void shouldNotPassAutheticatedCheck_withNoPrincipal() {
+    public void shouldNotPassAutheticatedCheck_withNoUserInSecurityContext() {
         // Given
+        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+        when(mockSecurityContext.userId()).thenReturn(Optional.empty());
         mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.get()).thenReturn(null);
+        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
 
         // When
-        CredentialsMissingException expectedException = null;
+        CredentialsMissingException thrownException = null;
         try {
-            SecurityChecker.checkAuthenticated();
+            SecurityChecker.checkAnyUser();
         } catch (final CredentialsMissingException e) {
-            expectedException = e;
+            thrownException = e;
         }
 
         // Then
-        assertNotNull(expectedException);
+        assertNotNull(thrownException);
     }
-
 }

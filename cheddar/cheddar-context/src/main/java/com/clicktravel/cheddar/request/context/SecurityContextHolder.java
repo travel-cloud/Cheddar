@@ -29,7 +29,8 @@ public class SecurityContextHolder {
     }
 
     public static SecurityContext get() {
-        return SECURITY_CONTEXT.get();
+        final SecurityContext securityContext = SECURITY_CONTEXT.get();
+        return securityContext == null ? NullSecurityContext.NULL : securityContext;
     }
 
     public static void clear() {
@@ -37,31 +38,27 @@ public class SecurityContextHolder {
     }
 
     /**
-     * @deprecated Use SecurityContextHolder.get().principal();
+     * @deprecated Use get().userId();
      */
     @Deprecated
     public static String getPrincipal() {
-        final SecurityContext securityContext = get();
-        if (securityContext == null) {
-            return null;
-        }
-        return securityContext.principal();
+        return get().principal();
     }
 
     /**
-     * @deprecated Use SecurityContextHolder.set(SecurityContext)
+     * @deprecated Use {@link #set}
      */
     @Deprecated
     public static void setPrincipal(final String principal) {
         if (principal == null) {
             clear();
         } else {
-            set(new BasicSecurityContext(principal));
+            set(new DefaultSecurityContext(principal, null, null));
         }
     }
 
     /**
-     * @deprecated Use SecurityContextHolder.clear()
+     * @deprecated Use {@link #clear}
      */
     @Deprecated
     public static void clearPrincipal() {

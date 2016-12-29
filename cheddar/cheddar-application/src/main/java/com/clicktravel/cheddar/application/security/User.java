@@ -16,19 +16,16 @@
  */
 package com.clicktravel.cheddar.application.security;
 
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Component
-@Aspect
-@Order(100)
-public class AuthenticatedAspect {
-
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAnyUser();
-    }
+/**
+ * This annotation should be placed on any API call that requires a user in security context.
+ */
+@Retention(value = RetentionPolicy.RUNTIME)
+@Target(value = ElementType.METHOD)
+public @interface User {
 
 }
