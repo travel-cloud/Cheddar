@@ -16,18 +16,29 @@
  */
 package com.clicktravel.cheddar.application.security;
 
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
-@Component
-@Aspect
-@Order(100)
-public class AuthenticatedAspect {
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(SecurityChecker.class)
+public class UserAspectTest {
+
+    @Test
+    public void shouldCheckForAnyUserInSecurityContext() {
+        // Given
+        mockStatic(SecurityChecker.class);
+        final UserAspect aspect = new UserAspect();
+
+        // When
+        aspect.checkAnyUserInSecurityContext();
+
+        // Then
+        verifyStatic();
         SecurityChecker.checkAnyUser();
     }
 

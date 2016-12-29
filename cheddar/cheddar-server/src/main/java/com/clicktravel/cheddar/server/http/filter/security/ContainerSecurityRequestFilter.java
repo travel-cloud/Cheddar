@@ -26,53 +26,43 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
-import com.clicktravel.cheddar.request.context.AgentSecurityContext;
-import com.clicktravel.cheddar.request.context.BasicSecurityContext;
+import com.clicktravel.cheddar.request.context.DefaultSecurityContext;
 import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 
 /**
- * Intercept each HTTP request to extract the security header and set its value as the principal within
- * {@link com.clicktravel.cheddar.application.security.SecurityContextHolder}
+ * Intercept each HTTP request to set the security context applicable during processing of the request
  */
 @Provider
 @Priority(Priorities.AUTHENTICATION)
 public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
 
-    private static final String CLICK_PLATFORM_AUTHORIZATION_SCHEME = "clickplatform";
+    private static final String CLICK_PLATFORM_SCHEME = "clickplatform";
     private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER = "Agent-Authorization";
+    private static final String CLICK_PLATFORM_TEAM_ID_HEADER = "Team-Id";
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-        final MultivaluedMap<String, String> headersMap = requestContext.getHeaders();
-        String principal = null;
-        if (headersMap.containsKey(HttpHeaders.AUTHORIZATION)) {
-            for (final String headerValue : headersMap.get(HttpHeaders.AUTHORIZATION)) {
+        final MultivaluedMap<String, String> headers = requestContext.getHeaders();
+        final String userId = getValueForHeaderAndScheme(headers, HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_SCHEME);
+        final String teamId = getValueForHeaderAndScheme(headers, CLICK_PLATFORM_TEAM_ID_HEADER, CLICK_PLATFORM_SCHEME);
+        final String agentUserId = getValueForHeaderAndScheme(headers, CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER,
+                CLICK_PLATFORM_SCHEME);
+        SecurityContextHolder.set(new DefaultSecurityContext(userId, teamId, agentUserId));
+    }
+
+    private String getValueForHeaderAndScheme(final MultivaluedMap<String, String> headers, final String header,
+            final String scheme) {
+        if (headers.containsKey(header)) {
+            for (final String headerValue : headers.get(header)) {
                 final String[] headerValueParts = headerValue.split(" ");
                 if (headerValueParts.length == 2) {
-                    if (CLICK_PLATFORM_AUTHORIZATION_SCHEME.equals(headerValueParts[0])) {
-                        principal = headerValueParts[1];
+                    if (scheme.equals(headerValueParts[0])) {
+                        return headerValueParts[1];
                     }
                 }
             }
         }
-        String agent = null;
-        if (headersMap.containsKey(CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER)) {
-            for (final String headerValue : headersMap.get(CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER)) {
-                final String[] headerValueParts = headerValue.split(" ");
-                if (headerValueParts.length == 2) {
-                    if (CLICK_PLATFORM_AUTHORIZATION_SCHEME.equals(headerValueParts[0])) {
-                        agent = headerValueParts[1];
-                    }
-                }
-            }
-        }
-        if (principal != null && agent != null) {
-            SecurityContextHolder.set(new AgentSecurityContext(principal, agent));
-        } else if (principal != null) {
-            SecurityContextHolder.set(new BasicSecurityContext(principal));
-        } else {
-            SecurityContextHolder.clear();
-        }
+        return null;
     }
 
 }

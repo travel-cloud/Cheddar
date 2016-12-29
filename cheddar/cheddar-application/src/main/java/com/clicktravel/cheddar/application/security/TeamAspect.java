@@ -23,12 +23,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Aspect
-@Order(100)
-public class AuthenticatedAspect {
+@Order(110)
+public class TeamAspect {
 
-    @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
-    public void checkAuthenticated() {
-        SecurityChecker.checkAnyUser();
+    @Before("@annotation(team)")
+    public void checkTeamInSecurityContext(final Team team) {
+        if (!team.optional()) {
+            SecurityChecker.checkAnyTeam();
+        }
     }
 
 }

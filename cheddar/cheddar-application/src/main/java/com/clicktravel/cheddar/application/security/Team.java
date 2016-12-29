@@ -14,25 +14,22 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.request.context;
+package com.clicktravel.cheddar.application.security;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Identifies the currently authenticated user as the principal in the security context. This is used when the user acts
- * on their own behalf without an agent.
- *
- * @see AgentSecurityContext
+ * This annotation should be placed on any API call that may require a team in the security context.
  */
-public class BasicSecurityContext implements SecurityContext {
+@Retention(value = RetentionPolicy.RUNTIME)
+@Target(value = ElementType.METHOD)
+public @interface Team {
 
-    private final String principal;
-
-    public BasicSecurityContext(final String principal) {
-        this.principal = principal;
-    }
-
-    @Override
-    public String principal() {
-        return principal;
-    }
-
+    /**
+     * @return {@code true} if team is optional in the security context. Default is {@code false} i.e. team is required
+     */
+    boolean optional() default false;
 }

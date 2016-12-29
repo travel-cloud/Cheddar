@@ -14,26 +14,21 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.request.context;
+package com.clicktravel.cheddar.application.security;
 
-import static com.clicktravel.common.random.Randoms.randomId;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
-import org.junit.Test;
+@Component
+@Aspect
+@Order(100)
+public class UserAspect {
 
-public class BasicSecurityContextTest {
-
-    @Test
-    public void shouldCreateSecurityContext_withPrincipal() {
-        // Given
-        final String principal = randomId();
-
-        // When
-        final BasicSecurityContext securityContext = new BasicSecurityContext(principal);
-
-        // Then
-        assertThat(securityContext.principal(), is(principal));
+    @Before("@annotation(com.clicktravel.cheddar.application.security.User)")
+    public void checkAnyUserInSecurityContext() {
+        SecurityChecker.checkAnyUser();
     }
 
 }
