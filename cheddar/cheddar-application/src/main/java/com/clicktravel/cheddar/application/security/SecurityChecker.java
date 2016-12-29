@@ -34,7 +34,7 @@ public class SecurityChecker {
     }
 
     /**
-     * Checks that the given user ID matches the user ID set in the security context. If they do not match an exception
+     * Checks that the given team ID matches the team ID set in the security context. If they do not match an exception
      * is thrown.
      * @param teamId
      */

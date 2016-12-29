@@ -25,6 +25,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 import java.util.Optional;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -37,20 +38,26 @@ import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 @PrepareForTest({ SecurityContextHolder.class })
 public class SecurityCheckerTest {
 
-    @Test
-    public void shouldPassCheckPrincipalCheck_withMatchingUserId() {
-        // Given
-        final String principal = randomId();
-        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.userId()).thenReturn(Optional.of(principal));
+    private SecurityContext mockSecurityContext;
+
+    @Before
+    public void setUp() {
+        mockSecurityContext = mock(SecurityContext.class);
         mockStatic(SecurityContextHolder.class);
         when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
+    }
+
+    @Test
+    public void shouldPassUserCheck_withMatchingUserIdInSecurityContext() {
+        // Given
+        final String userId = randomId();
+        when(mockSecurityContext.userId()).thenReturn(Optional.of(userId));
 
         // When
-        CredentialsMissingException thrownException = null;
+        Exception thrownException = null;
         try {
-            SecurityChecker.checkUser(principal);
-        } catch (final CredentialsMissingException e) {
+            SecurityChecker.checkUser(userId);
+        } catch (final Exception e) {
             thrownException = e;
         }
 
@@ -59,18 +66,15 @@ public class SecurityCheckerTest {
     }
 
     @Test
-    public void shouldNotPassCheckPrincipalCheck_withNoUserInSecurityContext() {
+    public void shouldNotPassUserCheck_withNoUserIdInSecurityContext() {
         // Given
-        final String principal = randomId();
-        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+        final String userId = randomId();
         when(mockSecurityContext.userId()).thenReturn(Optional.empty());
-        mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
 
         // When
         CredentialsMissingException thrownException = null;
         try {
-            SecurityChecker.checkUser(principal);
+            SecurityChecker.checkUser(userId);
         } catch (final CredentialsMissingException e) {
             thrownException = e;
         }
@@ -80,18 +84,15 @@ public class SecurityCheckerTest {
     }
 
     @Test
-    public void shouldNotPassCheckPrincipalCheck_withDifferentUserId() {
+    public void shouldNotPassUserCheck_withDifferentUserIdInSecurityContext() {
         // Given
-        final String principal = randomId();
-        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+        final String userId = randomId();
         when(mockSecurityContext.userId()).thenReturn(Optional.of(randomId()));
-        mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
 
         // When
         SecurityConstraintViolationException thrownException = null;
         try {
-            SecurityChecker.checkUser(principal);
+            SecurityChecker.checkUser(userId);
         } catch (final SecurityConstraintViolationException e) {
             thrownException = e;
         }
@@ -101,12 +102,26 @@ public class SecurityCheckerTest {
     }
 
     @Test
-    public void shouldPassAutheticatedCheck_withUserInRquestContext() {
+    public void shouldPassAnyUserCheck_withUserIdInSecurityContext() {
         // Given
-        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
         when(mockSecurityContext.userId()).thenReturn(Optional.of(randomId()));
-        mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
+
+        // When
+        Exception thrownException = null;
+        try {
+            SecurityChecker.checkAnyUser();
+        } catch (final Exception e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNull(thrownException);
+    }
+
+    @Test
+    public void shouldNotPassAnyUserCheck_withNoUserIdInSecurityContext() {
+        // Given
+        when(mockSecurityContext.userId()).thenReturn(Optional.empty());
 
         // When
         CredentialsMissingException thrownException = null;
@@ -117,21 +132,89 @@ public class SecurityCheckerTest {
         }
 
         // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldPassTeamCheck_withMatchingTeamIdInSecurityContext() {
+        // Given
+        final String teamId = randomId();
+        when(mockSecurityContext.teamId()).thenReturn(Optional.of(teamId));
+
+        // When
+        Exception thrownException = null;
+        try {
+            SecurityChecker.checkTeam(teamId);
+        } catch (final Exception e) {
+            thrownException = e;
+        }
+
+        // Then
         assertNull(thrownException);
     }
 
     @Test
-    public void shouldNotPassAutheticatedCheck_withNoUserInSecurityContext() {
+    public void shouldNotPassTeamCheck_withNoTeamIdInSecurityContext() {
         // Given
-        final SecurityContext mockSecurityContext = mock(SecurityContext.class);
-        when(mockSecurityContext.userId()).thenReturn(Optional.empty());
-        mockStatic(SecurityContextHolder.class);
-        when(SecurityContextHolder.get()).thenReturn(mockSecurityContext);
+        final String teamId = randomId();
+        when(mockSecurityContext.teamId()).thenReturn(Optional.empty());
 
         // When
         CredentialsMissingException thrownException = null;
         try {
-            SecurityChecker.checkAnyUser();
+            SecurityChecker.checkTeam(teamId);
+        } catch (final CredentialsMissingException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldNotPassTeamCheck_withDifferentTeamIdInSecurityContext() {
+        // Given
+        final String teamId = randomId();
+        when(mockSecurityContext.teamId()).thenReturn(Optional.of(randomId()));
+
+        // When
+        SecurityConstraintViolationException thrownException = null;
+        try {
+            SecurityChecker.checkTeam(teamId);
+        } catch (final SecurityConstraintViolationException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldPassAnyTeamCheck_withTeamIdInSecurityContext() {
+        // Given
+        when(mockSecurityContext.teamId()).thenReturn(Optional.of(randomId()));
+
+        // When
+        Exception thrownException = null;
+        try {
+            SecurityChecker.checkAnyTeam();
+        } catch (final Exception e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNull(thrownException);
+    }
+
+    @Test
+    public void shouldNotPassAnyTeamCheck_withNoTeamIdInSecurityContext() {
+        // Given
+        when(mockSecurityContext.teamId()).thenReturn(Optional.empty());
+
+        // When
+        CredentialsMissingException thrownException = null;
+        try {
+            SecurityChecker.checkAnyTeam();
         } catch (final CredentialsMissingException e) {
             thrownException = e;
         }

@@ -19,13 +19,13 @@ package com.clicktravel.cheddar.request.context;
 import java.util.Optional;
 
 /**
- * A security context which has no users, teams nor agents are defined.
+ * A security context which has no users, teams nor agents defined.
  */
 public class NullSecurityContext implements SecurityContext {
 
     public static NullSecurityContext NULL = new NullSecurityContext();
 
-    NullSecurityContext() {
+    private NullSecurityContext() {
     }
 
     @Override
