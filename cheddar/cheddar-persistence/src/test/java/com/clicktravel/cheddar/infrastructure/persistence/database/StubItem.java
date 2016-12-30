@@ -22,6 +22,7 @@ public class StubItem implements Item {
 
     private String id;
     private String stringProperty;
+    private Integer integerProperty;
     private Long version;
 
     public StubItem() {
@@ -45,6 +46,14 @@ public class StubItem implements Item {
         this.stringProperty = stringProperty;
     }
 
+    public Integer getIntegerProperty() {
+        return integerProperty;
+    }
+
+    public void setIntegerProperty(final Integer integerProperty) {
+        this.integerProperty = integerProperty;
+    }
+
     @Override
     public Long getVersion() {
         return version;
@@ -59,9 +68,10 @@ public class StubItem implements Item {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (id == null ? 0 : id.hashCode());
-        result = prime * result + (stringProperty == null ? 0 : stringProperty.hashCode());
-        result = prime * result + (version == null ? 0 : version.hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((integerProperty == null) ? 0 : integerProperty.hashCode());
+        result = prime * result + ((stringProperty == null) ? 0 : stringProperty.hashCode());
+        result = prime * result + ((version == null) ? 0 : version.hashCode());
         return result;
     }
 
@@ -84,6 +94,13 @@ public class StubItem implements Item {
         } else if (!id.equals(other.id)) {
             return false;
         }
+        if (integerProperty == null) {
+            if (other.integerProperty != null) {
+                return false;
+            }
+        } else if (!integerProperty.equals(other.integerProperty)) {
+            return false;
+        }
         if (stringProperty == null) {
             if (other.stringProperty != null) {
                 return false;
@@ -100,4 +117,5 @@ public class StubItem implements Item {
         }
         return true;
     }
+
 }
