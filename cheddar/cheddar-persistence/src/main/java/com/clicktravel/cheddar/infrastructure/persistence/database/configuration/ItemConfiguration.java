@@ -107,15 +107,6 @@ public class ItemConfiguration {
         }
     }
 
-    private Class<?> getPropertyType(final String propertyName) {
-        final PropertyDescriptor propertyDescriptor = properties.get(propertyName);
-        if (propertyDescriptor == null) {
-            throw new IllegalStateException("No property found '" + propertyName + "' for item :" + itemClass);
-        }
-
-        return propertyDescriptor.getPropertyType();
-    }
-
     public void registerUniqueConstraints(final Collection<UniqueConstraint> uniqueConstraints) {
         for (final UniqueConstraint uniqueConstraint : uniqueConstraints) {
             final String uniqueConstraintPropertyName = uniqueConstraint.propertyName();
@@ -187,5 +178,14 @@ public class ItemConfiguration {
         }
 
         return hasIndexOn(indexNameBuilder.toString());
+    }
+
+    private Class<?> getPropertyType(final String propertyName) {
+        final PropertyDescriptor propertyDescriptor = properties.get(propertyName);
+        if (propertyDescriptor == null) {
+            throw new IllegalStateException("No property found '" + propertyName + "' for item :" + itemClass);
+        }
+
+        return propertyDescriptor.getPropertyType();
     }
 }
