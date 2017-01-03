@@ -88,10 +88,10 @@ public class ItemConfiguration {
 
     public void registerIndexes(final Collection<IndexDefinition> indexDefinitions) {
         for (final IndexDefinition indexDefinition : indexDefinitions) {
-            final String indexPropertyName = indexDefinition.propertyName();
-            final Class<?> propertyType = getPropertyType(indexPropertyName);
+            final String propertyName = indexDefinition.propertyName();
+            final Class<?> propertyType = getPropertyType(propertyName);
             indexDefinition.setPropertyType(propertyType);
-            final StringBuilder indexPropertyNameBuilder = new StringBuilder(indexPropertyName);
+            String indexName;
 
             if (CompoundIndexDefinition.class.isAssignableFrom(indexDefinition.getClass())) {
                 final CompoundIndexDefinition compoundIndexDefinition = (CompoundIndexDefinition) indexDefinition;
@@ -99,10 +99,12 @@ public class ItemConfiguration {
 
                 final Class<?> supportingPropertyType = getPropertyType(supportingPropertyName);
                 compoundIndexDefinition.setSupportingPropertyType(supportingPropertyType);
-                appendSupportingPropertyNameToStringBuilder(indexPropertyNameBuilder, supportingPropertyName);
+                indexName = compoundName(propertyName, supportingPropertyName);
+            } else {
+                indexName = indexDefinition.propertyName();
             }
 
-            this.indexDefinitions.put(indexPropertyNameBuilder.toString(), indexDefinition);
+            this.indexDefinitions.put(indexName, indexDefinition);
         }
     }
 
@@ -168,14 +170,17 @@ public class ItemConfiguration {
     }
 
     public boolean hasIndexForQuery(final AttributeQuery attributeQuery) {
-        final StringBuilder indexNameBuilder = new StringBuilder(attributeQuery.getAttributeName());
+        String indexName;
 
         if (CompoundAttributeQuery.class.isAssignableFrom(attributeQuery.getClass())) {
             final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) attributeQuery;
-            appendSupportingPropertyNameToStringBuilder(indexNameBuilder, compoundAttributeQuery.getSupportingAttributeName());
+            indexName = compoundName(attributeQuery.getAttributeName(),
+                    compoundAttributeQuery.getSupportingAttributeName());
+        } else {
+            indexName = attributeQuery.getAttributeName();
         }
 
-        return hasIndexOn(indexNameBuilder.toString());
+        return hasIndexOn(indexName);
     }
 
     private Class<?> getPropertyType(final String propertyName) {
@@ -187,9 +192,7 @@ public class ItemConfiguration {
         return propertyDescriptor.getPropertyType();
     }
 
-    private void appendSupportingPropertyNameToStringBuilder(final StringBuilder stringBuilder,
-            final String supportingPropertyName) {
-        stringBuilder.append("_");
-        stringBuilder.append(supportingPropertyName);
+    private String compoundName(final String propertyName, final String supportingPropertyName) {
+        return propertyName + "_" + supportingPropertyName;
     }
 }
