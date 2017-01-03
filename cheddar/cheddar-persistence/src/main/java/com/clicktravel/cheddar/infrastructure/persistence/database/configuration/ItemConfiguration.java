@@ -99,8 +99,7 @@ public class ItemConfiguration {
 
                 final Class<?> supportingPropertyType = getPropertyType(supportingPropertyName);
                 compoundIndexDefinition.setSupportingPropertyType(supportingPropertyType);
-                indexPropertyNameBuilder.append("_");
-                indexPropertyNameBuilder.append(supportingPropertyName);
+                appendSupportingPropertyNameToStringBuilder(indexPropertyNameBuilder, supportingPropertyName);
             }
 
             this.indexDefinitions.put(indexPropertyNameBuilder.toString(), indexDefinition);
@@ -173,8 +172,7 @@ public class ItemConfiguration {
 
         if (CompoundAttributeQuery.class.isAssignableFrom(attributeQuery.getClass())) {
             final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) attributeQuery;
-            indexNameBuilder.append("_");
-            indexNameBuilder.append(compoundAttributeQuery.getSupportingAttributeName());
+            appendSupportingPropertyNameToStringBuilder(indexNameBuilder, compoundAttributeQuery.getSupportingAttributeName());
         }
 
         return hasIndexOn(indexNameBuilder.toString());
@@ -187,5 +185,11 @@ public class ItemConfiguration {
         }
 
         return propertyDescriptor.getPropertyType();
+    }
+
+    private void appendSupportingPropertyNameToStringBuilder(final StringBuilder stringBuilder,
+            final String supportingPropertyName) {
+        stringBuilder.append("_");
+        stringBuilder.append(supportingPropertyName);
     }
 }
