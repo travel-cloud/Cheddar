@@ -248,7 +248,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
 
         final List<T> totalItems = new ArrayList<>();
 
-        if (itemConfiguration.hasIndexOn(query.getAttributeName())
+        if (itemConfiguration.hasIndexForQuery(query)
                 && query.getCondition().getComparisonOperator() == Operators.EQUALS) {
 
             final QuerySpec querySpec = QuerySpecBuilder.build(query, itemClass);

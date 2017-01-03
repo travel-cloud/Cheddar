@@ -29,6 +29,8 @@ import java.util.Map;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.CompoundAttributeQuery;
 
 public class ItemConfiguration {
 
@@ -86,14 +88,23 @@ public class ItemConfiguration {
 
     public void registerIndexes(final Collection<IndexDefinition> indexDefinitions) {
         for (final IndexDefinition indexDefinition : indexDefinitions) {
-            final String indexPropertyName = indexDefinition.propertyName();
-            final PropertyDescriptor propertyDescriptor = properties.get(indexPropertyName);
-            if (propertyDescriptor == null) {
-                throw new IllegalStateException("No property found '" + indexPropertyName + "' for item :" + itemClass);
-            }
-            final Class<?> propertyType = propertyDescriptor.getPropertyType();
+            final String propertyName = indexDefinition.propertyName();
+            final Class<?> propertyType = getPropertyType(propertyName);
             indexDefinition.setPropertyType(propertyType);
-            this.indexDefinitions.put(indexPropertyName, indexDefinition);
+            String indexName;
+
+            if (CompoundIndexDefinition.class.isAssignableFrom(indexDefinition.getClass())) {
+                final CompoundIndexDefinition compoundIndexDefinition = (CompoundIndexDefinition) indexDefinition;
+                final String supportingPropertyName = compoundIndexDefinition.supportingPropertyName();
+
+                final Class<?> supportingPropertyType = getPropertyType(supportingPropertyName);
+                compoundIndexDefinition.setSupportingPropertyType(supportingPropertyType);
+                indexName = compoundName(propertyName, supportingPropertyName);
+            } else {
+                indexName = indexDefinition.propertyName();
+            }
+
+            this.indexDefinitions.put(indexName, indexDefinition);
         }
     }
 
@@ -111,8 +122,7 @@ public class ItemConfiguration {
     }
 
     public boolean hasIndexOn(final String propertyName) {
-        return primaryKeyDefinition.propertyName().equals(propertyName)
-                || indexDefinitions().stream().map(IndexDefinition::propertyName).anyMatch(propertyName::equals);
+        return primaryKeyDefinition.propertyName().equals(propertyName) || indexDefinitions.containsKey(propertyName);
     }
 
     public ItemId getItemId(final Item item) {
@@ -159,4 +169,30 @@ public class ItemConfiguration {
         return Collections.unmodifiableCollection(uniqueConstraints.values());
     }
 
+    public boolean hasIndexForQuery(final AttributeQuery attributeQuery) {
+        String indexName;
+
+        if (CompoundAttributeQuery.class.isAssignableFrom(attributeQuery.getClass())) {
+            final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) attributeQuery;
+            indexName = compoundName(attributeQuery.getAttributeName(),
+                    compoundAttributeQuery.getSupportingAttributeName());
+        } else {
+            indexName = attributeQuery.getAttributeName();
+        }
+
+        return hasIndexOn(indexName);
+    }
+
+    private Class<?> getPropertyType(final String propertyName) {
+        final PropertyDescriptor propertyDescriptor = properties.get(propertyName);
+        if (propertyDescriptor == null) {
+            throw new IllegalStateException("No property found '" + propertyName + "' for item :" + itemClass);
+        }
+
+        return propertyDescriptor.getPropertyType();
+    }
+
+    private String compoundName(final String propertyName, final String supportingPropertyName) {
+        return propertyName + "_" + supportingPropertyName;
+    }
 }
