@@ -37,6 +37,7 @@ public class DynamoDbDataGenerator {
     private final String stubItemTableName = "stub_item_" + randomString(10);
     private final String stubItemWithRangeTableName = "stub_item_with_range_" + randomString(10);
     private final String stubItemWithGsiTableName = "stub_item_with_gsi_" + randomString(10);
+    private final String stubItemWithHashAndRangeAndGsiTableName = "stub_item_with_hash_range_gsi" + randomString(10);
 
     public final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -62,6 +63,10 @@ public class DynamoDbDataGenerator {
 
     public String getStubItemWithGsiTableName() {
         return stubItemWithGsiTableName;
+    }
+
+    public String getStubItemWithHashAndRangeAndGsiTableName() {
+        return stubItemWithHashAndRangeAndGsiTableName;
     }
 
     public Collection<String> getCreatedItemIds() {
@@ -148,17 +153,8 @@ public class DynamoDbDataGenerator {
             attributeDefinitions.add(new AttributeDefinition("gsiSupportingValue", ScalarAttributeType.N));
             final Collection<KeySchemaElement> keySchema = new ArrayList<>();
             keySchema.add(new KeySchemaElement("id", "S").withKeyType(KeyType.HASH));
-            final GlobalSecondaryIndex globalSecondaryIndex = new GlobalSecondaryIndex();
-            final Collection<KeySchemaElement> globalSecondaryIndexKeySchema = new ArrayList<>();
-            globalSecondaryIndexKeySchema.add(new KeySchemaElement("gsi", "S").withKeyType(KeyType.HASH));
-            globalSecondaryIndexKeySchema
-                    .add(new KeySchemaElement("gsiSupportingValue", "N").withKeyType(KeyType.RANGE));
-            globalSecondaryIndex.setIndexName("gsi_gsiSupportingValue_idx");
-            globalSecondaryIndex.setKeySchema(globalSecondaryIndexKeySchema);
-            globalSecondaryIndex.setProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
-            final Projection projection = new Projection();
-            projection.setProjectionType(ProjectionType.ALL);
-            globalSecondaryIndex.setProjection(projection);
+            final GlobalSecondaryIndex globalSecondaryIndex = buildSimpleCompoundGlobalSecondaryIndex("gsi",
+                    "gsiSupportingValue", "gsi_gsiSupportingValue_idx");
             final CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
                     .withAttributeDefinitions(attributeDefinitions).withKeySchema(keySchema)
                     .withGlobalSecondaryIndexes(globalSecondaryIndex)
@@ -173,6 +169,59 @@ public class DynamoDbDataGenerator {
             } while (!tableCreated && System.currentTimeMillis() - startTime < 60000);
         }
     }
+
+    public void createStubItemWithHashAndRangePrimaryKeyAndCompoundGlobalSecondaryIndexTable() throws Exception {
+        final String tableName = unitTestSchemaName + "." + stubItemWithHashAndRangeAndGsiTableName;
+        boolean tableCreated = false;
+        try {
+            final DescribeTableResult result = amazonDynamoDbClient.describeTable(tableName);
+            if (isTableCreated(tableName, result)) {
+                tableCreated = true;
+            }
+        } catch (final ResourceNotFoundException e) {
+            tableCreated = false;
+        }
+        if (!tableCreated) {
+            final Collection<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+            attributeDefinitions.add(new AttributeDefinition("id", ScalarAttributeType.S));
+            attributeDefinitions.add(new AttributeDefinition("range", ScalarAttributeType.N));
+            attributeDefinitions.add(new AttributeDefinition("gsiSupportingValue", ScalarAttributeType.N));
+            final Collection<KeySchemaElement> keySchema = new ArrayList<>();
+            keySchema.add(new KeySchemaElement("id", "S").withKeyType(KeyType.HASH));
+            keySchema.add(new KeySchemaElement("range", "N").withKeyType(KeyType.RANGE));
+            final GlobalSecondaryIndex globalSecondaryIndexWithHashToSameAsTableKeySchemaHash = buildSimpleCompoundGlobalSecondaryIndex(
+                    "id", "gsiSupportingValue", "id_gsiSupportingValue_idx");
+            final CreateTableRequest createTableRequest = new CreateTableRequest().withTableName(tableName)
+                    .withAttributeDefinitions(attributeDefinitions).withKeySchema(keySchema)
+                    .withGlobalSecondaryIndexes(globalSecondaryIndexWithHashToSameAsTableKeySchemaHash)
+                    .withProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
+            amazonDynamoDbClient.createTable(createTableRequest);
+
+            final long startTime = System.currentTimeMillis();
+            do {
+                Thread.sleep(1000);
+                final DescribeTableResult describeTableResult = amazonDynamoDbClient.describeTable(tableName);
+                tableCreated = isTableCreated(tableName, describeTableResult);
+            } while (!tableCreated && System.currentTimeMillis() - startTime < 60000);
+        }
+    }
+
+    private GlobalSecondaryIndex buildSimpleCompoundGlobalSecondaryIndex(final String hashKeyName,
+            final String randgeKeyName, final String indexName) {
+        final GlobalSecondaryIndex globalSecondaryIndex = new GlobalSecondaryIndex();
+        final Collection<KeySchemaElement> globalSecondaryIndexKeySchema = new ArrayList<>();
+        globalSecondaryIndexKeySchema.add(new KeySchemaElement(hashKeyName, "S").withKeyType(KeyType.HASH));
+        globalSecondaryIndexKeySchema.add(new KeySchemaElement(randgeKeyName, "N").withKeyType(KeyType.RANGE));
+        globalSecondaryIndex.setIndexName(indexName);
+        globalSecondaryIndex.setKeySchema(globalSecondaryIndexKeySchema);
+        globalSecondaryIndex.setProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
+        final Projection projection = new Projection();
+        projection.setProjectionType(ProjectionType.ALL);
+        globalSecondaryIndex.setProjection(projection);
+        return globalSecondaryIndex;
+    }
+
+    // Add new method for building another GSI using the code above^
 
     private boolean isTableCreated(final String fullStubItemTableName, final DescribeTableResult describeTableResult) {
         return fullStubItemTableName.equals(describeTableResult.getTable().getTableName())
@@ -366,4 +415,12 @@ public class DynamoDbDataGenerator {
         amazonDynamoDbClient.deleteTable(unitTestSchemaName + "." + stubItemWithRangeTableName);
     }
 
+    public StubWithHashAndRangeAndGlobalSecondaryIndexItem randomStubWithHashAndRangeAndGlobalSecondaryIndexItem() {
+        final StubWithHashAndRangeAndGlobalSecondaryIndexItem stubItem = new StubWithHashAndRangeAndGlobalSecondaryIndexItem();
+        stubItem.setId(randomId());
+        stubItem.setRange(randomInt(1000));
+        stubItem.setGsiSupportingValue(randomInt(100));
+        stubItem.setVersion((long) randomInt(100));
+        return stubItem;
+    }
 }
