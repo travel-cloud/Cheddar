@@ -512,7 +512,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withEqualsGsiCompoundAttributeQueryWithHashTheFieldAsTablePrimaryKey() {
+    public void shouldFetch_withEqualsCompoundGsiAttributeQueryAndHashKeyTheSameAsTablesHashKey() {
         // Given
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);

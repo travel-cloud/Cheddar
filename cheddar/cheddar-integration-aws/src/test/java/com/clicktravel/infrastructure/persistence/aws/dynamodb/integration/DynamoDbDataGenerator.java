@@ -221,8 +221,6 @@ public class DynamoDbDataGenerator {
         return globalSecondaryIndex;
     }
 
-    // Add new method for building another GSI using the code above^
-
     private boolean isTableCreated(final String fullStubItemTableName, final DescribeTableResult describeTableResult) {
         return fullStubItemTableName.equals(describeTableResult.getTable().getTableName())
                 && "ACTIVE".equals(describeTableResult.getTable().getTableStatus());
