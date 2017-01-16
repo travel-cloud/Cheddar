@@ -52,10 +52,7 @@ import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.CompoundIndexDefinition;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.DatabaseSchemaHolder;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.IndexDefinition;
-import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.ItemConfiguration;
+import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
@@ -186,6 +183,51 @@ public class DynamoDocumentStoreTemplateTest {
 
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
                 tableName);
+        itemConfiguration.registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+
+        final Table mockTable = mock(Table.class);
+        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+
+        final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
+                mockDatabaseSchemaHolder);
+        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
+
+        final Index mockIndex = mock(Index.class);
+        when(mockTable.getIndex(anyString())).thenReturn(mockIndex);
+
+        final ItemCollection<QueryOutcome> mockOutcome = mock(ItemCollection.class);
+        when(mockIndex.query(any(QuerySpec.class))).thenReturn(mockOutcome);
+
+        final IteratorSupport<Item, QueryOutcome> mockIterator = mock(IteratorSupport.class);
+        final Item mockItem = new Item();
+        mockItem.withString(randomString(), randomString());
+
+        when(mockOutcome.iterator()).thenReturn(mockIterator);
+        when(mockIterator.hasNext()).thenReturn(true, false);
+        when(mockIterator.next()).thenReturn(mockItem);
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> stubWithGlobalSecondaryIndexItemCollection = dynamoDocumentStoreTemplate
+                .fetch(new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, itemId.value()),
+                        "gsiSupportingValue", new Condition(Operators.EQUALS, String.valueOf(randomInt(10)))),
+                        StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertTrue(stubWithGlobalSecondaryIndexItemCollection.size() == 1);
+        final ArgumentCaptor<QuerySpec> querySpecCaptor = ArgumentCaptor.forClass(QuerySpec.class);
+        verify(mockIndex).query(querySpecCaptor.capture());
+        assertNotNull(querySpecCaptor.getValue().getRangeKeyCondition());
+    }
+
+    @Test
+    public void shouldQueryIndex_withACompoundAttributeQueryOnACompoundGSIWithAHashValueTheSameAsThePrimaryKeyDefinition() {
+        // Given
+        final ItemId itemId = new ItemId(randomId());
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
+                tableName, new PrimaryKeyDefinition("gsi"));
         itemConfiguration.registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
         final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
         when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);

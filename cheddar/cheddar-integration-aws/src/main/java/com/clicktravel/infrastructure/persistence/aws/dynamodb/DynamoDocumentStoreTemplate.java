@@ -254,8 +254,9 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             final QuerySpec querySpec = QuerySpecBuilder.build(query, itemClass);
             final ItemCollection<QueryOutcome> queryOutcome;
 
-            if (itemConfiguration.primaryKeyDefinition().propertyName().equals(query.getAttributeName())) {
-                // if the query is for the has then call query on table
+            if (itemConfiguration.primaryKeyDefinition().propertyName().equals(query.getAttributeName())
+                    && !(query instanceof CompoundAttributeQuery)) {
+                // if the query is for the hash then call query on table
                 queryOutcome = table.query(querySpec);
             } else {
                 final String indexName = IndexNameBuilder.build(query);
