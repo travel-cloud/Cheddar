@@ -20,6 +20,7 @@ import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -118,6 +119,38 @@ public class DynamoDocumentStoreTemplateTest {
         assertEquals(stubItem.getStringProperty(), returnedItem.getStringProperty());
         assertEquals(stubItem.getStringProperty2(), returnedItem.getStringProperty2());
         assertEquals(stubItem.getStringSetProperty(), returnedItem.getStringSetProperty());
+    }
+
+    @Test
+    public void shouldCreate_withItemWithNullProperty() {
+        // Given
+        final ItemId itemId = new ItemId(randomId());
+        final StubItem stubItem = generateRandomStubItem(itemId);
+        stubItem.setStringProperty2(null);
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+
+        final Table mockTable = mock(Table.class);
+        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+
+        final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
+                mockDatabaseSchemaHolder);
+        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
+
+        final Item mockTableItem = mock(Item.class);
+        when(mockTableItem.toJSON()).thenReturn(dynamoDocumentStoreTemplate.itemToString(stubItem));
+
+        // When
+        dynamoDocumentStoreTemplate.create(stubItem);
+
+        // Then
+        final ArgumentCaptor<PutItemSpec> getItemRequestCaptor = ArgumentCaptor.forClass(PutItemSpec.class);
+        verify(mockTable).putItem(getItemRequestCaptor.capture());
+
+        final PutItemSpec spec = getItemRequestCaptor.getValue();
+        assertFalse(spec.getItem().isNull("stringProperty2"));
     }
 
     @Test
