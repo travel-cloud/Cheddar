@@ -150,7 +150,7 @@ public class DynamoDocumentStoreTemplateTest {
         verify(mockTable).putItem(getItemRequestCaptor.capture());
 
         final PutItemSpec spec = getItemRequestCaptor.getValue();
-        assertFalse(spec.getItem().isNull("stringProperty2"));
+        assertFalse(spec.getItem().hasAttribute("stringProperty2"));
     }
 
     @Test
