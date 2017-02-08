@@ -21,10 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomInt;
 import static com.clicktravel.common.random.Randoms.randomLong;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.CoreMatchers.hasItems;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -45,6 +42,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.configuration
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.ItemConstraintViolationException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.CompoundAttributeQuery;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Condition;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
@@ -137,6 +135,7 @@ public class DynamoDbTemplateTest {
         final AttributeQuery query = mock(AttributeQuery.class);
         final Condition mockCondition = mock(Condition.class);
         when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
         final String itemId = randomId();
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
@@ -187,6 +186,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("stringProperty");
         when(query.getCondition()).thenReturn(mockCondition);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
@@ -232,6 +232,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("stringProperty");
         when(query.getCondition()).thenReturn(mockCondition);
         final ParentItemConfiguration parentItemConfiguration = new ParentItemConfiguration(StubItem.class, tableName);
@@ -281,6 +282,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("stringProperty");
         when(query.getCondition()).thenReturn(mockCondition);
         final ParentItemConfiguration parentItemConfiguration = new ParentItemConfiguration(StubItem.class, tableName);
@@ -329,6 +331,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("id");
         when(query.getCondition()).thenReturn(mockCondition);
 
@@ -1927,4 +1930,182 @@ public class DynamoDbTemplateTest {
 
     }
 
+    @Test
+    public void shouldFetchEmptyList_withAttributeQueryWithEmptyAttributeList() throws Exception {
+        // Given
+        final AttributeQuery query = mock(AttributeQuery.class);
+        final Condition mockCondition = mock(Condition.class);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(false);
+        when(query.getCondition()).thenReturn(mockCondition);
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        final Collection<StubItem> returnedItems = dynamoDbTemplate.fetch(query, StubItem.class);
+
+        // Then
+        verify(mockAmazonDynamoDbClient, never()).query(any(QueryRequest.class));
+        assertTrue(returnedItems.isEmpty());
+    }
+
+    @Test
+    public void shouldFetch_withCompoundAttributeQueryOnIndex() throws Exception {
+        // Given
+        final String itemId = randomId();
+        final String gsiProperty = randomString(10);
+        final Integer gsiSupportingProperty = randomInt(20);
+        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(gsiProperty));
+        final Set<String> stringSupportingPropertyValues = new HashSet<>(
+                Arrays.asList(String.valueOf(gsiSupportingProperty)));
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
+                tableName);
+        itemConfiguration.registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+
+        final Condition mockCondition = mock(Condition.class);
+        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
+        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+
+        final Condition mockSupportingCondition = mock(Condition.class);
+        when(mockSupportingCondition.getComparisonOperator()).thenReturn(Operators.LESS_THAN_OR_EQUALS);
+        when(mockSupportingCondition.getValues()).thenReturn(stringSupportingPropertyValues);
+
+        final CompoundAttributeQuery query = mock(CompoundAttributeQuery.class);
+        when(query.getAttributeName()).thenReturn("gsi");
+        when(query.getCondition()).thenReturn(mockCondition);
+        when(query.getSupportingAttributeName()).thenReturn("gsiSupportingValue");
+        when(query.getSupportingCondition()).thenReturn(mockSupportingCondition);
+
+        final Map<String, AttributeValue> mockItem = new HashMap<>();
+        mockItem.put("id", new AttributeValue(itemId));
+        mockItem.put("gsi", new AttributeValue(gsiProperty));
+
+        final AttributeValue gsiSupportingPropertyAttributeValue = new AttributeValue();
+        gsiSupportingPropertyAttributeValue.withN(String.valueOf(gsiSupportingProperty));
+        mockItem.put("gsiSupportingValue", gsiSupportingPropertyAttributeValue);
+
+        final List<Map<String, AttributeValue>> mockItems = Arrays.asList(mockItem);
+
+        final QueryResult mockQueryResult = mock(QueryResult.class);
+        when(mockQueryResult.getItems()).thenReturn(mockItems);
+        when(mockQueryResult.getLastEvaluatedKey()).thenReturn(null);
+
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        when(mockAmazonDynamoDbClient.query(any(QueryRequest.class))).thenReturn(mockQueryResult);
+
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> returnedItems = dynamoDbTemplate.fetch(query,
+                StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        final ArgumentCaptor<QueryRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(mockAmazonDynamoDbClient).query(queryRequestArgumentCaptor.capture());
+
+        final QueryRequest queryRequest = queryRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, queryRequest.getTableName());
+        assertEquals("gsi_gsiSupportingValue_idx", queryRequest.getIndexName());
+
+        assertEquals(2, queryRequest.getKeyConditions().size());
+
+        assertEquals("EQ", queryRequest.getKeyConditions().get("gsi").getComparisonOperator());
+        assertEquals(1, queryRequest.getKeyConditions().get("gsi").getAttributeValueList().size());
+        assertEquals(new AttributeValue(gsiProperty),
+                queryRequest.getKeyConditions().get("gsi").getAttributeValueList().get(0));
+
+        assertEquals("LE", queryRequest.getKeyConditions().get("gsiSupportingValue").getComparisonOperator());
+        assertEquals(1, queryRequest.getKeyConditions().get("gsiSupportingValue").getAttributeValueList().size());
+        assertEquals(gsiSupportingPropertyAttributeValue,
+                queryRequest.getKeyConditions().get("gsiSupportingValue").getAttributeValueList().get(0));
+
+        assertNotNull(returnedItems);
+        assertEquals(1, returnedItems.size());
+    }
+
+    @Test
+    public void shouldFetch_withACompoundAttributeQueryOnACompoundGSIWithAHashValueTheSameAsThePrimaryKeyDefinition() {
+        // Given
+        final String itemId = randomId();
+        final String gsiProperty = randomString(10);
+        final Integer gsiSupportingProperty = randomInt(20);
+        final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(gsiProperty));
+        final Set<String> stringSupportingPropertyValues = new HashSet<>(
+                Arrays.asList(String.valueOf(gsiSupportingProperty)));
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
+                tableName, new PrimaryKeyDefinition("gsi"));
+        itemConfiguration.registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+
+        final Condition mockCondition = mock(Condition.class);
+        when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
+        when(mockCondition.getValues()).thenReturn(stringPropertyValues);
+        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+
+        final Condition mockSupportingCondition = mock(Condition.class);
+        when(mockSupportingCondition.getComparisonOperator()).thenReturn(Operators.LESS_THAN_OR_EQUALS);
+        when(mockSupportingCondition.getValues()).thenReturn(stringSupportingPropertyValues);
+
+        final CompoundAttributeQuery query = mock(CompoundAttributeQuery.class);
+        when(query.getAttributeName()).thenReturn("gsi");
+        when(query.getCondition()).thenReturn(mockCondition);
+        when(query.getSupportingAttributeName()).thenReturn("gsiSupportingValue");
+        when(query.getSupportingCondition()).thenReturn(mockSupportingCondition);
+
+        final Map<String, AttributeValue> mockItem = new HashMap<>();
+        mockItem.put("id", new AttributeValue(itemId));
+        mockItem.put("gsi", new AttributeValue(gsiProperty));
+
+        final AttributeValue gsiSupportingPropertyAttributeValue = new AttributeValue();
+        gsiSupportingPropertyAttributeValue.withN(String.valueOf(gsiSupportingProperty));
+        mockItem.put("gsiSupportingValue", gsiSupportingPropertyAttributeValue);
+
+        final List<Map<String, AttributeValue>> mockItems = Arrays.asList(mockItem);
+
+        final QueryResult mockQueryResult = mock(QueryResult.class);
+        when(mockQueryResult.getItems()).thenReturn(mockItems);
+        when(mockQueryResult.getLastEvaluatedKey()).thenReturn(null);
+
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+        when(mockAmazonDynamoDbClient.query(any(QueryRequest.class))).thenReturn(mockQueryResult);
+
+        final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(mockDatabaseSchemaHolder);
+        dynamoDbTemplate.initialize(mockAmazonDynamoDbClient);
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> returnedItems = dynamoDbTemplate.fetch(query,
+                StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        final ArgumentCaptor<QueryRequest> queryRequestArgumentCaptor = ArgumentCaptor.forClass(QueryRequest.class);
+        verify(mockAmazonDynamoDbClient).query(queryRequestArgumentCaptor.capture());
+
+        final QueryRequest queryRequest = queryRequestArgumentCaptor.getValue();
+        assertEquals(schemaName + "." + tableName, queryRequest.getTableName());
+        assertEquals("gsi_gsiSupportingValue_idx", queryRequest.getIndexName());
+
+        assertEquals(2, queryRequest.getKeyConditions().size());
+
+        assertEquals("EQ", queryRequest.getKeyConditions().get("gsi").getComparisonOperator());
+        assertEquals(1, queryRequest.getKeyConditions().get("gsi").getAttributeValueList().size());
+        assertEquals(new AttributeValue(gsiProperty),
+                queryRequest.getKeyConditions().get("gsi").getAttributeValueList().get(0));
+
+        assertEquals("LE", queryRequest.getKeyConditions().get("gsiSupportingValue").getComparisonOperator());
+        assertEquals(1, queryRequest.getKeyConditions().get("gsiSupportingValue").getAttributeValueList().size());
+        assertEquals(gsiSupportingPropertyAttributeValue,
+                queryRequest.getKeyConditions().get("gsiSupportingValue").getAttributeValueList().get(0));
+
+        assertNotNull(returnedItems);
+        assertEquals(1, returnedItems.size());
+    }
 }

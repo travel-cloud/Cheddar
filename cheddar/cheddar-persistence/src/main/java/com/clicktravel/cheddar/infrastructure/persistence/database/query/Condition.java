@@ -79,6 +79,16 @@ public class Condition {
         values = new HashSet<>();
     }
 
+    public boolean containsNonNullOrEmptyValues() {
+        for (final String value : values) {
+            if (value != null && !value.isEmpty()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public Operators getComparisonOperator() {
         return comparisonOperator;
     }

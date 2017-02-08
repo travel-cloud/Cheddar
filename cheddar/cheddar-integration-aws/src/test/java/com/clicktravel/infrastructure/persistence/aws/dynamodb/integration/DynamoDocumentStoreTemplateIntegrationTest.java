@@ -99,6 +99,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
     public static void deleteTables() {
         dataGenerator.deleteStubItemTable();
         dataGenerator.deleteStubItemWithRangeTable();
+        dataGenerator.deleteStubItemWithGlobalSecondaryIndexTable();
+        dataGenerator.deleteStubItemWithHashAndRangePrimaryKeyAndCompoundGlobalSecondaryIndexTable();
     }
 
     @Test

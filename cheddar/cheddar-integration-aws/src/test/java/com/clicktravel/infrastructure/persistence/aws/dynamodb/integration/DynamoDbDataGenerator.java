@@ -413,6 +413,14 @@ public class DynamoDbDataGenerator {
         amazonDynamoDbClient.deleteTable(unitTestSchemaName + "." + stubItemWithRangeTableName);
     }
 
+    public void deleteStubItemWithGlobalSecondaryIndexTable() {
+        amazonDynamoDbClient.deleteTable(unitTestSchemaName + "." + stubItemWithGsiTableName);
+    }
+
+    public void deleteStubItemWithHashAndRangePrimaryKeyAndCompoundGlobalSecondaryIndexTable() {
+        amazonDynamoDbClient.deleteTable(unitTestSchemaName + "." + stubItemWithHashAndRangeAndGsiTableName);
+    }
+
     public StubWithHashAndRangeAndGlobalSecondaryIndexItem randomStubWithHashAndRangeAndGlobalSecondaryIndexItem() {
         final StubWithHashAndRangeAndGlobalSecondaryIndexItem stubItem = new StubWithHashAndRangeAndGlobalSecondaryIndexItem();
         stubItem.setId(randomId());

@@ -16,12 +16,11 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
+import static com.clicktravel.common.random.Randoms.randomBoolean;
 import static com.clicktravel.common.random.Randoms.randomEnum;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.util.Set;
 
@@ -75,4 +74,33 @@ public class ConditionTest {
         assertEquals(0, condition.getValues().size());
     }
 
+    @Test
+    public void shouldReturnContainsNonNullOrEmptyValues_withConditionWithNonNullOrEmptyValues() {
+        // Given
+        final Operators randomComparisonOperator = randomEnum(Operators.class);
+        final String value = randomString(10);
+
+        final Condition condition = new Condition(randomComparisonOperator, value);
+
+        // When
+        final boolean containsNonNullOrEmptyValues = condition.containsNonNullOrEmptyValues();
+
+        // Then
+        assertTrue(containsNonNullOrEmptyValues);
+    }
+
+    @Test
+    public void shouldReturnDoesNotContainNonNullOrEmptyValues_withConditionWithNullOrEmptyValues() {
+        // Given
+        final Operators randomComparisonOperator = randomEnum(Operators.class);
+        final String value = randomBoolean() ? null : "";
+
+        final Condition condition = new Condition(randomComparisonOperator, value);
+
+        // When
+        final boolean containsNonNullOrEmptyValues = condition.containsNonNullOrEmptyValues();
+
+        // Then
+        assertFalse(containsNonNullOrEmptyValues);
+    }
 }

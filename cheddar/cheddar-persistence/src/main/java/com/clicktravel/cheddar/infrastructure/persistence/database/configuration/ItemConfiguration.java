@@ -183,13 +183,17 @@ public class ItemConfiguration {
         return hasIndexOn(indexName);
     }
 
-    private Class<?> getPropertyType(final String propertyName) {
+    public PropertyDescriptor getPropertyDescriptor(final String propertyName) {
         final PropertyDescriptor propertyDescriptor = properties.get(propertyName);
         if (propertyDescriptor == null) {
             throw new IllegalStateException("No property found '" + propertyName + "' for item :" + itemClass);
         }
 
-        return propertyDescriptor.getPropertyType();
+        return propertyDescriptor;
+    }
+
+    private Class<?> getPropertyType(final String propertyName) {
+        return getPropertyDescriptor(propertyName).getPropertyType();
     }
 
     private String compoundName(final String propertyName, final String supportingPropertyName) {

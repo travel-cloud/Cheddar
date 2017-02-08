@@ -37,6 +37,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.database.exception.Non
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.OptimisticLockException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.handler.PersistenceExceptionHandler;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.*;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.Condition;
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceResourceFailureException;
 
 @Deprecated
@@ -432,51 +433,29 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
 
     private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
-        final com.amazonaws.services.dynamodbv2.model.Condition condition = new com.amazonaws.services.dynamodbv2.model.Condition();
 
-        if (query.getCondition().getComparisonOperator() == Operators.NULL) {
-            condition.setComparisonOperator(ComparisonOperator.NULL);
-        } else if (query.getCondition().getComparisonOperator() == Operators.NOT_NULL) {
-            condition.setComparisonOperator(ComparisonOperator.NOT_NULL);
-        } else {
-            if (query.getCondition().getComparisonOperator() == Operators.EQUALS) {
-                condition.setComparisonOperator(ComparisonOperator.EQ);
-            } else if (query.getCondition().getComparisonOperator() == Operators.LESS_THAN_OR_EQUALS) {
-                condition.setComparisonOperator(ComparisonOperator.LE);
-            } else if (query.getCondition().getComparisonOperator() == Operators.GREATER_THAN_OR_EQUALS) {
-                condition.setComparisonOperator(ComparisonOperator.GE);
-            }
-
-            final Collection<AttributeValue> attributeValueList = new ArrayList<>();
-
-            for (final String value : query.getCondition().getValues()) {
-                if (value != null && !value.isEmpty()) {
-                    attributeValueList.add(new AttributeValue(value));
-                }
-            }
-
-            if (attributeValueList.size() == 0) {
-                return new ArrayList<>();
-            }
-
-            condition.setAttributeValueList(attributeValueList);
+        if (!query.getCondition().containsNonNullOrEmptyValues()) {
+            return new ArrayList<>();
         }
 
-        final Map<String, com.amazonaws.services.dynamodbv2.model.Condition> conditions = new HashMap<>();
-        conditions.put(query.getAttributeName(), condition);
+        Map<String, com.amazonaws.services.dynamodbv2.model.Condition> conditions;
+        try {
+            conditions = createDynamoDbConditionsMap(query, itemConfiguration);
+        } catch (final Exception e) {
+            throw new PersistenceResourceFailureException("Failure while attempting DynamoDb Query (" + query + ")", e);
+        }
+
         final List<T> totalItems = new ArrayList<>();
         Map<String, AttributeValue> lastEvaluatedKey = null;
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
-        if (itemConfiguration.hasIndexOn(query.getAttributeName())) {
+        if (itemConfiguration.hasIndexForQuery(query)) {
             do {
                 final String queryAttributeName = query.getAttributeName();
-                final PrimaryKeyDefinition primaryKeyDefinition = itemConfiguration.primaryKeyDefinition();
-                final String primaryKeyPropertyName = primaryKeyDefinition.propertyName();
-                final boolean isPrimaryKeyQuery = queryAttributeName.equals(primaryKeyPropertyName);
                 final QueryRequest queryRequest = new QueryRequest().withTableName(tableName)
                         .withKeyConditions(conditions).withExclusiveStartKey(lastEvaluatedKey);
-                if (!isPrimaryKeyQuery) {
-                    queryRequest.withIndexName(queryAttributeName + "_idx");
+                if (isQueryOnIndex(query, itemConfiguration, queryAttributeName)) {
+                    final String indexName = IndexNameBuilder.build(query);
+                    queryRequest.withIndexName(indexName);
                 }
 
                 final QueryResult queryResult;
@@ -641,5 +620,65 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             itemVersions.put(item, newVersion);
             writeRequestsForTable.add(new WriteRequest().withPutRequest(putRequest));
         }
+    }
+
+    private boolean isQueryOnIndex(final AttributeQuery query, final ItemConfiguration itemConfiguration,
+            final String queryAttributeName) {
+        return !(itemConfiguration.primaryKeyDefinition().propertyName().equals(queryAttributeName)
+                && !(query instanceof CompoundAttributeQuery));
+    }
+
+    private <T extends Item> Map<String, com.amazonaws.services.dynamodbv2.model.Condition> createDynamoDbConditionsMap(
+            final AttributeQuery query, final ItemConfiguration itemConfiguration) throws Exception {
+        final Map<String, com.amazonaws.services.dynamodbv2.model.Condition> conditions = new HashMap<>();
+
+        final com.amazonaws.services.dynamodbv2.model.Condition condition = createDynamoDbCondition(
+                query.getCondition(), query.getAttributeName(), itemConfiguration);
+        conditions.put(query.getAttributeName(), condition);
+
+        if (CompoundAttributeQuery.class.isAssignableFrom(query.getClass())) {
+            final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) query;
+            final com.amazonaws.services.dynamodbv2.model.Condition supportingCondition = createDynamoDbCondition(
+                    compoundAttributeQuery.getSupportingCondition(),
+                    compoundAttributeQuery.getSupportingAttributeName(), itemConfiguration);
+            conditions.put(compoundAttributeQuery.getSupportingAttributeName(), supportingCondition);
+        }
+
+        return conditions;
+    }
+
+    private <T extends Item> com.amazonaws.services.dynamodbv2.model.Condition createDynamoDbCondition(
+            final Condition condition, final String propertyName, final ItemConfiguration itemConfiguration)
+                    throws Exception {
+        final com.amazonaws.services.dynamodbv2.model.Condition dynamoDbCondition = new com.amazonaws.services.dynamodbv2.model.Condition();
+
+        if (condition.getComparisonOperator() == Operators.NULL) {
+            dynamoDbCondition.setComparisonOperator(ComparisonOperator.NULL);
+        } else if (condition.getComparisonOperator() == Operators.NOT_NULL) {
+            dynamoDbCondition.setComparisonOperator(ComparisonOperator.NOT_NULL);
+        } else {
+            if (condition.getComparisonOperator() == Operators.EQUALS) {
+                dynamoDbCondition.setComparisonOperator(ComparisonOperator.EQ);
+            } else if (condition.getComparisonOperator() == Operators.LESS_THAN_OR_EQUALS) {
+                dynamoDbCondition.setComparisonOperator(ComparisonOperator.LE);
+            } else if (condition.getComparisonOperator() == Operators.GREATER_THAN_OR_EQUALS) {
+                dynamoDbCondition.setComparisonOperator(ComparisonOperator.GE);
+            }
+
+            final Collection<AttributeValue> attributeValueList = new ArrayList<>();
+
+            for (final String stringValue : condition.getValues()) {
+                if (stringValue != null && !stringValue.isEmpty()) {
+                    final PropertyDescriptor propertyDescriptor = itemConfiguration.getPropertyDescriptor(propertyName);
+                    final AttributeValue attributeValue = DynamoDbPropertyMarshaller.getAttributeValue(stringValue,
+                            propertyDescriptor);
+                    attributeValueList.add(attributeValue);
+                }
+            }
+
+            dynamoDbCondition.setAttributeValueList(attributeValueList);
+        }
+
+        return dynamoDbCondition;
     }
 }
