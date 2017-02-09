@@ -438,7 +438,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             return new ArrayList<>();
         }
 
-        Map<String, com.amazonaws.services.dynamodbv2.model.Condition> conditions;
+        final Map<String, com.amazonaws.services.dynamodbv2.model.Condition> conditions;
         try {
             conditions = createDynamoDbConditionsMap(query, itemConfiguration);
         } catch (final Exception e) {
