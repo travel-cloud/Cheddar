@@ -80,13 +80,7 @@ public class Condition {
     }
 
     public boolean containsNonNullOrEmptyValues() {
-        for (final String value : values) {
-            if (value != null && !value.isEmpty()) {
-                return true;
-            }
-        }
-
-        return false;
+        return values.stream().anyMatch(value -> value != null && !value.isEmpty());
     }
 
     public Operators getComparisonOperator() {
