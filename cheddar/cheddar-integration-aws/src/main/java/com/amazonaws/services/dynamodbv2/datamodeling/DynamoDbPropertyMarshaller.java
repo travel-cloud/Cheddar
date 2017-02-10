@@ -111,4 +111,29 @@ public class DynamoDbPropertyMarshaller {
             return ScalarAttributeType.S;
         }
     }
+
+    public static AttributeValue getAttributeValue(final Object propertyValue,
+            final PropertyDescriptor propertyDescriptor) {
+        final Method readMethod = propertyDescriptor.getReadMethod();
+        if (propertyValue == null) {
+            return null;
+        }
+        if (propertyValue instanceof Collection && ((Collection<?>) propertyValue).isEmpty()) {
+            return null;
+        }
+        final DynamoDBReflectorUtil reflector = new DynamoDBReflectorUtil();
+        try {
+            final ArgumentMarshaller marshaller = reflector.getArgumentMarshaller(readMethod);
+            return marshaller.marshall(propertyValue);
+        } catch (final DynamoDBMappingException e) {
+            try {
+                final StringWriter output = new StringWriter();
+                final JsonGenerator jsonGenerator = jsonFactory.createGenerator(output);
+                jsonGenerator.writeObject(propertyValue);
+                return new AttributeValue(output.toString());
+            } catch (final IOException ioException) {
+                throw new IllegalStateException(ioException);
+            }
+        }
+    }
 }

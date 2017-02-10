@@ -79,6 +79,10 @@ public class Condition {
         values = new HashSet<>();
     }
 
+    public boolean containsNonNullOrEmptyValues() {
+        return values.stream().anyMatch(value -> value != null && !value.isEmpty());
+    }
+
     public Operators getComparisonOperator() {
         return comparisonOperator;
     }

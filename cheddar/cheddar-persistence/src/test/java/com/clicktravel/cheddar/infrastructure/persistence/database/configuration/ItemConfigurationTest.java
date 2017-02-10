@@ -267,4 +267,41 @@ public class ItemConfigurationTest {
         // Then
         assertFalse(hasIndexForQuery);
     }
+
+    @Test
+    public void shouldGetPropertyDescriptor_withPropertyName() throws Exception {
+        // Given
+        final Class<? extends Item> itemClass = StubItem.class;
+        final String tableName = randomString(10);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
+        final String propertyName = "stringProperty";
+
+        // When
+        final PropertyDescriptor propertyDescriptor = itemConfiguration.getPropertyDescriptor(propertyName);
+
+        // Then
+        assertNotNull(propertyDescriptor);
+        assertEquals(String.class, propertyDescriptor.getPropertyType());
+        assertEquals(propertyName, propertyDescriptor.getName());
+    }
+
+    @Test
+    public void shouldNotGetPropertyDescriptor_withInvalidPropertyName() throws Exception {
+        // Given
+        final Class<? extends Item> itemClass = StubItem.class;
+        final String tableName = randomString(10);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
+        final String propertyName = randomString();
+
+        // When
+        IllegalStateException thrownException = null;
+        try {
+            itemConfiguration.getPropertyDescriptor(propertyName);
+        } catch (final IllegalStateException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
 }
