@@ -20,7 +20,7 @@
 def checkstyleConfigDir = new File(rootDir, 'config/checkstyle')
 
 // Select all non-empty subprojects
-def subproj = subprojects.findAll{ new File(it.projectDir, "src").exists() }
+def subproj = subprojects.findAll { new File(it.projectDir, "src").exists() }
 
 // Add clean task to all projects
 allprojects { apply plugin: 'base' }
@@ -50,16 +50,8 @@ configure(subproj) {
         configFile = new File(checkstyleConfigDir, "checkstyle.xml")
         configProperties.checkstyleConfigDir = checkstyleConfigDir
     }
-    
-    configurations.all {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            // Use org.mockito:mockito-core:xxx rather than org.mockito:mockito-all:xxx
-            // This fixes Powermock's transitive dependencies conflicting with org.hamcrest:hamcrest-core
-            if (details.requested.group == 'org.mockito' && details.requested.name == 'mockito-all') {
-                details.useTarget "org.mockito:mockito-core:${details.requested.version}"
-            }
-        }
 
+    configurations.all {
         // Remove Jakarta Commons Logging
         exclude(group: 'commons-logging', module: 'commons-logging')
     }
@@ -78,7 +70,9 @@ task checkstyleAggregate {
     doLast {
         def reportFiles = fileTree(rootDir).include('**/checkstyle/main.xml', '**/checkstyle/test.xml')
         def reportDir = new File("${project.buildDir}/reports/checkstyle")
-        if( !reportDir.exists() ) { reportDir.mkdirs() }
+        if (!reportDir.exists()) {
+            reportDir.mkdirs()
+        }
         def file = new File("${reportDir}/aggregate.xml")
         def fileElemWriter = new PrintWriter(file)
         fileElemWriter.print('<checkstyle version="5.6">')
@@ -104,11 +98,13 @@ def integrationTestTask = tasks.getByPath(':cheddar:cheddar-integration-aws:inte
 task checkAllWithIntegrationIfNeeded {
     description 'Check all subprojects and follow with integration tests if needed'
     dependsOn { checkAll }
-    if (runIntegrationTests) { dependsOn { integrationTestTask } }
+    if (runIntegrationTests) {
+        dependsOn { integrationTestTask }
+    }
 }
 integrationTestTask.mustRunAfter checkAll
 
-task uploadAll (dependsOn: subproj.uploadArchives) {
+task uploadAll(dependsOn: subproj.uploadArchives) {
     description 'Upload source and binaries for all subprojects'
     doLast {
         println "Uploaded Cheddar version ${version}"
@@ -123,5 +119,5 @@ uploadAll.mustRunAfter checkAllWithIntegrationIfNeeded
 
 task wrapper(type: Wrapper) {
     description "Produce Gradle Wrapper scripts for running Gradle on machines that don't have Gradle installed"
-    gradleVersion = '2.9'
+    gradleVersion = '3.3'
 }
