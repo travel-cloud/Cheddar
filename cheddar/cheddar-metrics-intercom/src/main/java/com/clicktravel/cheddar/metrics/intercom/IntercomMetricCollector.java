@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
+import java.util.Map;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +49,11 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void tagOrganisation(final String tagName, final MetricOrganisation metricOrganisation) {
-        Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
+        try {
+            Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
+        } catch (final Exception e) {
+            logger.debug("Error tagging Intercom organisation: " + metricOrganisation + " - " + e.getMessage());
+        }
     }
 
     @Override
@@ -68,6 +74,18 @@ public class IntercomMetricCollector implements MetricCollector {
             User.update(intercomUser);
         } catch (final Exception e) {
             logger.debug("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void addCustomAttributesToUser(final Map<String, String> customAttributes, final MetricUser user) {
+        final User intercomUser = getIntercomUser(user);
+        try {
+            customAttributes.entrySet().stream().forEach(customAttribute -> intercomUser.addCustomAttribute(
+                    CustomAttribute.newStringAttribute(customAttribute.getKey(), customAttribute.getValue())));
+            User.update(intercomUser);
+        } catch (final Exception e) {
+            logger.debug("Error tagging Intercom user: " + intercomUser + " - " + e.getMessage());
         }
     }
 
