@@ -72,6 +72,12 @@ public class IntercomMetricCollector implements MetricCollector {
     }
 
     @Override
+    public void tagUser(final String tagName, final MetricUser user) {
+        final User intercomUser = getIntercomUser(user);
+        Tag.tag(new Tag().setName(tagName), intercomUser);
+    }
+
+    @Override
     public void deleteUser(final String userId) {
         try {
             User.delete(userId);

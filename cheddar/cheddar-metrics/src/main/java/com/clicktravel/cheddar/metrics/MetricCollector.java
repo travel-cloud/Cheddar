@@ -28,6 +28,8 @@ public interface MetricCollector {
 
     void updateUser(MetricUser user);
 
+    void tagUser(String tagName, MetricUser user);
+
     void deleteUser(String userId);
 
     void sendMetric(Metric metric);
