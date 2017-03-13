@@ -83,6 +83,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             customAttributes.entrySet().stream().forEach(customAttribute -> intercomUser.addCustomAttribute(
                     CustomAttribute.newStringAttribute(customAttribute.getKey(), customAttribute.getValue())));
+            User.update(intercomUser);
         } catch (final Exception e) {
             logger.debug("Error tagging Intercom user: " + intercomUser + " - " + e.getMessage());
         }
