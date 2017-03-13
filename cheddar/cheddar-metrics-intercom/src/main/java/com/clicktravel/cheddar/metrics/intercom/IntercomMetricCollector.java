@@ -78,16 +78,6 @@ public class IntercomMetricCollector implements MetricCollector {
     }
 
     @Override
-    public void tagUser(final String tagName, final MetricUser user) {
-        final User intercomUser = getIntercomUser(user);
-        try {
-            Tag.tag(new Tag().setName(tagName), intercomUser);
-        } catch (final Exception e) {
-            logger.debug("Error adding Intercom custom attribute to user: " + intercomUser + " - " + e.getMessage());
-        }
-    }
-
-    @Override
     public void addCustomAttributesToUser(final Map<String, String> customAttributes, final MetricUser user) {
         final User intercomUser = getIntercomUser(user);
         try {
