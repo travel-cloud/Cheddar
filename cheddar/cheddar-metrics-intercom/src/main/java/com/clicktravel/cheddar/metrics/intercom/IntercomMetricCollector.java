@@ -16,11 +16,7 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -82,36 +78,26 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             final User intercomUser = User.find(userId);
 
-            final List<Class<?>> classTypes = Arrays.asList(Boolean.class, String.class, Integer.class, Double.class,
-                    Long.class, Float.class);
-            final Optional<Entry<String, Object>> unsupportedClassType = customAttributes.entrySet().stream()
-                    .filter(entry -> !classTypes.contains(entry.getValue().getClass())).findAny();
-
-            if (unsupportedClassType.isPresent()) {
-                logger.debug("Unsupported custom attribute class type: " + unsupportedClassType.get());
-            } else {
-                customAttributes.entrySet().stream().forEach(entry -> {
-                    if (entry.getValue().getClass().equals(Boolean.class)) {
-                        intercomUser.addCustomAttribute(CustomAttribute.newBooleanAttribute((String) entry.getValue(),
-                                (Boolean) entry.getValue()));
-                    } else if (entry.getValue().getClass().equals(Integer.class)) {
-                        intercomUser.addCustomAttribute(CustomAttribute.newIntegerAttribute((String) entry.getValue(),
-                                (Integer) entry.getValue()));
-                    } else if (entry.getValue().getClass().equals(Double.class)) {
-                        intercomUser.addCustomAttribute(CustomAttribute.newDoubleAttribute((String) entry.getValue(),
-                                (Double) entry.getValue()));
-                    } else if (entry.getValue().getClass().equals(Long.class)) {
-                        intercomUser.addCustomAttribute(
-                                CustomAttribute.newLongAttribute((String) entry.getValue(), (Long) entry.getValue()));
-                    } else if (entry.getValue().getClass().equals(String.class)) {
-                        intercomUser.addCustomAttribute(
-                                CustomAttribute.newFloatAttribute((String) entry.getValue(), (Float) entry.getValue()));
-                    } else {
-                        intercomUser.addCustomAttribute(CustomAttribute.newStringAttribute((String) entry.getValue(),
-                                (String) entry.getValue()));
-                    }
-                });
-            }
+            customAttributes.entrySet().stream().forEach(entry -> {
+                final String key = entry.getKey();
+                final Object value = entry.getValue();
+                if (value.getClass().equals(Boolean.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newBooleanAttribute(key, (Boolean) value));
+                } else if (value.getClass().equals(Integer.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newIntegerAttribute(key, (Integer) value));
+                } else if (value.getClass().equals(Double.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newDoubleAttribute(key, (Double) value));
+                } else if (value.getClass().equals(Long.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newLongAttribute(key, (Long) value));
+                } else if (value.getClass().equals(Float.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newFloatAttribute(key, (Float) value));
+                } else if (value.getClass().equals(String.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newStringAttribute(key, (String) value));
+                } else {
+                    logger.warn("Unsupported custom attribute class : " + value.getClass().getSimpleName());
+                }
+            });
+            User.update(intercomUser);
         } catch (final Exception e) {
             logger.debug(
                     "Error adding custom attributes to  Intercom user with id: " + userId + " - " + e.getMessage());
