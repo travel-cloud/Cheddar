@@ -49,7 +49,11 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void tagOrganisation(final String tagName, final MetricOrganisation metricOrganisation) {
-        Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
+        try {
+            Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
+        } catch (final Exception e) {
+            logger.debug("Error taging Intercom organisation: " + metricOrganisation + " - " + e.getMessage());
+        }
     }
 
     @Override
@@ -99,8 +103,7 @@ public class IntercomMetricCollector implements MetricCollector {
             });
             User.update(intercomUser);
         } catch (final Exception e) {
-            logger.debug(
-                    "Error adding custom attributes to  Intercom user with id: " + userId + " - " + e.getMessage());
+            logger.warn("Error adding custom attributes to  Intercom user with id: " + userId + " - " + e.getMessage());
         }
     }
 
