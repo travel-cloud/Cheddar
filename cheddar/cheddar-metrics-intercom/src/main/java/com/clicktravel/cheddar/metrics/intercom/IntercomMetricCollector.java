@@ -52,7 +52,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
         } catch (final Exception e) {
-            logger.debug("Error taging Intercom organisation: " + metricOrganisation + " - " + e.getMessage());
+            logger.warn("Error tagging Intercom organisation: " + metricOrganisation + " - " + e.getMessage());
         }
     }
 
@@ -63,7 +63,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.create(intercomUser);
         } catch (final Exception e) {
-            logger.debug("Error creating a Intercom user: " + intercomUser + " - " + e.getMessage());
+            logger.warn("Error creating a Intercom user: " + intercomUser + " - " + e.getMessage());
         }
     }
 
@@ -73,7 +73,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.update(intercomUser);
         } catch (final Exception e) {
-            logger.debug("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+            logger.warn("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
         }
     }
 
@@ -112,7 +112,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.delete(userId);
         } catch (final Exception e) {
-            logger.debug("Error deleting a Intercom user: " + userId + " - " + e.getMessage());
+            logger.warn("Error deleting a Intercom user: " + userId + " - " + e.getMessage());
         }
     }
 
@@ -153,7 +153,7 @@ public class IntercomMetricCollector implements MetricCollector {
             }
             Event.create(event);
         } catch (final Exception e) {
-            logger.debug("Failed to send metric via Intercom", e);
+            logger.warn("Failed to send metric via Intercom", e);
         }
     }
 
@@ -193,7 +193,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             Company.create(company);
         } catch (final Exception e) {
-            logger.debug("Error creating/updating a Intercom company: " + company + " - " + e.getMessage());
+            logger.warn("Error creating/updating a Intercom company: " + company + " - " + e.getMessage());
         }
     }
 }
