@@ -1,3 +1,4 @@
+apply from: '../../test.gradle'
 apply from: '../../logging-api.gradle'
 
 dependencies {

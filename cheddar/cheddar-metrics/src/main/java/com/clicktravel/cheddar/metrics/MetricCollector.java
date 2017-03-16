@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.metrics;
 
+import java.util.Map;
+
 public interface MetricCollector {
 
     void createOrganisation(MetricOrganisation metricOrganisation);
@@ -27,6 +29,8 @@ public interface MetricCollector {
     void createUser(MetricUser user);
 
     void updateUser(MetricUser user);
+
+    void addCustomAttributesToUser(String userId, Map<String, Object> customAttributes);
 
     void deleteUser(String userId);
 

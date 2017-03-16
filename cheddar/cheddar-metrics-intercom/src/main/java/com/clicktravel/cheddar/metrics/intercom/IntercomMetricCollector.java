@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
+import java.util.Map;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +49,11 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void tagOrganisation(final String tagName, final MetricOrganisation metricOrganisation) {
-        Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
+        try {
+            Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
+        } catch (final Exception e) {
+            logger.warn("Error tagging Intercom organisation: " + metricOrganisation + " - " + e.getMessage());
+        }
     }
 
     @Override
@@ -57,7 +63,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.create(intercomUser);
         } catch (final Exception e) {
-            logger.debug("Error creating a Intercom user: " + intercomUser + " - " + e.getMessage());
+            logger.warn("Error creating a Intercom user: " + intercomUser + " - " + e.getMessage());
         }
     }
 
@@ -67,7 +73,37 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.update(intercomUser);
         } catch (final Exception e) {
-            logger.debug("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+            logger.warn("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void addCustomAttributesToUser(final String userId, final Map<String, Object> customAttributes) {
+        try {
+            final User intercomUser = User.find(userId);
+
+            customAttributes.entrySet().stream().forEach(entry -> {
+                final String key = entry.getKey();
+                final Object value = entry.getValue();
+                if (value.getClass().equals(Boolean.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newBooleanAttribute(key, (Boolean) value));
+                } else if (value.getClass().equals(Integer.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newIntegerAttribute(key, (Integer) value));
+                } else if (value.getClass().equals(Double.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newDoubleAttribute(key, (Double) value));
+                } else if (value.getClass().equals(Long.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newLongAttribute(key, (Long) value));
+                } else if (value.getClass().equals(Float.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newFloatAttribute(key, (Float) value));
+                } else if (value.getClass().equals(String.class)) {
+                    intercomUser.addCustomAttribute(CustomAttribute.newStringAttribute(key, (String) value));
+                } else {
+                    logger.warn("Unsupported custom attribute class : " + value.getClass().getSimpleName());
+                }
+            });
+            User.update(intercomUser);
+        } catch (final Exception e) {
+            logger.warn("Error adding custom attributes to  Intercom user with id: " + userId + " - " + e.getMessage());
         }
     }
 
@@ -76,7 +112,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.delete(userId);
         } catch (final Exception e) {
-            logger.debug("Error deleting a Intercom user: " + userId + " - " + e.getMessage());
+            logger.warn("Error deleting a Intercom user: " + userId + " - " + e.getMessage());
         }
     }
 
@@ -117,7 +153,7 @@ public class IntercomMetricCollector implements MetricCollector {
             }
             Event.create(event);
         } catch (final Exception e) {
-            logger.debug("Failed to send metric via Intercom", e);
+            logger.warn("Failed to send metric via Intercom", e);
         }
     }
 
@@ -157,7 +193,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             Company.create(company);
         } catch (final Exception e) {
-            logger.debug("Error creating/updating a Intercom company: " + company + " - " + e.getMessage());
+            logger.warn("Error creating/updating a Intercom company: " + company + " - " + e.getMessage());
         }
     }
 }
