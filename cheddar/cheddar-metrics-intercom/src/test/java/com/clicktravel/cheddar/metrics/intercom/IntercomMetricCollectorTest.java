@@ -31,7 +31,10 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,38 +54,14 @@ import io.intercom.api.User;
 public class IntercomMetricCollectorTest {
 
     private IntercomMetricCollector intercomMetricCollector;
-    private List<Class<?>> classTypes;
-    private List<CustomAttribute<?>> expectedAttributes;
 
     @Before
     public void setUp() {
         PowerMockito.mockStatic(CustomAttribute.class);
         PowerMockito.mockStatic(User.class);
-        classTypes = Arrays.asList(Boolean.class, String.class, Integer.class, Double.class, Long.class, Float.class);
-        expectedAttributes = new ArrayList<>();
         final String personalAccessToken = randomString();
         intercomMetricCollector = new IntercomMetricCollector(personalAccessToken);
     }
-    //
-    // @Test
-    // public void shouldAddCustomAttributesToUser_withUserIdAndValidAttribute() {
-    // // Given
-    // final String userId = randomId();
-    // final User mockUser = mock(User.class);
-    // when(User.find(userId)).thenReturn(mockUser);
-    // final Map<String, Object> customAttributes = mockCustomAttributes();
-    //
-    // // When
-    // intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-    //
-    // // Then
-    // final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-    // verify(mockUser, times(classTypes.size())).addCustomAttribute(argumentCaptor.capture());
-    // assertThat(argumentCaptor.getAllValues(),
-    // containsInAnyOrder(expectedAttributes.toArray(new CustomAttribute[expectedAttributes.size()])));
-    // verifyStatic();
-    // User.update(mockUser);
-    // }
 
     @Test
     public void shouldAddBooleanCustomAttributeToUser_withBooleanAttribute() {
@@ -234,15 +213,29 @@ public class IntercomMetricCollectorTest {
         final String userId = randomId();
         final User mockUser = mock(User.class);
         when(User.find(userId)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = mockCustomAttributes();
-        customAttributes.put(randomString(), new Object());
+
+        final Map<String, Object> customAttributes = new HashMap<>();
+        customAttributes.put(randomString(5), new Object());
+
+        final BooleanAttribute booleanAttribute = mock(BooleanAttribute.class);
+        when(CustomAttribute.newBooleanAttribute(any(String.class), any(Boolean.class))).thenReturn(booleanAttribute);
+        customAttributes.put(randomString(5), randomBoolean());
+
+        final StringAttribute stringAttribute = mock(StringAttribute.class);
+        when(CustomAttribute.newStringAttribute(any(String.class), any(String.class))).thenReturn(stringAttribute);
+        customAttributes.put(randomString(5), randomString(5));
+
+        final IntegerAttribute integerAttribute = mock(IntegerAttribute.class);
+        when(CustomAttribute.newIntegerAttribute(any(String.class), any(Integer.class))).thenReturn(integerAttribute);
+        customAttributes.put(randomString(5), Integer.valueOf(randomIntInRange(-10, 10)));
+        final List<CustomAttribute<?>> expectedAttributes = Arrays.asList(booleanAttribute, stringAttribute,
+                integerAttribute);
 
         // When
         intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-
         // Then
         final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser, times(classTypes.size())).addCustomAttribute(argumentCaptor.capture());
+        verify(mockUser, times(customAttributes.size() - 1)).addCustomAttribute(argumentCaptor.capture());
         assertThat(argumentCaptor.getAllValues(),
                 containsInAnyOrder(expectedAttributes.toArray(new CustomAttribute[expectedAttributes.size()])));
         verifyStatic();
@@ -254,7 +247,7 @@ public class IntercomMetricCollectorTest {
         // Given
         final String userId = randomId();
         when(User.find(userId)).thenThrow(Exception.class);
-        final Map<String, Object> customAttributes = mockCustomAttributes();
+        final Map<String, Object> customAttributes = mock(Map.class);
 
         // When
         intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
@@ -262,56 +255,6 @@ public class IntercomMetricCollectorTest {
         // Then
         verifyStatic(never());
         User.update(any(User.class));
-    }
-
-    private Map<String, Object> mockCustomAttributes() {
-        final Map<String, Object> customAttributes = new HashMap<>();
-        classTypes.forEach(classType -> {
-            if (classType.equals(Boolean.class)) {
-                final String name = randomString(5);
-                final boolean value = randomBoolean();
-                customAttributes.put(name, value);
-                final BooleanAttribute mockBooleanAttribute = mock(BooleanAttribute.class);
-                when(CustomAttribute.newBooleanAttribute(name, value)).thenReturn(mockBooleanAttribute);
-                expectedAttributes.add(mockBooleanAttribute);
-            } else if (classType.equals(String.class)) {
-                final String name = randomString(5);
-                final String value = randomString(5);
-                customAttributes.put(name, value);
-                final StringAttribute mockStringAttribute = mock(StringAttribute.class);
-                when(CustomAttribute.newStringAttribute(name, value)).thenReturn(mockStringAttribute);
-                expectedAttributes.add(mockStringAttribute);
-            } else if (classType.equals(Integer.class)) {
-                final String name = randomString(5);
-                final Integer value = Integer.valueOf(randomIntInRange(-10, 10));
-                customAttributes.put(name, value);
-                final IntegerAttribute mockIntegerAttribute = mock(IntegerAttribute.class);
-                when(CustomAttribute.newIntegerAttribute(name, value)).thenReturn(mockIntegerAttribute);
-                expectedAttributes.add(mockIntegerAttribute);
-            } else if (classType.equals(Double.class)) {
-                final String name = randomString(5);
-                final Double value = Double.valueOf(randomIntInRange(-10, 10));
-                customAttributes.put(name, value);
-                final DoubleAttribute mockDoubleAttribute = mock(DoubleAttribute.class);
-                when(CustomAttribute.newDoubleAttribute(name, value)).thenReturn(mockDoubleAttribute);
-                expectedAttributes.add(mockDoubleAttribute);
-            } else if (classType.equals(Long.class)) {
-                final String name = randomString(5);
-                final Long value = Long.valueOf(randomIntInRange(-10, 10));
-                customAttributes.put(name, value);
-                final LongAttribute mockLongAttribute = mock(LongAttribute.class);
-                when(CustomAttribute.newLongAttribute(name, value)).thenReturn(mockLongAttribute);
-                expectedAttributes.add(mockLongAttribute);
-            } else if (classType.equals(Float.class)) {
-                final String name = randomString(5);
-                final Float value = Float.valueOf(randomIntInRange(-10, 10));
-                customAttributes.put(name, value);
-                final FloatAttribute mockFloatAttribute = mock(FloatAttribute.class);
-                when(CustomAttribute.newFloatAttribute(name, value)).thenReturn(mockFloatAttribute);
-                expectedAttributes.add(mockFloatAttribute);
-            }
-        });
-        return customAttributes;
     }
 
 }
