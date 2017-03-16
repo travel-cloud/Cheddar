@@ -21,6 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomIntInRange;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
@@ -62,23 +63,167 @@ public class IntercomMetricCollectorTest {
         final String personalAccessToken = randomString();
         intercomMetricCollector = new IntercomMetricCollector(personalAccessToken);
     }
+    //
+    // @Test
+    // public void shouldAddCustomAttributesToUser_withUserIdAndValidAttribute() {
+    // // Given
+    // final String userId = randomId();
+    // final User mockUser = mock(User.class);
+    // when(User.find(userId)).thenReturn(mockUser);
+    // final Map<String, Object> customAttributes = mockCustomAttributes();
+    //
+    // // When
+    // intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
+    //
+    // // Then
+    // final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
+    // verify(mockUser, times(classTypes.size())).addCustomAttribute(argumentCaptor.capture());
+    // assertThat(argumentCaptor.getAllValues(),
+    // containsInAnyOrder(expectedAttributes.toArray(new CustomAttribute[expectedAttributes.size()])));
+    // verifyStatic();
+    // User.update(mockUser);
+    // }
 
     @Test
-    public void shouldAddCustomAttributesToUser_withUserIdAndValidAttribute() {
+    public void shouldAddBooleanCustomAttributeToUser_withBooleanAttribute() {
         // Given
         final String userId = randomId();
         final User mockUser = mock(User.class);
         when(User.find(userId)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = mockCustomAttributes();
+        final Map<String, Object> customAttributes = new HashMap<>();
+        final BooleanAttribute booleanAttribute = mock(BooleanAttribute.class);
+        final String name = randomString(5);
+        final boolean value = randomBoolean();
+        when(CustomAttribute.newBooleanAttribute(name, value)).thenReturn(booleanAttribute);
+        customAttributes.put(name, value);
 
         // When
         intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
 
         // Then
         final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser, times(classTypes.size())).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getAllValues(),
-                containsInAnyOrder(expectedAttributes.toArray(new CustomAttribute[expectedAttributes.size()])));
+        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue(), is(booleanAttribute));
+        verifyStatic();
+        User.update(mockUser);
+    }
+
+    @Test
+    public void shouldAddStringCustomAttributeToUser_withStringAttribute() {
+        // Given
+        final String userId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenReturn(mockUser);
+        final Map<String, Object> customAttributes = new HashMap<>();
+        final StringAttribute stringAttribute = mock(StringAttribute.class);
+        final String name = randomString(5);
+        final String value = randomString(5);
+        when(CustomAttribute.newStringAttribute(name, value)).thenReturn(stringAttribute);
+        customAttributes.put(name, value);
+
+        // When
+        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
+
+        // Then
+        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
+        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue(), is(stringAttribute));
+        verifyStatic();
+        User.update(mockUser);
+    }
+
+    @Test
+    public void shouldAddIntegerCustomAttributeToUser_withIntegerAttribute() {
+        // Given
+        final String userId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenReturn(mockUser);
+        final Map<String, Object> customAttributes = new HashMap<>();
+        final IntegerAttribute integerAttribute = mock(IntegerAttribute.class);
+        final String name = randomString(5);
+        final Integer value = Integer.valueOf(randomIntInRange(-10, 10));
+        when(CustomAttribute.newIntegerAttribute(name, value)).thenReturn(integerAttribute);
+        customAttributes.put(name, value);
+
+        // When
+        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
+
+        // Then
+        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
+        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue(), is(integerAttribute));
+        verifyStatic();
+        User.update(mockUser);
+    }
+
+    @Test
+    public void shouldAddDoubleCustomAttributeToUser_withDoubleAttribute() {
+        // Given
+        final String userId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenReturn(mockUser);
+        final Map<String, Object> customAttributes = new HashMap<>();
+        final DoubleAttribute doubleAttribute = mock(DoubleAttribute.class);
+        final String name = randomString(5);
+        final Double value = Double.valueOf(randomIntInRange(-10, 10));
+        when(CustomAttribute.newDoubleAttribute(name, value)).thenReturn(doubleAttribute);
+        customAttributes.put(name, value);
+
+        // When
+        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
+
+        // Then
+        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
+        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue(), is(doubleAttribute));
+        verifyStatic();
+        User.update(mockUser);
+    }
+
+    @Test
+    public void shouldAddLongCustomAttributeToUser_withLongAttribute() {
+        // Given
+        final String userId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenReturn(mockUser);
+        final Map<String, Object> customAttributes = new HashMap<>();
+        final LongAttribute longAttribute = mock(LongAttribute.class);
+        final String name = randomString(5);
+        final Long value = Long.valueOf(randomIntInRange(-10, 10));
+        when(CustomAttribute.newLongAttribute(name, value)).thenReturn(longAttribute);
+        customAttributes.put(name, value);
+
+        // When
+        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
+
+        // Then
+        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
+        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue(), is(longAttribute));
+        verifyStatic();
+        User.update(mockUser);
+    }
+
+    @Test
+    public void shouldAddFloatCustomAttributeToUser_withFloatAttribute() {
+        // Given
+        final String userId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenReturn(mockUser);
+        final Map<String, Object> customAttributes = new HashMap<>();
+        final FloatAttribute floatAttribute = mock(FloatAttribute.class);
+        final String name = randomString(5);
+        final Float value = Float.valueOf(randomIntInRange(-10, 10));
+        when(CustomAttribute.newFloatAttribute(name, value)).thenReturn(floatAttribute);
+        customAttributes.put(name, value);
+
+        // When
+        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
+
+        // Then
+        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
+        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue(), is(floatAttribute));
         verifyStatic();
         User.update(mockUser);
     }
