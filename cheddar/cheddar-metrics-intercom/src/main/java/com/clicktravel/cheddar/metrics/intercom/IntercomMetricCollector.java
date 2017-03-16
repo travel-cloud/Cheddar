@@ -52,7 +52,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
         } catch (final Exception e) {
-            logger.warn("Error tagging Intercom organisation: " + metricOrganisation + " - " + e.getMessage());
+            logger.warn("Error tagging Intercom organisation: {} - {} ", metricOrganisation, e.getMessage());
         }
     }
 
@@ -63,7 +63,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.create(intercomUser);
         } catch (final Exception e) {
-            logger.warn("Error creating a Intercom user: " + intercomUser + " - " + e.getMessage());
+            logger.warn("Error creating a Intercom user: {} - {}", intercomUser, e.getMessage());
         }
     }
 
@@ -73,7 +73,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.update(intercomUser);
         } catch (final Exception e) {
-            logger.warn("Error updating a Intercom user: " + intercomUser + " - " + e.getMessage());
+            logger.warn("Error updating a Intercom user: {} - {}", intercomUser, e.getMessage());
         }
     }
 
@@ -98,12 +98,41 @@ public class IntercomMetricCollector implements MetricCollector {
                 } else if (value.getClass().equals(String.class)) {
                     intercomUser.addCustomAttribute(CustomAttribute.newStringAttribute(key, (String) value));
                 } else {
-                    logger.warn("Unsupported custom attribute class : " + value.getClass().getSimpleName());
+                    logger.warn("Unsupported custom attribute class : {}", value.getClass().getSimpleName());
                 }
             });
             User.update(intercomUser);
         } catch (final Exception e) {
-            logger.warn("Error adding custom attributes to  Intercom user with id: " + userId + " - " + e.getMessage());
+            logger.warn("Error adding custom attributes to  Intercom user with id: {} - {} ", userId, e.getMessage());
+        }
+    }
+
+    @Override
+    public void addOrganisationToUser(final String userId, final String organisationId) {
+        try {
+            final User intercomUser = User.find(userId);
+            final Company company = Company.find(organisationId);
+
+            intercomUser.addCompany(company);
+            User.update(intercomUser);
+        } catch (final Exception e) {
+            logger.warn("Error adding organisation with id: {} to  Intercom user with id: {} - {} ", organisationId,
+                    userId, e.getMessage());
+        }
+
+    }
+
+    @Override
+    public void removeOrganisationFromUser(final String userId, final String organisationId) {
+        try {
+            final User intercomUser = User.find(userId);
+            final Company company = Company.find(organisationId);
+
+            intercomUser.removeCompany(company);
+            User.update(intercomUser);
+        } catch (final Exception e) {
+            logger.warn("Error removing organisation with id: {} from  Intercom user with id: {} - {} ", organisationId,
+                    userId, e.getMessage());
         }
     }
 
@@ -112,7 +141,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             User.delete(userId);
         } catch (final Exception e) {
-            logger.warn("Error deleting a Intercom user: " + userId + " - " + e.getMessage());
+            logger.warn("Error deleting a Intercom user: {} - {}", userId, e.getMessage());
         }
     }
 
@@ -185,15 +214,15 @@ public class IntercomMetricCollector implements MetricCollector {
         }
         final Company company = new Company();
 
-        final String companyId = organisation.id;
-        final String name = organisation.name;
+        final String companyId = organisation.id();
+        final String name = organisation.name();
 
         company.setCompanyID(companyId);
         company.setName(name);
         try {
             Company.create(company);
         } catch (final Exception e) {
-            logger.warn("Error creating/updating a Intercom company: " + company + " - " + e.getMessage());
+            logger.warn("Error creating/updating a Intercom company: {} - {}", company, e.getMessage());
         }
     }
 }

@@ -32,6 +32,10 @@ public interface MetricCollector {
 
     void addCustomAttributesToUser(String userId, Map<String, Object> customAttributes);
 
+    void addOrganisationToUser(String userId, String organisationId);
+
+    void removeOrganisationFromUser(String userId, String organisationId);
+
     void deleteUser(String userId);
 
     void sendMetric(Metric metric);
