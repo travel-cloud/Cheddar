@@ -16,6 +16,8 @@
  */
 package com.clicktravel.cheddar.metrics;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +37,15 @@ public class MetricUser {
         this.name = name;
         this.emailAddress = emailAddress;
         this.customAttributes = customAttributes;
+    }
+
+    public MetricUser(final String id, final String name, final String emailAddress) {
+        super();
+        this.id = id;
+        organisationIds = new ArrayList<>();
+        this.name = name;
+        this.emailAddress = emailAddress;
+        customAttributes = new HashMap<>();
     }
 
     public String id() {

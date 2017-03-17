@@ -70,8 +70,10 @@ public class IntercomMetricCollectorTest {
     public void shouldAddBooleanCustomAttributeToUser_withBooleanAttribute() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Map<String, Object> customAttributes = new HashMap<>();
         final BooleanAttribute booleanAttribute = mock(BooleanAttribute.class);
         final String name = randomString(5);
@@ -94,8 +96,10 @@ public class IntercomMetricCollectorTest {
     public void shouldAddStringCustomAttributeToUser_withStringAttribute() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Map<String, Object> customAttributes = new HashMap<>();
         final StringAttribute stringAttribute = mock(StringAttribute.class);
         final String name = randomString(5);
@@ -118,8 +122,10 @@ public class IntercomMetricCollectorTest {
     public void shouldAddIntegerCustomAttributeToUser_withIntegerAttribute() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Map<String, Object> customAttributes = new HashMap<>();
         final IntegerAttribute integerAttribute = mock(IntegerAttribute.class);
         final String name = randomString(5);
@@ -142,8 +148,10 @@ public class IntercomMetricCollectorTest {
     public void shouldAddDoubleCustomAttributeToUser_withDoubleAttribute() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Map<String, Object> customAttributes = new HashMap<>();
         final DoubleAttribute doubleAttribute = mock(DoubleAttribute.class);
         final String name = randomString(5);
@@ -166,8 +174,10 @@ public class IntercomMetricCollectorTest {
     public void shouldAddLongCustomAttributeToUser_withLongAttribute() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Map<String, Object> customAttributes = new HashMap<>();
         final LongAttribute longAttribute = mock(LongAttribute.class);
         final String name = randomString(5);
@@ -190,8 +200,10 @@ public class IntercomMetricCollectorTest {
     public void shouldAddFloatCustomAttributeToUser_withFloatAttribute() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Map<String, Object> customAttributes = new HashMap<>();
         final FloatAttribute floatAttribute = mock(FloatAttribute.class);
         final String name = randomString(5);
@@ -214,8 +226,10 @@ public class IntercomMetricCollectorTest {
     public void shouldAddValidCustomAttributesToUser_withValidAndInvalidAttribute() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
 
         final Map<String, Object> customAttributes = new HashMap<>();
         customAttributes.put(randomString(5), new Object());
@@ -249,7 +263,9 @@ public class IntercomMetricCollectorTest {
     public void shouldNotAddCustomAttributesToUser_withIntercomFindUserException() {
         // Given
         final String userId = randomId();
-        when(User.find(userId)).thenThrow(Exception.class);
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
+        when(User.find(params)).thenThrow(Exception.class);
         final Map<String, Object> customAttributes = mock(Map.class);
 
         // When
@@ -264,9 +280,11 @@ public class IntercomMetricCollectorTest {
     public void shouldAddOrganisationToUser_withUserIdAndOrganisationId() throws Exception {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final String organisationId = randomId();
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Company mockCompany = mock(Company.class);
         whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
 
@@ -284,8 +302,10 @@ public class IntercomMetricCollectorTest {
     public void shouldNotAddOrganisationToUser_withUserIdAndOrganisationIdAndIntercomFindUserException() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final String organisationId = randomId();
-        when(User.find(userId)).thenThrow(Exception.class);
+        when(User.find(params)).thenThrow(Exception.class);
 
         // When
         intercomMetricCollector.addOrganisationToUser(userId, organisationId);
@@ -298,9 +318,11 @@ public class IntercomMetricCollectorTest {
     public void shouldRemoveOrganisationFromUser_withUserIdAndOrganisationId() throws Exception {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final String organisationId = randomId();
         final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
         final Company mockCompany = mock(Company.class);
         whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
         when(Company.find(organisationId)).thenReturn(mockCompany);
@@ -319,8 +341,10 @@ public class IntercomMetricCollectorTest {
     public void shouldNotRemoveOrganisationFromUser_withUserIdAndOrganisationIdAndIntercomFindUserException() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final String organisationId = randomId();
-        when(User.find(userId)).thenThrow(Exception.class);
+        when(User.find(params)).thenThrow(Exception.class);
 
         // When
         intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
@@ -334,8 +358,10 @@ public class IntercomMetricCollectorTest {
     public void shouldReturnUser_withUserId() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User mockUser = randomUser();
-        when(User.find(userId)).thenReturn(mockUser);
+        when(User.find(params)).thenReturn(mockUser);
 
         // When
         final MetricUser result = intercomMetricCollector.getUser(userId);
@@ -376,8 +402,10 @@ public class IntercomMetricCollectorTest {
     public void shouldNotReturnUser_withExceptionThrownByIntercom() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
 
-        when(User.find(userId)).thenThrow(Exception.class);
+        when(User.find(params)).thenThrow(Exception.class);
 
         // When
         MetricUserNotFoundException thrownException = null;
@@ -395,9 +423,11 @@ public class IntercomMetricCollectorTest {
     public void shouldNotReturnUser_withNullUserReturnedByIntercom() {
         // Given
         final String userId = randomId();
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", userId);
         final User user = null;
 
-        when(User.find(userId)).thenReturn(user);
+        when(User.find(params)).thenReturn(user);
 
         // When
         MetricUserNotFoundException thrownException = null;

@@ -17,6 +17,7 @@
 package com.clicktravel.cheddar.metrics.intercom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,7 +82,7 @@ public class IntercomMetricCollector implements MetricCollector {
     @Override
     public void addCustomAttributesToUser(final String userId, final Map<String, Object> customAttributes) {
         try {
-            final User intercomUser = User.find(userId);
+            final User intercomUser = findIntercomUserByUserId(userId);
 
             customAttributes.entrySet().stream().forEach(entry -> {
                 final String key = entry.getKey();
@@ -111,7 +112,7 @@ public class IntercomMetricCollector implements MetricCollector {
     @Override
     public void addOrganisationToUser(final String userId, final String organisationId) {
         try {
-            final User intercomUser = User.find(userId);
+            final User intercomUser = findIntercomUserByUserId(userId);
             final Company company = new Company();
             company.setCompanyID(organisationId);
 
@@ -127,7 +128,7 @@ public class IntercomMetricCollector implements MetricCollector {
     @Override
     public void removeOrganisationFromUser(final String userId, final String organisationId) {
         try {
-            final User intercomUser = User.find(userId);
+            final User intercomUser = findIntercomUserByUserId(userId);
             final Company company = new Company();
             company.setCompanyID(organisationId);
 
@@ -195,7 +196,7 @@ public class IntercomMetricCollector implements MetricCollector {
 
         User intercomUser = null;
         try {
-            intercomUser = User.find(userId);
+            intercomUser = findIntercomUserByUserId(userId);
         } catch (final Exception e) {
             logger.warn("Failed to get user with Id: {} from Intercom - {}", userId, e.getMessage());
             throw new MetricUserNotFoundException(userId);
@@ -217,6 +218,7 @@ public class IntercomMetricCollector implements MetricCollector {
 
         final User intercomUser = new User();
         intercomUser.setId(user.id());
+        intercomUser.setUserId(user.id());
         intercomUser.setName(user.name());
 
         if (!Equals.isNullOrBlank(user.emailAddress())) {
@@ -265,4 +267,11 @@ public class IntercomMetricCollector implements MetricCollector {
             logger.warn("Error creating/updating a Intercom company: {} - {}", company, e.getMessage());
         }
     }
+
+    private User findIntercomUserByUserId(final String travelCloudUserId) {
+        final Map<String, String> params = new HashMap<>();
+        params.put("user_id", travelCloudUserId);
+        return User.find(params);
+    }
+
 }
