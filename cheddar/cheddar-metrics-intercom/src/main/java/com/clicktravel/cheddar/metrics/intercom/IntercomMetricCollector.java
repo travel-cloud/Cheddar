@@ -25,11 +25,9 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.metrics.Metric;
-import com.clicktravel.cheddar.metrics.MetricCollector;
-import com.clicktravel.cheddar.metrics.MetricOrganisation;
-import com.clicktravel.cheddar.metrics.MetricUser;
+import com.clicktravel.cheddar.metrics.*;
 import com.clicktravel.common.functional.Equals;
+import com.clicktravel.common.validation.Check;
 
 import io.intercom.api.*;
 
@@ -193,17 +191,18 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public MetricUser getUser(final String userId) {
-        if (userId == null) {
-            return null;
-        }
+        Check.isNotNull("userId", userId);
+
         User intercomUser = null;
         try {
             intercomUser = User.find(userId);
         } catch (final Exception e) {
             logger.warn("Failed to get user with Id: {} from Intercom - {}", userId, e.getMessage());
+            throw new MetricUserNotFoundException(userId);
         }
+
         if (intercomUser == null) {
-            return null;
+            throw new MetricUserNotFoundException(userId);
         } else {
             return new MetricUser(intercomUser.getId(), getUserOrganisations(intercomUser), intercomUser.getName(),
                     intercomUser.getEmail(), getCustomAttributes(intercomUser));
@@ -224,21 +223,20 @@ public class IntercomMetricCollector implements MetricCollector {
             intercomUser.setEmail(user.emailAddress());
         }
 
-        if (!user.organisationIds().isEmpty()) {
-            user.organisationIds().forEach(organisationId -> {
-                final Company company = new Company();
-                company.setCompanyID(organisationId);
-                intercomUser.addCompany(company);
-            });
-        }
+        user.organisationIds().forEach(organisationId -> {
+            final Company company = new Company();
+            company.setCompanyID(organisationId);
+            intercomUser.addCompany(company);
+        });
 
         return intercomUser;
     }
 
+    @SuppressWarnings("rawtypes")
     private Map<String, Object> getCustomAttributes(final User user) {
-        final Map<String, ?> customAttributes = user.getCustomAttributes();
+        final Map<String, CustomAttribute> customAttributes = user.getCustomAttributes();
         return customAttributes.entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getKey(), entry -> (Object) entry.getValue()));
+                .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
     }
 
     private List<String> getUserOrganisations(final User user) {
