@@ -16,27 +16,33 @@
  */
 package com.clicktravel.cheddar.metrics;
 
+import java.util.List;
+import java.util.Map;
+
 public class MetricUser {
 
     private final String id;
-    private final String organisationId;
+    private final List<String> organisationIds;
     private final String name;
     private final String emailAddress;
+    private final Map<String, Object> customAttributes;
 
-    public MetricUser(final String id, final String organisationId, final String name, final String emailAddress) {
+    public MetricUser(final String id, final List<String> organisationIds, final String name, final String emailAddress,
+            final Map<String, Object> customAttributes) {
         super();
         this.id = id;
-        this.organisationId = organisationId;
+        this.organisationIds = organisationIds;
         this.name = name;
         this.emailAddress = emailAddress;
+        this.customAttributes = customAttributes;
     }
 
     public String id() {
         return id;
     }
 
-    public String organisationId() {
-        return organisationId;
+    public List<String> organisationIds() {
+        return organisationIds;
     }
 
     public String name() {
@@ -46,4 +52,9 @@ public class MetricUser {
     public String emailAddress() {
         return emailAddress;
     }
+
+    public Map<String, Object> customAttributes() {
+        return customAttributes;
+    }
+
 }
