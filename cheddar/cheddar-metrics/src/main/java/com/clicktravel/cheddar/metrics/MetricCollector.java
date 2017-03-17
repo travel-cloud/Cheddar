@@ -40,4 +40,6 @@ public interface MetricCollector {
 
     void sendMetric(Metric metric);
 
+    MetricUser getUser(String userId);
+
 }

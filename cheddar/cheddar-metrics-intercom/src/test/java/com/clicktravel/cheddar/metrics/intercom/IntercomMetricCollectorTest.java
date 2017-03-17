@@ -16,18 +16,16 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
-import static com.clicktravel.common.random.Randoms.randomBoolean;
-import static com.clicktravel.common.random.Randoms.randomId;
-import static com.clicktravel.common.random.Randoms.randomIntInRange;
-import static com.clicktravel.common.random.Randoms.randomString;
+import static com.clicktravel.common.random.Randoms.*;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -46,7 +44,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.clicktravel.cheddar.metrics.MetricUser;
+
 import io.intercom.api.Company;
+import io.intercom.api.CompanyCollection;
 import io.intercom.api.CustomAttribute;
 import io.intercom.api.CustomAttribute.*;
 import io.intercom.api.User;
@@ -285,16 +286,14 @@ public class IntercomMetricCollectorTest {
         // Given
         final String userId = randomId();
         final String organisationId = randomId();
-        final User mockUser = mock(User.class);
         when(User.find(userId)).thenThrow(Exception.class);
 
         // When
         intercomMetricCollector.addOrganisationToUser(userId, organisationId);
 
         // Then
-        verifyZeroInteractions(mockUser);
         verifyStatic(never());
-        User.update(mockUser);
+        User.update(any(User.class));
     }
 
     public void shouldRemoveOrganisationFromUser_withUserIdAndOrganisationId() throws Exception {
@@ -322,15 +321,55 @@ public class IntercomMetricCollectorTest {
         // Given
         final String userId = randomId();
         final String organisationId = randomId();
-        final User mockUser = mock(User.class);
         when(User.find(userId)).thenThrow(Exception.class);
 
         // When
         intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
 
         // Then
-        verifyZeroInteractions(mockUser);
         verifyStatic(never());
-        User.update(mockUser);
+        User.update(any(User.class));
+    }
+
+    @Test
+    public void shouldReturnUser_withUserId() {
+        // Given
+        final String userId = randomId();
+        final User mockUser = randomUser();
+        when(User.find(userId)).thenReturn(mockUser);
+
+        // When
+        final MetricUser result = intercomMetricCollector.getUser(userId);
+
+        // Then
+        assertNotNull(result);
+        assertThat(result.id(), is(mockUser.getId()));
+        // TODO: assert on organisationIds;
+        assertThat(result.name(), is(mockUser.getName()));
+        assertThat(result.emailAddress(), is(mockUser.getEmail()));
+        // TODO: assert on custom attributes;
+    }
+
+    @Test
+    public void shouldReturnNull_withUserIddAndIntercomFindUserException() {
+        // Given
+        final String userId = randomId();
+        when(User.find(userId)).thenThrow(Exception.class);
+
+        // When
+        final MetricUser result = intercomMetricCollector.getUser(userId);
+
+        // Then
+        assertNull(result);
+    }
+
+    private User randomUser() {
+        final User user = new User();
+        user.setId(randomId());
+        user.setCompanyCollection(mock(CompanyCollection.class));
+        user.setName(randomString());
+        user.setEmail(randomEmailAddress());
+        user.setCustomAttributes(mock(Map.class));
+        return user;
     }
 }

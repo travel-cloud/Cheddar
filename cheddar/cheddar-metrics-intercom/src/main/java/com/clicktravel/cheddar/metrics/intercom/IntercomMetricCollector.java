@@ -16,7 +16,10 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -58,7 +61,7 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void createUser(final MetricUser user) {
-        final User intercomUser = getIntercomUser(user);
+        final User intercomUser = createIntercomUser(user);
         intercomUser.setSignedUpAt(DateTime.now().getMillis() / 1000);
         try {
             User.create(intercomUser);
@@ -69,7 +72,7 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void updateUser(final MetricUser user) {
-        final User intercomUser = getIntercomUser(user);
+        final User intercomUser = createIntercomUser(user);
         try {
             User.update(intercomUser);
         } catch (final Exception e) {
@@ -188,26 +191,63 @@ public class IntercomMetricCollector implements MetricCollector {
         }
     }
 
-    private User getIntercomUser(final MetricUser user) {
+    @Override
+    public MetricUser getUser(final String userId) {
+        if (userId == null) {
+            return null;
+        }
+        User intercomUser = null;
+        try {
+            intercomUser = User.find(userId);
+        } catch (final Exception e) {
+            logger.warn("Failed to get user with Id: {} from Intercom - {}", userId, e.getMessage());
+        }
+        if (intercomUser == null) {
+            return null;
+        } else {
+            return new MetricUser(intercomUser.getId(), getUserOrganisations(intercomUser), intercomUser.getName(),
+                    intercomUser.getEmail(), getCustomAttributes(intercomUser));
+        }
+
+    }
+
+    private User createIntercomUser(final MetricUser user) {
         if (user == null) {
             return null;
         }
 
         final User intercomUser = new User();
-        intercomUser.setUserId(user.id());
+        intercomUser.setId(user.id());
         intercomUser.setName(user.name());
 
         if (!Equals.isNullOrBlank(user.emailAddress())) {
             intercomUser.setEmail(user.emailAddress());
         }
 
-        if (!Equals.isNullOrBlank(user.organisationId())) {
-            final Company company = new Company();
-            company.setCompanyID(user.organisationId());
-            intercomUser.addCompany(company);
+        if (!user.organisationIds().isEmpty()) {
+            user.organisationIds().forEach(organisationId -> {
+                final Company company = new Company();
+                company.setCompanyID(organisationId);
+                intercomUser.addCompany(company);
+            });
         }
 
         return intercomUser;
+    }
+
+    private Map<String, Object> getCustomAttributes(final User user) {
+        final Map<String, ?> customAttributes = user.getCustomAttributes();
+        return customAttributes.entrySet().stream()
+                .collect(Collectors.toMap(entry -> entry.getKey(), entry -> (Object) entry.getValue()));
+    }
+
+    private List<String> getUserOrganisations(final User user) {
+        final CompanyCollection companyCollection = user.getCompanyCollection();
+        final List<String> companies = new ArrayList<>();
+        while (companyCollection.hasNext()) {
+            companies.add(companyCollection.next().getId());
+        }
+        return companies;
     }
 
     private void createOrUpdateIntercomCompany(final MetricOrganisation organisation) {
