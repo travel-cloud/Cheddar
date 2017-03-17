@@ -111,7 +111,8 @@ public class IntercomMetricCollector implements MetricCollector {
     public void addOrganisationToUser(final String userId, final String organisationId) {
         try {
             final User intercomUser = User.find(userId);
-            final Company company = Company.find(organisationId);
+            final Company company = new Company();
+            company.setCompanyID(organisationId);
 
             intercomUser.addCompany(company);
             User.update(intercomUser);
@@ -126,7 +127,8 @@ public class IntercomMetricCollector implements MetricCollector {
     public void removeOrganisationFromUser(final String userId, final String organisationId) {
         try {
             final User intercomUser = User.find(userId);
-            final Company company = Company.find(organisationId);
+            final Company company = new Company();
+            company.setCompanyID(organisationId);
 
             intercomUser.removeCompany(company);
             User.update(intercomUser);

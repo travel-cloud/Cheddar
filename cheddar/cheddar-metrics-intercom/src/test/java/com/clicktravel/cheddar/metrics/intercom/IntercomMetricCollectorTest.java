@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -51,7 +52,7 @@ import io.intercom.api.CustomAttribute.*;
 import io.intercom.api.User;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ CustomAttribute.class, User.class, Company.class })
+@PrepareForTest({ CustomAttribute.class, User.class, IntercomMetricCollector.class })
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class IntercomMetricCollectorTest {
     private IntercomMetricCollector intercomMetricCollector;
@@ -260,19 +261,20 @@ public class IntercomMetricCollectorTest {
     }
 
     @Test
-    public void shouldAddOrganisationToUser_withUserIdAndOrganisationId() {
+    public void shouldAddOrganisationToUser_withUserIdAndOrganisationId() throws Exception {
         // Given
         final String userId = randomId();
         final String organisationId = randomId();
         final User mockUser = mock(User.class);
         when(User.find(userId)).thenReturn(mockUser);
         final Company mockCompany = mock(Company.class);
-        when(Company.find(organisationId)).thenReturn(mockCompany);
+        whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
 
         // When
         intercomMetricCollector.addOrganisationToUser(userId, organisationId);
 
         // Then
+        verify(mockCompany).setCompanyID(organisationId);
         verify(mockUser).addCompany(mockCompany);
         verifyStatic();
         User.update(mockUser);
@@ -295,37 +297,21 @@ public class IntercomMetricCollectorTest {
         User.update(mockUser);
     }
 
-    @Test
-    public void shouldNotAddOrganisationToUser_withUserIdAndOrganisationIdAndIntercomFindCompanyException() {
-        // Given
-        final String userId = randomId();
-        final String organisationId = randomId();
-        final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
-        when(Company.find(organisationId)).thenThrow(Exception.class);
-
-        // When
-        intercomMetricCollector.addOrganisationToUser(userId, organisationId);
-
-        // Then
-        verifyZeroInteractions(mockUser);
-        verifyStatic(never());
-        User.update(mockUser);
-    }
-
-    public void shouldRemoveOrganisationFromUser_withUserIdAndOrganisationId() {
+    public void shouldRemoveOrganisationFromUser_withUserIdAndOrganisationId() throws Exception {
         // Given
         final String userId = randomId();
         final String organisationId = randomId();
         final User mockUser = mock(User.class);
         when(User.find(userId)).thenReturn(mockUser);
         final Company mockCompany = mock(Company.class);
+        whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
         when(Company.find(organisationId)).thenReturn(mockCompany);
 
         // When
         intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
 
         // Then
+        verify(mockCompany).setCompanyID(organisationId);
         verify(mockUser).removeCompany(mockCompany);
         verifyStatic();
         User.update(mockUser);
@@ -347,23 +333,4 @@ public class IntercomMetricCollectorTest {
         verifyStatic(never());
         User.update(mockUser);
     }
-
-    @Test
-    public void shouldNotRemoveOrganisationFromUser_withUserIdAndOrganisationIdAndIntercomFindCompanyException() {
-        // Given
-        final String userId = randomId();
-        final String organisationId = randomId();
-        final User mockUser = mock(User.class);
-        when(User.find(userId)).thenReturn(mockUser);
-        when(Company.find(organisationId)).thenThrow(Exception.class);
-
-        // When
-        intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
-
-        // Then
-        verifyZeroInteractions(mockUser);
-        verifyStatic(never());
-        User.update(mockUser);
-    }
-
 }
