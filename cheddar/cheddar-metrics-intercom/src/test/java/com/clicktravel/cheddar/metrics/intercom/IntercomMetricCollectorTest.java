@@ -27,9 +27,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,21 +46,22 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import io.intercom.api.Company;
 import io.intercom.api.CustomAttribute;
 import io.intercom.api.CustomAttribute.*;
 import io.intercom.api.User;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ CustomAttribute.class, User.class })
+@PrepareForTest({ CustomAttribute.class, User.class, IntercomMetricCollector.class })
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class IntercomMetricCollectorTest {
-
     private IntercomMetricCollector intercomMetricCollector;
 
     @Before
     public void setUp() {
         PowerMockito.mockStatic(CustomAttribute.class);
         PowerMockito.mockStatic(User.class);
+        PowerMockito.mockStatic(Company.class);
         final String personalAccessToken = randomString();
         intercomMetricCollector = new IntercomMetricCollector(personalAccessToken);
     }
@@ -257,4 +260,77 @@ public class IntercomMetricCollectorTest {
         User.update(any(User.class));
     }
 
+    @Test
+    public void shouldAddOrganisationToUser_withUserIdAndOrganisationId() throws Exception {
+        // Given
+        final String userId = randomId();
+        final String organisationId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenReturn(mockUser);
+        final Company mockCompany = mock(Company.class);
+        whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
+
+        // When
+        intercomMetricCollector.addOrganisationToUser(userId, organisationId);
+
+        // Then
+        verify(mockCompany).setCompanyID(organisationId);
+        verify(mockUser).addCompany(mockCompany);
+        verifyStatic();
+        User.update(mockUser);
+    }
+
+    @Test
+    public void shouldNotAddOrganisationToUser_withUserIdAndOrganisationIdAndIntercomFindUserException() {
+        // Given
+        final String userId = randomId();
+        final String organisationId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenThrow(Exception.class);
+
+        // When
+        intercomMetricCollector.addOrganisationToUser(userId, organisationId);
+
+        // Then
+        verifyZeroInteractions(mockUser);
+        verifyStatic(never());
+        User.update(mockUser);
+    }
+
+    public void shouldRemoveOrganisationFromUser_withUserIdAndOrganisationId() throws Exception {
+        // Given
+        final String userId = randomId();
+        final String organisationId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenReturn(mockUser);
+        final Company mockCompany = mock(Company.class);
+        whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
+        when(Company.find(organisationId)).thenReturn(mockCompany);
+
+        // When
+        intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
+
+        // Then
+        verify(mockCompany).setCompanyID(organisationId);
+        verify(mockUser).removeCompany(mockCompany);
+        verifyStatic();
+        User.update(mockUser);
+    }
+
+    @Test
+    public void shouldNotRemoveOrganisationFromUser_withUserIdAndOrganisationIdAndIntercomFindUserException() {
+        // Given
+        final String userId = randomId();
+        final String organisationId = randomId();
+        final User mockUser = mock(User.class);
+        when(User.find(userId)).thenThrow(Exception.class);
+
+        // When
+        intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
+
+        // Then
+        verifyZeroInteractions(mockUser);
+        verifyStatic(never());
+        User.update(mockUser);
+    }
 }
