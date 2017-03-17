@@ -20,8 +20,8 @@ import static com.clicktravel.common.random.Randoms.*;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -31,10 +31,7 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +42,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.clicktravel.cheddar.metrics.MetricUser;
+import com.clicktravel.cheddar.metrics.MetricUserNotFoundException;
+import com.clicktravel.common.validation.ValidationException;
 
 import io.intercom.api.Company;
 import io.intercom.api.CompanyCollection;
@@ -344,32 +343,113 @@ public class IntercomMetricCollectorTest {
         // Then
         assertNotNull(result);
         assertThat(result.id(), is(mockUser.getId()));
-        // TODO: assert on organisationIds;
+        mockUser.getCompanyCollection().forEachRemaining(company -> {
+            assertTrue(result.organisationIds().contains(company.getId()));
+        });
         assertThat(result.name(), is(mockUser.getName()));
         assertThat(result.emailAddress(), is(mockUser.getEmail()));
-        // TODO: assert on custom attributes;
+        assertThat(result.customAttributes().size(), is(mockUser.getCustomAttributes().size()));
+        mockUser.getCustomAttributes().entrySet().forEach(entry -> {
+            assertTrue(result.customAttributes().containsKey(entry.getKey()));
+            assertThat(result.customAttributes().get(entry.getKey()), is(entry.getValue()));
+        });
     }
 
     @Test
-    public void shouldReturnNull_withUserIddAndIntercomFindUserException() {
+    public void shouldNotReturnUser_withNullUserId() {
+        // Given
+        final String userId = null;
+
+        // When
+        ValidationException thrownException = null;
+        try {
+            intercomMetricCollector.getUser(userId);
+        } catch (final ValidationException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldNotReturnUser_withExceptionThrownByIntercom() {
         // Given
         final String userId = randomId();
+
         when(User.find(userId)).thenThrow(Exception.class);
 
         // When
-        final MetricUser result = intercomMetricCollector.getUser(userId);
+        MetricUserNotFoundException thrownException = null;
+        try {
+            intercomMetricCollector.getUser(userId);
+        } catch (final MetricUserNotFoundException e) {
+            thrownException = e;
+        }
 
         // Then
-        assertNull(result);
+        assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldNotReturnUser_withNullUserReturnedByIntercom() {
+        // Given
+        final String userId = randomId();
+        final User user = null;
+
+        when(User.find(userId)).thenReturn(user);
+
+        // When
+        MetricUserNotFoundException thrownException = null;
+        try {
+            intercomMetricCollector.getUser(userId);
+        } catch (final MetricUserNotFoundException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
     }
 
     private User randomUser() {
         final User user = new User();
         user.setId(randomId());
-        user.setCompanyCollection(mock(CompanyCollection.class));
+        user.setCompanyCollection(randomCompanyCollection());
         user.setName(randomString());
         user.setEmail(randomEmailAddress());
-        user.setCustomAttributes(mock(Map.class));
+        user.setCustomAttributes(randomCustomAttributes());
         return user;
+    }
+
+    private CompanyCollection randomCompanyCollection() {
+        final List<Company> companies = new ArrayList<>();
+        final CompanyCollection companyCollection = new CompanyCollection(companies);
+
+        final int numberOfCompanies = randomInt(10);
+
+        for (int i = 0; i < numberOfCompanies; i++) {
+            final Company mockCompany = mock(Company.class);
+            final String companyId = randomId();
+            when(mockCompany.getId()).thenReturn(companyId);
+
+            companies.add(mockCompany);
+        }
+
+        return companyCollection;
+    }
+
+    private Map<String, CustomAttribute> randomCustomAttributes() {
+        final Map<String, CustomAttribute> customAttributes = new HashMap<>();
+
+        final int numberOfCompanies = randomInt(10);
+
+        for (int i = 0; i < numberOfCompanies; i++) {
+            final String key = randomString();
+            final CustomAttribute mockCustomAttribute = mock(CustomAttribute.class);
+
+            customAttributes.put(key, mockCustomAttribute);
+        }
+
+        return customAttributes;
     }
 }
