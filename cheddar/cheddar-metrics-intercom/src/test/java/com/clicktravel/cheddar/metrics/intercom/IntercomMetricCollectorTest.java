@@ -16,23 +16,27 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
-import static com.clicktravel.common.random.Randoms.*;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomDataGenerator.randomIntercomUser;
+import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomDataGenerator.randomMetricOrganisation;
+import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomDataGenerator.randomMetricUser;
+import static com.clicktravel.common.random.Randoms.randomId;
+import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,222 +45,157 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
 import com.clicktravel.cheddar.metrics.MetricUserNotFoundException;
 import com.clicktravel.common.validation.ValidationException;
 
 import io.intercom.api.Company;
-import io.intercom.api.CompanyCollection;
 import io.intercom.api.CustomAttribute;
-import io.intercom.api.CustomAttribute.*;
+import io.intercom.api.Tag;
 import io.intercom.api.User;
 
+@SuppressWarnings({ "unchecked", "rawtypes" })
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ CustomAttribute.class, User.class, IntercomMetricCollector.class })
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@PrepareForTest({ User.class, Company.class, IntercomMetricCollector.class, Tag.class })
 public class IntercomMetricCollectorTest {
+
+    private MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper;
     private IntercomMetricCollector intercomMetricCollector;
 
     @Before
     public void setUp() {
-        PowerMockito.mockStatic(CustomAttribute.class);
         PowerMockito.mockStatic(User.class);
         PowerMockito.mockStatic(Company.class);
+        PowerMockito.mockStatic(Tag.class);
         final String personalAccessToken = randomString();
+        customAttributeMapper = mock(MetricCustomAttributeToIntercomCustomAttributeMapper.class);
         intercomMetricCollector = new IntercomMetricCollector(personalAccessToken);
+        intercomMetricCollector.setCustomAttributeMapper(customAttributeMapper);
     }
 
     @Test
-    public void shouldAddBooleanCustomAttributeToUser_withBooleanAttribute() {
+    public void shouldCreateIntercomCompany_withMetricOrganisation() throws Exception {
+        // Given
+        final MetricOrganisation metricOrganisation = randomMetricOrganisation();
+
+        // When
+        intercomMetricCollector.createOrganisation(metricOrganisation);
+
+        // Then
+        verifyStatic();
+        final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+        Company.create(companyCaptor.capture());
+        final Company company = companyCaptor.getValue();
+        assertThat(company.getCompanyID(), is(metricOrganisation.id()));
+        assertThat(company.getName(), is(metricOrganisation.name()));
+    }
+
+    @Test
+    public void shouldUpdateIntercomCompany_withMetricOrganisation() throws Exception {
+        // Given
+        final MetricOrganisation metricOrganisation = randomMetricOrganisation();
+
+        // When
+        intercomMetricCollector.updateOrganisation(metricOrganisation);
+
+        // Then
+        verifyStatic();
+        final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+        Company.create(companyCaptor.capture());
+        final Company company = companyCaptor.getValue();
+        assertThat(company.getCompanyID(), is(metricOrganisation.id()));
+        assertThat(company.getName(), is(metricOrganisation.name()));
+    }
+
+    @Test
+    public void shouldTagIntercomOrganisation_withMetricOrganisation() throws Exception {
+        // Given
+        final String tagName = randomString();
+        final MetricOrganisation metricOrganisation = randomMetricOrganisation();
+
+        // When
+        intercomMetricCollector.tagOrganisation(tagName, metricOrganisation);
+
+        // Then
+        verifyStatic();
+        final ArgumentCaptor<Tag> tagCaptor = ArgumentCaptor.forClass(Tag.class);
+        final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+        Tag.tag(tagCaptor.capture(), companyCaptor.capture());
+        assertThat(tagCaptor.getValue().getName(), is(tagName));
+        assertThat(companyCaptor.getValue().getCompanyID(), is(metricOrganisation.id()));
+    }
+
+    @Test
+    public void shouldCreateUser_withMetricUser() throws Exception {
+        // Given
+        final MetricUser metricUser = randomMetricUser();
+        final Map<String, CustomAttribute> customAttributes = mock(Map.class);
+        when(customAttributeMapper.apply(metricUser.customAttributes())).thenReturn(customAttributes);
+        DateTimeUtils.setCurrentMillisFixed(DateTime.now().getMillis());
+        // When
+        intercomMetricCollector.createUser(metricUser);
+
+        // Then
+        verifyStatic();
+        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        User.create(userCaptor.capture());
+        final User intercomUser = userCaptor.getValue();
+        assertThat(intercomUser.getId(), is(metricUser.id()));
+        assertThat(intercomUser.getUserId(), is(metricUser.id()));
+        assertThat(intercomUser.getUserId(), is(metricUser.id()));
+        assertThat(intercomUser.getCustomAttributes(), is(customAttributes));
+        assertThat(intercomUser.getCompanyCollection().getPage().size(), is(metricUser.organisationIds().size()));
+        assertThat(intercomUser.getSignedUpAt(), is(DateTime.now().getMillis() / 1000));
+        intercomUser.getCompanyCollection().getPage()
+                .forEach(company -> assertTrue(metricUser.organisationIds().contains(company.getCompanyID())));
+        DateTimeUtils.setCurrentMillisSystem();
+    }
+
+    @Test
+    public void shouldUpdateUser_withMetricUser() throws Exception {
+        // Given
+        final MetricUser metricUser = randomMetricUser();
+        final Map<String, CustomAttribute> customAttributes = mock(Map.class);
+        when(customAttributeMapper.apply(metricUser.customAttributes())).thenReturn(customAttributes);
+        // When
+        intercomMetricCollector.updateUser(metricUser);
+
+        // Then
+        verifyStatic();
+        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        User.update(userCaptor.capture());
+        final User intercomUser = userCaptor.getValue();
+        assertThat(intercomUser.getId(), is(metricUser.id()));
+        assertThat(intercomUser.getUserId(), is(metricUser.id()));
+        assertThat(intercomUser.getUserId(), is(metricUser.id()));
+        assertThat(intercomUser.getCustomAttributes(), is(customAttributes));
+        assertThat(intercomUser.getCompanyCollection().getPage().size(), is(metricUser.organisationIds().size()));
+        intercomUser.getCompanyCollection().getPage()
+                .forEach(company -> assertTrue(metricUser.organisationIds().contains(company.getCompanyID())));
+        DateTimeUtils.setCurrentMillisSystem();
+    }
+
+    @Test
+    public void shouldAddCustomAttributesToUser_withUserIdAndCustomAttributes() {
         // Given
         final String userId = randomId();
+        final User mockUser = mock(User.class);
+        final Map<String, Object> customAttributes = mock(Map.class);
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", userId);
-        final User mockUser = mock(User.class);
         when(User.find(params)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = new HashMap<>();
-        final BooleanAttribute booleanAttribute = mock(BooleanAttribute.class);
-        final String name = randomString(5);
-        final boolean value = randomBoolean();
-        when(CustomAttribute.newBooleanAttribute(name, value)).thenReturn(booleanAttribute);
-        customAttributes.put(name, value);
+        final Map<String, CustomAttribute> mockCustomAttributes = mock(Map.class);
+        when(customAttributeMapper.apply(customAttributes)).thenReturn(mockCustomAttributes);
 
         // When
         intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
 
         // Then
-        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue(), is(booleanAttribute));
         verifyStatic();
-        User.update(mockUser);
-    }
-
-    @Test
-    public void shouldAddStringCustomAttributeToUser_withStringAttribute() {
-        // Given
-        final String userId = randomId();
-        final Map<String, String> params = new HashMap<>();
-        params.put("user_id", userId);
-        final User mockUser = mock(User.class);
-        when(User.find(params)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = new HashMap<>();
-        final StringAttribute stringAttribute = mock(StringAttribute.class);
-        final String name = randomString(5);
-        final String value = randomString(5);
-        when(CustomAttribute.newStringAttribute(name, value)).thenReturn(stringAttribute);
-        customAttributes.put(name, value);
-
-        // When
-        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-
-        // Then
-        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue(), is(stringAttribute));
-        verifyStatic();
-        User.update(mockUser);
-    }
-
-    @Test
-    public void shouldAddIntegerCustomAttributeToUser_withIntegerAttribute() {
-        // Given
-        final String userId = randomId();
-        final Map<String, String> params = new HashMap<>();
-        params.put("user_id", userId);
-        final User mockUser = mock(User.class);
-        when(User.find(params)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = new HashMap<>();
-        final IntegerAttribute integerAttribute = mock(IntegerAttribute.class);
-        final String name = randomString(5);
-        final Integer value = Integer.valueOf(randomIntInRange(-10, 10));
-        when(CustomAttribute.newIntegerAttribute(name, value)).thenReturn(integerAttribute);
-        customAttributes.put(name, value);
-
-        // When
-        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-
-        // Then
-        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue(), is(integerAttribute));
-        verifyStatic();
-        User.update(mockUser);
-    }
-
-    @Test
-    public void shouldAddDoubleCustomAttributeToUser_withDoubleAttribute() {
-        // Given
-        final String userId = randomId();
-        final Map<String, String> params = new HashMap<>();
-        params.put("user_id", userId);
-        final User mockUser = mock(User.class);
-        when(User.find(params)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = new HashMap<>();
-        final DoubleAttribute doubleAttribute = mock(DoubleAttribute.class);
-        final String name = randomString(5);
-        final Double value = Double.valueOf(randomIntInRange(-10, 10));
-        when(CustomAttribute.newDoubleAttribute(name, value)).thenReturn(doubleAttribute);
-        customAttributes.put(name, value);
-
-        // When
-        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-
-        // Then
-        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue(), is(doubleAttribute));
-        verifyStatic();
-        User.update(mockUser);
-    }
-
-    @Test
-    public void shouldAddLongCustomAttributeToUser_withLongAttribute() {
-        // Given
-        final String userId = randomId();
-        final Map<String, String> params = new HashMap<>();
-        params.put("user_id", userId);
-        final User mockUser = mock(User.class);
-        when(User.find(params)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = new HashMap<>();
-        final LongAttribute longAttribute = mock(LongAttribute.class);
-        final String name = randomString(5);
-        final Long value = Long.valueOf(randomIntInRange(-10, 10));
-        when(CustomAttribute.newLongAttribute(name, value)).thenReturn(longAttribute);
-        customAttributes.put(name, value);
-
-        // When
-        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-
-        // Then
-        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue(), is(longAttribute));
-        verifyStatic();
-        User.update(mockUser);
-    }
-
-    @Test
-    public void shouldAddFloatCustomAttributeToUser_withFloatAttribute() {
-        // Given
-        final String userId = randomId();
-        final Map<String, String> params = new HashMap<>();
-        params.put("user_id", userId);
-        final User mockUser = mock(User.class);
-        when(User.find(params)).thenReturn(mockUser);
-        final Map<String, Object> customAttributes = new HashMap<>();
-        final FloatAttribute floatAttribute = mock(FloatAttribute.class);
-        final String name = randomString(5);
-        final Float value = Float.valueOf(randomIntInRange(-10, 10));
-        when(CustomAttribute.newFloatAttribute(name, value)).thenReturn(floatAttribute);
-        customAttributes.put(name, value);
-
-        // When
-        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-
-        // Then
-        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue(), is(floatAttribute));
-        verifyStatic();
-        User.update(mockUser);
-    }
-
-    @Test
-    public void shouldAddValidCustomAttributesToUser_withValidAndInvalidAttribute() {
-        // Given
-        final String userId = randomId();
-        final Map<String, String> params = new HashMap<>();
-        params.put("user_id", userId);
-        final User mockUser = mock(User.class);
-        when(User.find(params)).thenReturn(mockUser);
-
-        final Map<String, Object> customAttributes = new HashMap<>();
-        customAttributes.put(randomString(5), new Object());
-
-        final BooleanAttribute booleanAttribute = mock(BooleanAttribute.class);
-        when(CustomAttribute.newBooleanAttribute(any(String.class), any(Boolean.class))).thenReturn(booleanAttribute);
-        customAttributes.put(randomString(5), randomBoolean());
-
-        final StringAttribute stringAttribute = mock(StringAttribute.class);
-        when(CustomAttribute.newStringAttribute(any(String.class), any(String.class))).thenReturn(stringAttribute);
-        customAttributes.put(randomString(5), randomString(5));
-
-        final IntegerAttribute integerAttribute = mock(IntegerAttribute.class);
-        when(CustomAttribute.newIntegerAttribute(any(String.class), any(Integer.class))).thenReturn(integerAttribute);
-        customAttributes.put(randomString(5), Integer.valueOf(randomIntInRange(-10, 10)));
-        final List<CustomAttribute<?>> expectedAttributes = Arrays.asList(booleanAttribute, stringAttribute,
-                integerAttribute);
-
-        // When
-        intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
-        // Then
-        final ArgumentCaptor<CustomAttribute> argumentCaptor = ArgumentCaptor.forClass(CustomAttribute.class);
-        verify(mockUser, times(customAttributes.size() - 1)).addCustomAttribute(argumentCaptor.capture());
-        assertThat(argumentCaptor.getAllValues(),
-                containsInAnyOrder(expectedAttributes.toArray(new CustomAttribute[expectedAttributes.size()])));
-        verifyStatic();
-        User.update(mockUser);
+        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        User.update(userCaptor.capture());
+        assertThat(userCaptor.getValue().getCustomAttributes(), is(mockCustomAttributes));
     }
 
     @Test
@@ -285,15 +224,14 @@ public class IntercomMetricCollectorTest {
         final String organisationId = randomId();
         final User mockUser = mock(User.class);
         when(User.find(params)).thenReturn(mockUser);
-        final Company mockCompany = mock(Company.class);
-        whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
 
         // When
         intercomMetricCollector.addOrganisationToUser(userId, organisationId);
 
         // Then
-        verify(mockCompany).setCompanyID(organisationId);
-        verify(mockUser).addCompany(mockCompany);
+        final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+        verify(mockUser).addCompany(companyCaptor.capture());
+        assertThat(companyCaptor.getValue().getCompanyID(), is(organisationId));
         verifyStatic();
         User.update(mockUser);
     }
@@ -324,15 +262,15 @@ public class IntercomMetricCollectorTest {
         final User mockUser = mock(User.class);
         when(User.find(params)).thenReturn(mockUser);
         final Company mockCompany = mock(Company.class);
-        whenNew(Company.class).withNoArguments().thenReturn(mockCompany);
         when(Company.find(organisationId)).thenReturn(mockCompany);
 
         // When
         intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
 
         // Then
-        verify(mockCompany).setCompanyID(organisationId);
-        verify(mockUser).removeCompany(mockCompany);
+        final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+        verify(mockUser).removeCompany(companyCaptor.capture());
+        assertThat(companyCaptor.getValue().getCompanyID(), is(organisationId));
         verifyStatic();
         User.update(mockUser);
     }
@@ -360,7 +298,7 @@ public class IntercomMetricCollectorTest {
         final String userId = randomId();
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", userId);
-        final User mockUser = randomUser();
+        final User mockUser = randomIntercomUser();
         when(User.find(params)).thenReturn(mockUser);
 
         // When
@@ -441,45 +379,4 @@ public class IntercomMetricCollectorTest {
         assertNotNull(thrownException);
     }
 
-    private User randomUser() {
-        final User user = new User();
-        user.setId(randomId());
-        user.setCompanyCollection(randomCompanyCollection());
-        user.setName(randomString());
-        user.setEmail(randomEmailAddress());
-        user.setCustomAttributes(randomCustomAttributes());
-        return user;
-    }
-
-    private CompanyCollection randomCompanyCollection() {
-        final List<Company> companies = new ArrayList<>();
-        final CompanyCollection companyCollection = new CompanyCollection(companies);
-
-        final int numberOfCompanies = randomInt(10);
-
-        for (int i = 0; i < numberOfCompanies; i++) {
-            final Company mockCompany = mock(Company.class);
-            final String companyId = randomId();
-            when(mockCompany.getId()).thenReturn(companyId);
-
-            companies.add(mockCompany);
-        }
-
-        return companyCollection;
-    }
-
-    private Map<String, CustomAttribute> randomCustomAttributes() {
-        final Map<String, CustomAttribute> customAttributes = new HashMap<>();
-
-        final int numberOfCompanies = randomInt(10);
-
-        for (int i = 0; i < numberOfCompanies; i++) {
-            final String key = randomString();
-            final CustomAttribute mockCustomAttribute = mock(CustomAttribute.class);
-
-            customAttributes.put(key, mockCustomAttribute);
-        }
-
-        return customAttributes;
-    }
 }
