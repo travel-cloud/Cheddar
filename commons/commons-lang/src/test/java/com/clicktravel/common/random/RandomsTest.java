@@ -410,4 +410,16 @@ public class RandomsTest {
             assertThat(itemCollection, hasItem(item));
         }
     }
+
+    @Test
+    public void shouldReturnRandomIdSet() {
+        final Set<Set<String>> randomIdSets = new HashSet<>();
+        for (int n = 0; n < 100; n++) {
+            final Set<String> randomIdSet = Randoms.randomIdSet();
+            assertNotNull(randomIdSet);
+            randomIdSets.add(randomIdSet);
+        }
+        assertTrue("100 random samples should not all be same id set: " + randomIdSets.iterator().next(),
+                randomIdSets.size() > 1);
+    }
 }
