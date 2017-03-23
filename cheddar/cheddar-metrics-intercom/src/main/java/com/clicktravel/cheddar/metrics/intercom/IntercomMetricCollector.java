@@ -34,9 +34,15 @@ import io.intercom.api.*;
 
 public class IntercomMetricCollector implements MetricCollector {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper;
 
     public IntercomMetricCollector(final String personalAccessToken) {
         Intercom.setToken(personalAccessToken);
+        customAttributeMapper = new MetricCustomAttributeToIntercomCustomAttributeMapper();
+    }
+
+    void setCustomAttributeMapper(final MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper) {
+        this.customAttributeMapper = customAttributeMapper;
     }
 
     @Override
@@ -83,26 +89,7 @@ public class IntercomMetricCollector implements MetricCollector {
     public void addCustomAttributesToUser(final String userId, final Map<String, Object> customAttributes) {
         try {
             final User intercomUser = findIntercomUserByUserId(userId);
-
-            customAttributes.entrySet().stream().forEach(entry -> {
-                final String key = entry.getKey();
-                final Object value = entry.getValue();
-                if (value.getClass().equals(Boolean.class)) {
-                    intercomUser.addCustomAttribute(CustomAttribute.newBooleanAttribute(key, (Boolean) value));
-                } else if (value.getClass().equals(Integer.class)) {
-                    intercomUser.addCustomAttribute(CustomAttribute.newIntegerAttribute(key, (Integer) value));
-                } else if (value.getClass().equals(Double.class)) {
-                    intercomUser.addCustomAttribute(CustomAttribute.newDoubleAttribute(key, (Double) value));
-                } else if (value.getClass().equals(Long.class)) {
-                    intercomUser.addCustomAttribute(CustomAttribute.newLongAttribute(key, (Long) value));
-                } else if (value.getClass().equals(Float.class)) {
-                    intercomUser.addCustomAttribute(CustomAttribute.newFloatAttribute(key, (Float) value));
-                } else if (value.getClass().equals(String.class)) {
-                    intercomUser.addCustomAttribute(CustomAttribute.newStringAttribute(key, (String) value));
-                } else {
-                    logger.warn("Unsupported custom attribute class : {}", value.getClass().getSimpleName());
-                }
-            });
+            intercomUser.setCustomAttributes(customAttributeMapper.apply(customAttributes));
             User.update(intercomUser);
         } catch (final Exception e) {
             logger.warn("Error adding custom attributes to  Intercom user with id: {} - {} ", userId, e.getMessage());
@@ -122,7 +109,6 @@ public class IntercomMetricCollector implements MetricCollector {
             logger.warn("Error adding organisation with id: {} to  Intercom user with id: {} - {} ", organisationId,
                     userId, e.getMessage());
         }
-
     }
 
     @Override
@@ -220,7 +206,7 @@ public class IntercomMetricCollector implements MetricCollector {
         intercomUser.setId(user.id());
         intercomUser.setUserId(user.id());
         intercomUser.setName(user.name());
-
+        intercomUser.setCustomAttributes(customAttributeMapper.apply(user.customAttributes()));
         if (!Equals.isNullOrBlank(user.emailAddress())) {
             intercomUser.setEmail(user.emailAddress());
         }

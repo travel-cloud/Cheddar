@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.joda.time.*;
 
@@ -365,6 +367,14 @@ public class Randoms {
         @SuppressWarnings("unchecked")
         final T[] collectionAsArray = (T[]) collection.toArray();
         return Randoms.randomItem(collectionAsArray);
+    }
+
+    /**
+     * @return A randomly generated set of IDs.
+     */
+    public static Set<String> randomIdSet() {
+        final int numberToCreate = randomIntInRange(0, 10);
+        return IntStream.range(0, numberToCreate).mapToObj(i -> randomId()).collect(Collectors.toSet());
     }
 
     private static Random newRandom() {
