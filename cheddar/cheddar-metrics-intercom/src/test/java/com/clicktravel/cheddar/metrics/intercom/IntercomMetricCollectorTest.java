@@ -16,9 +16,9 @@
  */
 package com.clicktravel.cheddar.metrics.intercom;
 
-import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomDataGenerator.randomIntercomUser;
-import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomDataGenerator.randomMetricOrganisation;
-import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomDataGenerator.randomMetricUser;
+import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomIntercomDataGenerator.randomIntercomUser;
+import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomMetricDataGenerator.randomMetricOrganisation;
+import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomMetricDataGenerator.randomMetricUser;
 import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.is;

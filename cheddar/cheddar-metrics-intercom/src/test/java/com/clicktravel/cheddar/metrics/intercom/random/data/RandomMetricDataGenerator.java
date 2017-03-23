@@ -21,7 +21,6 @@ import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomIntInRange;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,13 +30,9 @@ import java.util.Map;
 import com.clicktravel.cheddar.metrics.MetricOrganisation;
 import com.clicktravel.cheddar.metrics.MetricUser;
 
-import io.intercom.api.Company;
-import io.intercom.api.CompanyCollection;
 import io.intercom.api.CustomAttribute;
-import io.intercom.api.User;
 
-@SuppressWarnings("rawtypes")
-public class RandomDataGenerator {
+public class RandomMetricDataGenerator {
 
     public static MetricOrganisation randomMetricOrganisation() {
         return new MetricOrganisation(randomId(), randomString());
@@ -53,54 +48,12 @@ public class RandomDataGenerator {
                 randomMetricCustomAttributes());
     }
 
-    public static User randomIntercomUser() {
-        final User user = new User();
-        user.setId(randomId());
-        user.setCompanyCollection(randomCompanyCollection());
-        user.setName(randomString());
-        user.setEmail(randomEmailAddress());
-        user.setCustomAttributes(randomCustomAttributes());
-        return user;
-    }
-
-    public static CompanyCollection randomCompanyCollection() {
-        final List<Company> companies = new ArrayList<>();
-        final CompanyCollection companyCollection = mock(CompanyCollection.class);
-        final int numberOfCompanies = randomIntInRange(1, 10);
-
-        for (int i = 0; i < numberOfCompanies; i++) {
-            final Company mockCompany = mock(Company.class);
-            final String companyId = randomId();
-            when(mockCompany.getCompanyID()).thenReturn(companyId);
-
-            companies.add(mockCompany);
-        }
-
-        when(companyCollection.getPage()).thenReturn(companies);
-        return companyCollection;
-    }
-
     public static Map<String, Object> randomMetricCustomAttributes() {
         final Map<String, Object> customAttributes = new HashMap<>();
         final int numberOfCustomAttributes = randomIntInRange(1, 10);
         for (int i = 0; i < numberOfCustomAttributes; i++) {
             final String key = randomString();
             final Object mockCustomAttribute = mock(CustomAttribute.class);
-            customAttributes.put(key, mockCustomAttribute);
-        }
-
-        return customAttributes;
-    }
-
-    public static Map<String, CustomAttribute> randomCustomAttributes() {
-        final Map<String, CustomAttribute> customAttributes = new HashMap<>();
-
-        final int numberOfCustomAttributes = randomIntInRange(1, 10);
-
-        for (int i = 0; i < numberOfCustomAttributes; i++) {
-            final String key = randomString();
-            final CustomAttribute mockCustomAttribute = mock(CustomAttribute.class);
-
             customAttributes.put(key, mockCustomAttribute);
         }
 
