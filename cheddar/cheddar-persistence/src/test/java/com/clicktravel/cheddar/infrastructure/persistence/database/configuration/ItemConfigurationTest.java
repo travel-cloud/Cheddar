@@ -21,6 +21,7 @@ import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -59,6 +60,7 @@ public class ItemConfigurationTest {
         assertEquals(tableName, itemConfiguration.tableName());
         assertThat(itemConfiguration.propertyDescriptors(), hasSize(propertyDescriptors.size()));
         assertEquals(0, itemConfiguration.indexDefinitions().size());
+        assertEquals(0, itemConfiguration.compoundIndexHashKeyToIndexNameMap().size());
     }
 
     @Test
@@ -78,6 +80,7 @@ public class ItemConfigurationTest {
         // Then
         assertTrue(itemConfiguration.hasIndexOn(propertyName));
         assertEquals(1, itemConfiguration.indexDefinitions().size());
+        assertTrue(itemConfiguration.compoundIndexHashKeyToIndexNameMap().isEmpty());
     }
 
     @Test
@@ -100,6 +103,7 @@ public class ItemConfigurationTest {
         final String expectedIndexName = stringPropertyName + "_" + integerPropertyName;
         assertTrue(itemConfiguration.hasIndexOn(expectedIndexName));
         assertEquals(1, itemConfiguration.indexDefinitions().size());
+        assertEquals(expectedIndexName, itemConfiguration.compoundIndexHashKeyToIndexNameMap().get(stringPropertyName));
     }
 
     @Test
@@ -201,6 +205,30 @@ public class ItemConfigurationTest {
     }
 
     @Test
+    public void shouldReturnHasIndexForQuery_withAttributeQueryOnHashKeyAndCompositeIndex() throws Exception {
+        // Given
+        final Class<? extends Item> itemClass = StubItem.class;
+        final String tableName = randomString(10);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
+        final Collection<IndexDefinition> indexDefinitions = new ArrayList<>();
+        final String stringPropertyName = "stringProperty";
+        final String integerPropertyName = "integerProperty";
+        final CompoundIndexDefinition compoundIndexDefinition = new CompoundIndexDefinition(stringPropertyName,
+                integerPropertyName);
+        indexDefinitions.add(compoundIndexDefinition);
+        itemConfiguration.registerIndexes(indexDefinitions);
+
+        final Condition condition = new Condition(randomEnum(Operators.class), randomString());
+        final AttributeQuery attributeQuery = new AttributeQuery(stringPropertyName, condition);
+
+        // When
+        final boolean hasIndexForQuery = itemConfiguration.hasIndexForQuery(attributeQuery);
+
+        // Then
+        assertTrue(hasIndexForQuery);
+    }
+
+    @Test
     public void shouldNotReturnHasIndexForQuery_withCompositeAttributeQuery() throws Exception {
         // Given
         final Class<? extends Item> itemClass = StubItem.class;
@@ -245,30 +273,6 @@ public class ItemConfigurationTest {
     }
 
     @Test
-    public void shouldNotReturnHasIndexForQuery_withAttributeQueryAndCompositeIndex() throws Exception {
-        // Given
-        final Class<? extends Item> itemClass = StubItem.class;
-        final String tableName = randomString(10);
-        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
-        final Collection<IndexDefinition> indexDefinitions = new ArrayList<>();
-        final String stringPropertyName = "stringProperty";
-        final String integerPropertyName = "integerProperty";
-        final CompoundIndexDefinition compoundIndexDefinition = new CompoundIndexDefinition(stringPropertyName,
-                integerPropertyName);
-        indexDefinitions.add(compoundIndexDefinition);
-        itemConfiguration.registerIndexes(indexDefinitions);
-
-        final Condition condition = new Condition(randomEnum(Operators.class), randomString());
-        final AttributeQuery attributeQuery = new AttributeQuery(stringPropertyName, condition);
-
-        // When
-        final boolean hasIndexForQuery = itemConfiguration.hasIndexForQuery(attributeQuery);
-
-        // Then
-        assertFalse(hasIndexForQuery);
-    }
-
-    @Test
     public void shouldGetPropertyDescriptor_withPropertyName() throws Exception {
         // Given
         final Class<? extends Item> itemClass = StubItem.class;
@@ -303,5 +307,70 @@ public class ItemConfigurationTest {
 
         // Then
         assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldGetIndexNameForQuery_withAttributeQuery() {
+        // Given
+        final Class<? extends Item> itemClass = StubItem.class;
+        final String tableName = randomString(10);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
+        final Collection<IndexDefinition> indexDefinitions = new ArrayList<>();
+        final String propertyName = "stringProperty";
+        final IndexDefinition indexDefinition = new IndexDefinition(propertyName);
+        indexDefinitions.add(indexDefinition);
+        itemConfiguration.registerIndexes(indexDefinitions);
+        final AttributeQuery attributeQuery = new AttributeQuery(propertyName, mock(Condition.class));
+
+        // When
+        final String indexNameForQuery = itemConfiguration.indexNameForQuery(attributeQuery);
+
+        // Then
+        assertEquals("stringProperty_idx", indexNameForQuery);
+    }
+
+    @Test
+    public void shouldGetIndexNameForQuery_withAttributeQueryAndCompoundIndexWithHashKeyEqualToAttributeName() {
+        // Given
+        final Class<? extends Item> itemClass = StubItem.class;
+        final String tableName = randomString(10);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
+        final Collection<IndexDefinition> indexDefinitions = new ArrayList<>();
+        final String stringPropertyName = "stringProperty";
+        final String integerPropertyName = "integerProperty";
+        final CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(stringPropertyName,
+                integerPropertyName);
+        indexDefinitions.add(indexDefinition);
+        itemConfiguration.registerIndexes(indexDefinitions);
+        final AttributeQuery attributeQuery = new AttributeQuery(stringPropertyName, mock(Condition.class));
+
+        // When
+        final String indexNameForQuery = itemConfiguration.indexNameForQuery(attributeQuery);
+
+        // Then
+        assertEquals("stringProperty_integerProperty_idx", indexNameForQuery);
+    }
+
+    @Test
+    public void shouldGetIndexNameForQuery_withCompoundAttributeQuery() {
+        // Given
+        final Class<? extends Item> itemClass = StubItem.class;
+        final String tableName = randomString(10);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
+        final Collection<IndexDefinition> indexDefinitions = new ArrayList<>();
+        final String stringPropertyName = "stringProperty";
+        final String integerPropertyName = "integerProperty";
+        final CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(stringPropertyName,
+                integerPropertyName);
+        indexDefinitions.add(indexDefinition);
+        itemConfiguration.registerIndexes(indexDefinitions);
+        final AttributeQuery attributeQuery = new CompoundAttributeQuery(stringPropertyName, mock(Condition.class),
+                integerPropertyName, mock(Condition.class));
+
+        // When
+        final String indexNameForQuery = itemConfiguration.indexNameForQuery(attributeQuery);
+
+        // Then
+        assertEquals("stringProperty_integerProperty_idx", indexNameForQuery);
     }
 }

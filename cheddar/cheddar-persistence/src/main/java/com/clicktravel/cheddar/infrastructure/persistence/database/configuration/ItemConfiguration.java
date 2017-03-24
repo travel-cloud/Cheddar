@@ -39,6 +39,7 @@ public class ItemConfiguration {
     private final PrimaryKeyDefinition primaryKeyDefinition;
     private final Map<String, PropertyDescriptor> properties = new HashMap<>();
     private final Map<String, IndexDefinition> indexDefinitions;
+    private final Map<String, String> compoundIndexHashKeyToIndexNameMap;
     private final Map<String, UniqueConstraint> uniqueConstraints;
 
     public ItemConfiguration(final Class<? extends Item> itemClass, final String tableName) {
@@ -50,6 +51,7 @@ public class ItemConfiguration {
         this.itemClass = itemClass;
         this.tableName = tableName;
         indexDefinitions = new HashMap<>();
+        compoundIndexHashKeyToIndexNameMap = new HashMap<>();
         uniqueConstraints = new HashMap<>();
         try {
             final BeanInfo beanInfo = Introspector.getBeanInfo(itemClass);
@@ -100,6 +102,7 @@ public class ItemConfiguration {
                 final Class<?> supportingPropertyType = getPropertyType(supportingPropertyName);
                 compoundIndexDefinition.setSupportingPropertyType(supportingPropertyType);
                 indexName = compoundName(propertyName, supportingPropertyName);
+                compoundIndexHashKeyToIndexNameMap.put(propertyName, indexName);
             } else {
                 indexName = indexDefinition.propertyName();
             }
@@ -122,7 +125,8 @@ public class ItemConfiguration {
     }
 
     public boolean hasIndexOn(final String propertyName) {
-        return primaryKeyDefinition.propertyName().equals(propertyName) || indexDefinitions.containsKey(propertyName);
+        return primaryKeyDefinition.propertyName().equals(propertyName) || indexDefinitions.containsKey(propertyName)
+                || compoundIndexHashKeyToIndexNameMap.containsKey(propertyName);
     }
 
     public ItemId getItemId(final Item item) {
@@ -190,6 +194,30 @@ public class ItemConfiguration {
         }
 
         return propertyDescriptor;
+    }
+
+    public String indexNameForQuery(final AttributeQuery attributeQuery) {
+        final StringBuffer stringBuffer = new StringBuffer();
+
+        if (CompoundAttributeQuery.class.isAssignableFrom(attributeQuery.getClass())) {
+            final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) attributeQuery;
+            stringBuffer.append(compoundName(attributeQuery.getAttributeName(),
+                    compoundAttributeQuery.getSupportingAttributeName()));
+        } else {
+            if (compoundIndexHashKeyToIndexNameMap.keySet().contains(attributeQuery.getAttributeName())) {
+                stringBuffer.append(compoundIndexHashKeyToIndexNameMap.get(attributeQuery.getAttributeName()));
+            } else {
+                stringBuffer.append(attributeQuery.getAttributeName());
+            }
+        }
+
+        stringBuffer.append("_idx");
+
+        return stringBuffer.toString();
+    }
+
+    Map<String, String> compoundIndexHashKeyToIndexNameMap() {
+        return compoundIndexHashKeyToIndexNameMap;
     }
 
     private Class<?> getPropertyType(final String propertyName) {

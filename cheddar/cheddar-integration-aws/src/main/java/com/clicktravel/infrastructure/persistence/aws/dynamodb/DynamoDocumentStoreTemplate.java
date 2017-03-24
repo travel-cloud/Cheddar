@@ -261,7 +261,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
                 // if the query is for the hash then call query on table
                 queryOutcome = table.query(querySpec);
             } else {
-                final String indexName = IndexNameBuilder.build(query);
+                final String indexName = itemConfiguration.indexNameForQuery(query);
                 final Index index = table.getIndex(indexName);
                 queryOutcome = index.query(querySpec);
             }

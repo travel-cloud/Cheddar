@@ -135,7 +135,7 @@ public class DynamoDbDataGenerator {
         }
     }
 
-    public void createStubItemWithGlobalSecondaryIndexTable() throws Exception {
+    public void createStubItemWithCompoundGlobalSecondaryIndexTable() throws Exception {
         final String tableName = unitTestSchemaName + "." + stubItemWithGsiTableName;
         boolean tableCreated = false;
         try {
