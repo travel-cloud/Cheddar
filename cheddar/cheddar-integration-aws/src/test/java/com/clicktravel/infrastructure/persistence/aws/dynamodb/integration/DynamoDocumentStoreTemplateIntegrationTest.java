@@ -54,7 +54,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
 
         dataGenerator.createStubItemTable();
         dataGenerator.createStubItemWithRangeTable();
-        dataGenerator.createStubItemWithGlobalSecondaryIndexTable();
+        dataGenerator.createStubItemWithCompoundGlobalSecondaryIndexTable();
         dataGenerator.createStubItemWithHashAndRangePrimaryKeyAndCompoundGlobalSecondaryIndexTable();
     }
 
@@ -545,6 +545,38 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         // When
         final Collection<StubWithHashAndRangeAndGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
                 StubWithHashAndRangeAndGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertEquals(expectedMatchingItems.size(), allItems.size());
+        assertTrue(allItems.containsAll(expectedMatchingItems));
+    }
+
+    @Test
+    public void shouldFetch_withAttributeQueryOnHashPartOfCompoundIndex() {
+        // Given
+        final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
+        dynamoDbTemplate.initialize(amazonDynamoDbClient);
+
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final String gsiFetchCriteriaValue = Randoms.randomString(10);
+        final Query query = new AttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue));
+
+        for (int i = 0; i < 20; i++) {
+            final StubWithGlobalSecondaryIndexItem item = dataGenerator.randomStubWithGlobalSecondaryIndexItem();
+
+            if (Randoms.randomBoolean() || item.getGsi().equals(gsiFetchCriteriaValue)) {
+                item.setGsi(gsiFetchCriteriaValue);
+                item.setGsiSupportingValue(Randoms.randomIntInRange(0, 10));
+                expectedMatchingItems.add(item);
+            }
+
+            dynamoDbTemplate.create(item);
+            createdItemIds.add(item.getId());
+        }
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
+                StubWithGlobalSecondaryIndexItem.class);
 
         // Then
         assertEquals(expectedMatchingItems.size(), allItems.size());

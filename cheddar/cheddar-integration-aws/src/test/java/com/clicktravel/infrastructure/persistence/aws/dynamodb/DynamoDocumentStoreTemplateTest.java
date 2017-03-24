@@ -210,6 +210,49 @@ public class DynamoDocumentStoreTemplateTest {
     }
 
     @Test
+    public void shouldQueryIndex_withAttributeQueryOnHashPartOfCompoundIndex() {
+        // Given
+        final ItemId itemId = new ItemId(randomId());
+
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
+                tableName);
+        itemConfiguration.registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsi", "gsiSupportingValue"))));
+        final Collection<ItemConfiguration> itemConfigurations = Arrays.asList(itemConfiguration);
+        when(mockDatabaseSchemaHolder.itemConfigurations()).thenReturn(itemConfigurations);
+
+        final Table mockTable = mock(Table.class);
+        when(mockDynamoDBClient.getTable(any(String.class))).thenReturn(mockTable);
+
+        final DynamoDocumentStoreTemplate dynamoDocumentStoreTemplate = new DynamoDocumentStoreTemplate(
+                mockDatabaseSchemaHolder);
+        dynamoDocumentStoreTemplate.initialize(mockAmazonDynamoDbClient);
+
+        final Index mockIndex = mock(Index.class);
+        when(mockTable.getIndex(anyString())).thenReturn(mockIndex);
+
+        final ItemCollection<QueryOutcome> mockOutcome = mock(ItemCollection.class);
+        when(mockIndex.query(any(QuerySpec.class))).thenReturn(mockOutcome);
+
+        final IteratorSupport<Item, QueryOutcome> mockIterator = mock(IteratorSupport.class);
+        final Item mockItem = new Item();
+        mockItem.withString(randomString(), randomString());
+
+        when(mockOutcome.iterator()).thenReturn(mockIterator);
+        when(mockIterator.hasNext()).thenReturn(true, false);
+        when(mockIterator.next()).thenReturn(mockItem);
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> stubWithGlobalSecondaryIndexItemCollection = dynamoDocumentStoreTemplate
+                .fetch(new AttributeQuery("gsi", new Condition(Operators.EQUALS, itemId.value())),
+                        StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertTrue(stubWithGlobalSecondaryIndexItemCollection.size() == 1);
+        final ArgumentCaptor<QuerySpec> querySpecCaptor = ArgumentCaptor.forClass(QuerySpec.class);
+        verify(mockIndex).query(querySpecCaptor.capture());
+    }
+
+    @Test
     public void shouldQueryIndex_withCompoundAttributeQuery() {
         // Given
         final ItemId itemId = new ItemId(randomId());

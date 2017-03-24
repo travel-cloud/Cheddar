@@ -454,7 +454,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 final QueryRequest queryRequest = new QueryRequest().withTableName(tableName)
                         .withKeyConditions(conditions).withExclusiveStartKey(lastEvaluatedKey);
                 if (isQueryOnIndex(query, itemConfiguration, queryAttributeName)) {
-                    final String indexName = IndexNameBuilder.build(query);
+                    final String indexName = itemConfiguration.indexNameForQuery(query);
                     queryRequest.withIndexName(indexName);
                 }
 
