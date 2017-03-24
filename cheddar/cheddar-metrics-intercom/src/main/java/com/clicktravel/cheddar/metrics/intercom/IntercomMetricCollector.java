@@ -191,7 +191,7 @@ public class IntercomMetricCollector implements MetricCollector {
         if (intercomUser == null) {
             throw new MetricUserNotFoundException(userId);
         } else {
-            return new MetricUser(intercomUser.getId(), getUserOrganisations(intercomUser), intercomUser.getName(),
+            return new MetricUser(intercomUser.getUserId(), getUserOrganisations(intercomUser), intercomUser.getName(),
                     intercomUser.getEmail(), getCustomAttributes(intercomUser));
         }
 

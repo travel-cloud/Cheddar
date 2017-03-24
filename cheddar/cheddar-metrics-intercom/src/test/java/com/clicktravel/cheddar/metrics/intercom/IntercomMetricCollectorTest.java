@@ -143,7 +143,6 @@ public class IntercomMetricCollectorTest {
         final User intercomUser = userCaptor.getValue();
         assertThat(intercomUser.getId(), is(metricUser.id()));
         assertThat(intercomUser.getUserId(), is(metricUser.id()));
-        assertThat(intercomUser.getUserId(), is(metricUser.id()));
         assertThat(intercomUser.getCustomAttributes(), is(customAttributes));
         assertThat(intercomUser.getCompanyCollection().getPage().size(), is(metricUser.organisationIds().size()));
         assertThat(intercomUser.getSignedUpAt(), is(DateTime.now().getMillis() / 1000));
@@ -306,7 +305,7 @@ public class IntercomMetricCollectorTest {
 
         // Then
         assertNotNull(result);
-        assertThat(result.id(), is(mockUser.getId()));
+        assertThat(result.id(), is(mockUser.getUserId()));
         mockUser.getCompanyCollection().forEachRemaining(company -> {
             assertTrue(result.organisationIds().contains(company.getId()));
         });
