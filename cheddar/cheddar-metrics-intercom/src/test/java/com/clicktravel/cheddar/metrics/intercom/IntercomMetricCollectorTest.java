@@ -314,7 +314,7 @@ public class IntercomMetricCollectorTest {
         assertThat(result.customAttributes().size(), is(mockUser.getCustomAttributes().size()));
         mockUser.getCustomAttributes().entrySet().forEach(entry -> {
             assertTrue(result.customAttributes().containsKey(entry.getKey()));
-            assertThat(result.customAttributes().get(entry.getKey()), is(entry.getValue()));
+            assertThat(result.customAttributes().get(entry.getKey()), is(entry.getValue().getValue()));
         });
     }
 
@@ -378,4 +378,9 @@ public class IntercomMetricCollectorTest {
         assertNotNull(thrownException);
     }
 
+    /*
+     * @Test void shouldReturnCustomAttributes_withUser() { // Given final User intercomUser = randomIntercomUser();
+     *
+     * // When final Map<String, Object> customAttributes = intercomMetricCollector.getCustomAttributes(intercomUser); }
+     */
 }

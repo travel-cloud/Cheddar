@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -34,15 +33,17 @@ import io.intercom.api.*;
 
 public class IntercomMetricCollector implements MetricCollector {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper;
+    private MetricCustomAttributeToIntercomCustomAttributeMapper metricToIntercomCustomAttributeMapper;
+    private final IntercomCustomAttributeToMetricCustomAttributeMapper intercomToMetricCustomAttributeMapper;
 
     public IntercomMetricCollector(final String personalAccessToken) {
         Intercom.setToken(personalAccessToken);
-        customAttributeMapper = new MetricCustomAttributeToIntercomCustomAttributeMapper();
+        metricToIntercomCustomAttributeMapper = new MetricCustomAttributeToIntercomCustomAttributeMapper();
+        intercomToMetricCustomAttributeMapper = new IntercomCustomAttributeToMetricCustomAttributeMapper();
     }
 
     void setCustomAttributeMapper(final MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper) {
-        this.customAttributeMapper = customAttributeMapper;
+        metricToIntercomCustomAttributeMapper = customAttributeMapper;
     }
 
     @Override
@@ -89,7 +90,7 @@ public class IntercomMetricCollector implements MetricCollector {
     public void addCustomAttributesToUser(final String userId, final Map<String, Object> customAttributes) {
         try {
             final User intercomUser = findIntercomUserByUserId(userId);
-            intercomUser.setCustomAttributes(customAttributeMapper.apply(customAttributes));
+            intercomUser.setCustomAttributes(metricToIntercomCustomAttributeMapper.apply(customAttributes));
             User.update(intercomUser);
         } catch (final Exception e) {
             logger.warn("Error adding custom attributes to  Intercom user with id: {} - {} ", userId, e.getMessage());
@@ -206,7 +207,7 @@ public class IntercomMetricCollector implements MetricCollector {
         intercomUser.setId(user.id());
         intercomUser.setUserId(user.id());
         intercomUser.setName(user.name());
-        intercomUser.setCustomAttributes(customAttributeMapper.apply(user.customAttributes()));
+        intercomUser.setCustomAttributes(metricToIntercomCustomAttributeMapper.apply(user.customAttributes()));
         if (!Equals.isNullOrBlank(user.emailAddress())) {
             intercomUser.setEmail(user.emailAddress());
         }
@@ -223,8 +224,9 @@ public class IntercomMetricCollector implements MetricCollector {
     @SuppressWarnings("rawtypes")
     private Map<String, Object> getCustomAttributes(final User user) {
         final Map<String, CustomAttribute> customAttributes = user.getCustomAttributes();
-        return customAttributes.entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
+        // return customAttributes.entrySet().stream().collect(
+        // Collectors.toMap(entry -> entry.getKey(), entry -> (CustomAttribute) (entry.getValue().getValue())));
+        return intercomToMetricCustomAttributeMapper.apply(customAttributes);
     }
 
     private List<String> getUserOrganisations(final User user) {
