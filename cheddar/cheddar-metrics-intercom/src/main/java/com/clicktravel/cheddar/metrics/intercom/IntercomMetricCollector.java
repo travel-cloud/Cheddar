@@ -224,8 +224,6 @@ public class IntercomMetricCollector implements MetricCollector {
     @SuppressWarnings("rawtypes")
     private Map<String, Object> getCustomAttributes(final User user) {
         final Map<String, CustomAttribute> customAttributes = user.getCustomAttributes();
-        // return customAttributes.entrySet().stream().collect(
-        // Collectors.toMap(entry -> entry.getKey(), entry -> (CustomAttribute) (entry.getValue().getValue())));
         return intercomToMetricCustomAttributeMapper.apply(customAttributes);
     }
 
