@@ -377,10 +377,4 @@ public class IntercomMetricCollectorTest {
         // Then
         assertNotNull(thrownException);
     }
-
-    /*
-     * @Test void shouldReturnCustomAttributes_withUser() { // Given final User intercomUser = randomIntercomUser();
-     *
-     * // When final Map<String, Object> customAttributes = intercomMetricCollector.getCustomAttributes(intercomUser); }
-     */
 }
