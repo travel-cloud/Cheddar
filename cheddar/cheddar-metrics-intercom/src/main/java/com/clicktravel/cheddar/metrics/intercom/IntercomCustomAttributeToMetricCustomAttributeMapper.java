@@ -42,9 +42,9 @@ public class IntercomCustomAttributeToMetricCustomAttributeMapper
             if (value == null || value.getValue() == null) {
                 customAttributes.put(key, null);
             } else if (value.getValueClass().equals(Boolean.class)) {
-                customAttributes.put(key, (new Boolean(value.booleanValue())));
+                customAttributes.put(key, (value.booleanValue()));
             } else if (value.getValueClass().equals(Integer.class)) {
-                customAttributes.put(key, (new Integer(value.integerValue())));
+                customAttributes.put(key, (value.integerValue()));
             } else if (value.getValueClass().equals(Double.class)) {
                 customAttributes.put(key, (value.doubleValue()));
             } else if (value.getValueClass().equals(Long.class)) {

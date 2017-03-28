@@ -34,7 +34,7 @@ import io.intercom.api.*;
 public class IntercomMetricCollector implements MetricCollector {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private MetricCustomAttributeToIntercomCustomAttributeMapper metricToIntercomCustomAttributeMapper;
-    private final IntercomCustomAttributeToMetricCustomAttributeMapper intercomToMetricCustomAttributeMapper;
+    private IntercomCustomAttributeToMetricCustomAttributeMapper intercomToMetricCustomAttributeMapper;
 
     public IntercomMetricCollector(final String personalAccessToken) {
         Intercom.setToken(personalAccessToken);
@@ -42,8 +42,14 @@ public class IntercomMetricCollector implements MetricCollector {
         intercomToMetricCustomAttributeMapper = new IntercomCustomAttributeToMetricCustomAttributeMapper();
     }
 
-    void setCustomAttributeMapper(final MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper) {
+    void setMetricToIntercomCustomAttributeMapper(
+            final MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper) {
         metricToIntercomCustomAttributeMapper = customAttributeMapper;
+    }
+
+    void setIntercomToMetricCustomAttributeMapper(
+            final IntercomCustomAttributeToMetricCustomAttributeMapper customAttributeMapper) {
+        intercomToMetricCustomAttributeMapper = customAttributeMapper;
     }
 
     @Override

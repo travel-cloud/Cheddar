@@ -40,7 +40,7 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapper
             final String key = entry.getKey();
             final Object value = entry.getValue();
             if (value == null) {
-                customAttributes.put(key, null);
+                customAttributes.put(key, CustomAttribute.newStringAttribute(key, null));
             } else if (value.getClass().equals(Boolean.class)) {
                 customAttributes.put(key, CustomAttribute.newBooleanAttribute(key, (Boolean) value));
             } else if (value.getClass().equals(Integer.class)) {
