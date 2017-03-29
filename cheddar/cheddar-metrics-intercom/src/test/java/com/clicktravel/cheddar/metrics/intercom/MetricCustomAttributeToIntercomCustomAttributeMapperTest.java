@@ -45,12 +45,12 @@ import io.intercom.api.CustomAttribute.*;
 @SuppressWarnings("rawtypes")
 public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
 
-    private MetricCustomAttributeToIntercomCustomAttributeMapper mapper;
+    private MetricCustomAttributeToIntercomCustomAttributeMapper metricToIntercomMapper;
 
     @Before
     public void setUp() {
         PowerMockito.mockStatic(CustomAttribute.class);
-        mapper = new MetricCustomAttributeToIntercomCustomAttributeMapper();
+        metricToIntercomMapper = new MetricCustomAttributeToIntercomCustomAttributeMapper();
     }
 
     @Test
@@ -64,7 +64,7 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
         when(CustomAttribute.newBooleanAttribute(name, value)).thenReturn(mockBooleanAttribute);
 
         // When
-        final Map<String, CustomAttribute> result = mapper.apply(metricCustomAttribute);
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
 
         // Then
         assertNotNull(result);
@@ -83,7 +83,7 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
         when(CustomAttribute.newStringAttribute(name, value)).thenReturn(mockStringAttribute);
 
         // When
-        final Map<String, CustomAttribute> result = mapper.apply(metricCustomAttribute);
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
 
         // Then
         assertNotNull(result);
@@ -101,7 +101,7 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
         when(CustomAttribute.newIntegerAttribute(name, value)).thenReturn(mockIntegerAttribute);
 
         // When
-        final Map<String, CustomAttribute> result = mapper.apply(metricCustomAttribute);
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
 
         // Then
         assertNotNull(result);
@@ -119,7 +119,7 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
         when(CustomAttribute.newDoubleAttribute(name, value)).thenReturn(mockDoubleAttribute);
 
         // When
-        final Map<String, CustomAttribute> result = mapper.apply(metricCustomAttribute);
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
 
         // Then
         assertNotNull(result);
@@ -137,7 +137,7 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
         when(CustomAttribute.newLongAttribute(name, value)).thenReturn(mockLongAttribute);
 
         // When
-        final Map<String, CustomAttribute> result = mapper.apply(metricCustomAttribute);
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
 
         // Then
         assertNotNull(result);
@@ -154,11 +154,28 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
         when(CustomAttribute.newFloatAttribute(name, value)).thenReturn(mockFloatAttribute);
 
         // When
-        final Map<String, CustomAttribute> result = mapper.apply(metricCustomAttribute);
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
 
         // Then
         assertNotNull(result);
         assertThat(result.get(name), is(mockFloatAttribute));
+    }
+
+    @Test
+    public void shouldMapToNullCustomAttribute_withNullAttribute() {
+        // Given
+        final Map<String, Object> metricCustomAttribute = new HashMap<>();
+        final String name = randomString();
+        metricCustomAttribute.put(name, null);
+        final StringAttribute mockNullAttribute = mock(StringAttribute.class);
+        when(CustomAttribute.newStringAttribute(name, null)).thenReturn(mockNullAttribute);
+
+        // When
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
+
+        // Then
+        assertNotNull(result);
+        assertThat(result.get(name), is(mockNullAttribute));
     }
 
     @Test
@@ -187,7 +204,7 @@ public class MetricCustomAttributeToIntercomCustomAttributeMapperTest {
         expectedAttributes.put(integerKey, integerAttribute);
 
         // When
-        final Map<String, CustomAttribute> result = mapper.apply(metricCustomAttribute);
+        final Map<String, CustomAttribute> result = metricToIntercomMapper.apply(metricCustomAttribute);
 
         // Then
         assertNotNull(result);

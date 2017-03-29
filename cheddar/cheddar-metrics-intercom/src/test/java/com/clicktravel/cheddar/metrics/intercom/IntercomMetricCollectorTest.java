@@ -60,7 +60,8 @@ import io.intercom.api.User;
 @PrepareForTest({ User.class, Company.class, IntercomMetricCollector.class, Tag.class })
 public class IntercomMetricCollectorTest {
 
-    private MetricCustomAttributeToIntercomCustomAttributeMapper customAttributeMapper;
+    private MetricCustomAttributeToIntercomCustomAttributeMapper metricToIntercomMapper;
+    private IntercomCustomAttributeToMetricCustomAttributeMapper intercomToMetricMapper;
     private IntercomMetricCollector intercomMetricCollector;
 
     @Before
@@ -69,9 +70,11 @@ public class IntercomMetricCollectorTest {
         PowerMockito.mockStatic(Company.class);
         PowerMockito.mockStatic(Tag.class);
         final String personalAccessToken = randomString();
-        customAttributeMapper = mock(MetricCustomAttributeToIntercomCustomAttributeMapper.class);
+        metricToIntercomMapper = mock(MetricCustomAttributeToIntercomCustomAttributeMapper.class);
+        intercomToMetricMapper = mock(IntercomCustomAttributeToMetricCustomAttributeMapper.class);
         intercomMetricCollector = new IntercomMetricCollector(personalAccessToken);
-        intercomMetricCollector.setCustomAttributeMapper(customAttributeMapper);
+        intercomMetricCollector.setMetricToIntercomCustomAttributeMapper(metricToIntercomMapper);
+        intercomMetricCollector.setIntercomToMetricCustomAttributeMapper(intercomToMetricMapper);
     }
 
     @Test
@@ -131,7 +134,7 @@ public class IntercomMetricCollectorTest {
         // Given
         final MetricUser metricUser = randomMetricUser();
         final Map<String, CustomAttribute> customAttributes = mock(Map.class);
-        when(customAttributeMapper.apply(metricUser.customAttributes())).thenReturn(customAttributes);
+        when(metricToIntercomMapper.apply(metricUser.customAttributes())).thenReturn(customAttributes);
         DateTimeUtils.setCurrentMillisFixed(DateTime.now().getMillis());
         // When
         intercomMetricCollector.createUser(metricUser);
@@ -156,7 +159,7 @@ public class IntercomMetricCollectorTest {
         // Given
         final MetricUser metricUser = randomMetricUser();
         final Map<String, CustomAttribute> customAttributes = mock(Map.class);
-        when(customAttributeMapper.apply(metricUser.customAttributes())).thenReturn(customAttributes);
+        when(metricToIntercomMapper.apply(metricUser.customAttributes())).thenReturn(customAttributes);
         // When
         intercomMetricCollector.updateUser(metricUser);
 
@@ -185,7 +188,7 @@ public class IntercomMetricCollectorTest {
         params.put("user_id", userId);
         when(User.find(params)).thenReturn(mockUser);
         final Map<String, CustomAttribute> mockCustomAttributes = mock(Map.class);
-        when(customAttributeMapper.apply(customAttributes)).thenReturn(mockCustomAttributes);
+        when(metricToIntercomMapper.apply(customAttributes)).thenReturn(mockCustomAttributes);
 
         // When
         intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
@@ -299,6 +302,8 @@ public class IntercomMetricCollectorTest {
         params.put("user_id", userId);
         final User mockUser = randomIntercomUser();
         when(User.find(params)).thenReturn(mockUser);
+        final Map<String, Object> mockCustomAttributes = mock(Map.class);
+        when(intercomToMetricMapper.apply(mockUser.getCustomAttributes())).thenReturn(mockCustomAttributes);
 
         // When
         final MetricUser result = intercomMetricCollector.getUser(userId);
@@ -311,11 +316,7 @@ public class IntercomMetricCollectorTest {
         });
         assertThat(result.name(), is(mockUser.getName()));
         assertThat(result.emailAddress(), is(mockUser.getEmail()));
-        assertThat(result.customAttributes().size(), is(mockUser.getCustomAttributes().size()));
-        mockUser.getCustomAttributes().entrySet().forEach(entry -> {
-            assertTrue(result.customAttributes().containsKey(entry.getKey()));
-            assertThat(result.customAttributes().get(entry.getKey()), is(entry.getValue()));
-        });
+        assertThat(result.customAttributes(), is(mockCustomAttributes));
     }
 
     @Test
@@ -377,5 +378,4 @@ public class IntercomMetricCollectorTest {
         // Then
         assertNotNull(thrownException);
     }
-
 }
