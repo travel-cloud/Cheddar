@@ -54,12 +54,14 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         final Map<String, AttributeValue> attributeMap = readRaw(itemId, itemClass);
         try {
             final T item = marshallIntoObject(itemClass, attributeMap);
+            final String tableName = databaseSchemaHolder.schemaName() + "."
+                    + getItemConfiguration(itemClass).tableName();
+            LoggingUtils.logReadItemFromDatabase(tableName, item);
             return item;
         } catch (final ItemClassDiscriminatorMismatchException e) {
             throw new NonExistentItemException(
                     String.format("The item of type [%s] with id [%s] does not exist", itemClass.getName(), itemId));
         }
-
     }
 
     private Map<String, AttributeValue> readRaw(final ItemId itemId, final Class<? extends Item> itemClass) {
@@ -185,6 +187,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 .withExpected(expectedResults);
         boolean itemRequestSucceeded = false;
         try {
+            LoggingUtils.logWriteItemToDatabase(tableName, item);
             amazonDynamoDbClient.putItem(itemRequest);
             itemRequestSucceeded = true;
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
@@ -293,6 +296,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 .withAttributeUpdates(attributeMap).withExpected(expectedResults);
         boolean itemRequestSucceeded = false;
         try {
+            LoggingUtils.logWriteItemToDatabase(tableName, item);
             amazonDynamoDbClient.updateItem(itemRequest);
             itemRequestSucceeded = true;
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
@@ -404,6 +408,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
         final DeleteItemRequest deleteItemRequest = new DeleteItemRequest().withTableName(tableName).withKey(key)
                 .withExpected(expectedResults);
         try {
+            LoggingUtils.logWriteItemToDatabase(tableName, item);
             amazonDynamoDbClient.deleteItem(deleteItemRequest);
         } catch (final ConditionalCheckFailedException e) {
             throw new OptimisticLockException("Conflicting write detected while deleting item");
@@ -485,7 +490,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                 lastEvaluatedKey = scanResult.getLastEvaluatedKey();
             } while (lastEvaluatedKey != null);
         }
-
+        LoggingUtils.logReadItemFromDatabase(tableName, totalItems);
         return totalItems;
     }
 
@@ -520,7 +525,9 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
                     "Failure while attempting DynamoDb Batch Get Item (" + tableName + ")", e);
         }
         final List<Map<String, AttributeValue>> itemAttributeMaps = batchGetItemResult.getResponses().get(tableName);
-        return marshallIntoObjects(itemClass, itemAttributeMaps);
+        final Collection<T> fetchedItems = marshallIntoObjects(itemClass, itemAttributeMaps);
+        LoggingUtils.logReadItemFromDatabase(tableName, fetchedItems);
+        return fetchedItems;
     }
 
     /**

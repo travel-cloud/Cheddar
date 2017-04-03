@@ -36,9 +36,16 @@ import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageSendExc
 public abstract class SqsMessageQueue<T extends Message> implements MessageQueue<T> {
 
     private final SqsQueueResource sqsQueueResource;
+    private final boolean logReceivedMessages;
 
     public SqsMessageQueue(final SqsQueueResource sqsQueueResource) {
         this.sqsQueueResource = sqsQueueResource;
+        logReceivedMessages = false;
+    }
+
+    public SqsMessageQueue(final SqsQueueResource sqsQueueResource, final boolean logReceivedMessages) {
+        this.sqsQueueResource = sqsQueueResource;
+        this.logReceivedMessages = logReceivedMessages;
     }
 
     protected abstract String toSqsMessageBody(final T message);
@@ -55,8 +62,8 @@ public abstract class SqsMessageQueue<T extends Message> implements MessageQueue
         try {
             sqsQueueResource.sendMessage(toSqsMessageBody(message));
         } catch (final AmazonClientException e) {
-            throw new MessageSendException("Unable to send message on SQS queue:[" + sqsQueueResource.getQueueName()
-                    + "]", e);
+            throw new MessageSendException(
+                    "Unable to send message on SQS queue:[" + sqsQueueResource.getQueueName() + "]", e);
         }
     }
 
@@ -65,8 +72,8 @@ public abstract class SqsMessageQueue<T extends Message> implements MessageQueue
         try {
             sqsQueueResource.sendDelayedMessage(toSqsMessageBody(message), delaySeconds);
         } catch (final AmazonClientException e) {
-            throw new MessageSendException("Unable to send message on SQS queue:[" + sqsQueueResource.getQueueName()
-                    + "]", e);
+            throw new MessageSendException(
+                    "Unable to send message on SQS queue:[" + sqsQueueResource.getQueueName() + "]", e);
         }
     }
 
@@ -75,8 +82,8 @@ public abstract class SqsMessageQueue<T extends Message> implements MessageQueue
         try {
             return toMessages(sqsQueueResource.receiveMessages());
         } catch (final AmazonClientException e) {
-            throw new MessageReceiveException("Unable to receive messages on SQS queue:["
-                    + sqsQueueResource.getQueueName() + "]", e);
+            throw new MessageReceiveException(
+                    "Unable to receive messages on SQS queue:[" + sqsQueueResource.getQueueName() + "]", e);
         }
     }
 
@@ -85,8 +92,8 @@ public abstract class SqsMessageQueue<T extends Message> implements MessageQueue
         try {
             return toMessages(sqsQueueResource.receiveMessages(waitTimeSeconds, maxMessages));
         } catch (final AmazonClientException e) {
-            throw new MessageReceiveException("Unable to receive messages on SQS queue:["
-                    + sqsQueueResource.getQueueName() + "]", e);
+            throw new MessageReceiveException(
+                    "Unable to receive messages on SQS queue:[" + sqsQueueResource.getQueueName() + "]", e);
         }
     }
 
@@ -103,12 +110,16 @@ public abstract class SqsMessageQueue<T extends Message> implements MessageQueue
         try {
             sqsQueueResource.deleteMessage(message.getReceiptHandle());
         } catch (final AmazonClientException e) {
-            throw new MessageDeleteException("Unable to delete message on SQS queue:["
-                    + sqsQueueResource.getQueueName() + "]", e);
+            throw new MessageDeleteException(
+                    "Unable to delete message on SQS queue:[" + sqsQueueResource.getQueueName() + "]", e);
         }
     }
 
     public SqsQueueResource getSqsQueue() {
         return sqsQueueResource;
+    }
+
+    protected boolean isLogReceivedMessages() {
+        return logReceivedMessages;
     }
 }

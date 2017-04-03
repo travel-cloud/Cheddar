@@ -1,0 +1,12 @@
+apply from: '../../test.gradle'
+apply from: '../../logging-api.gradle'
+
+dependencies {
+    compile project(':commons:commons-lang')
+    
+    compile "org.springframework:spring-core:${springVersion}"
+    compile "org.springframework:spring-context:${springVersion}"
+    
+    compile 'log4j:log4j:1.2.17'
+    compile 'log4j:apache-log4j-extras:1.2.17'
+}
