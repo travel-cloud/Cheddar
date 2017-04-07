@@ -204,7 +204,7 @@ public class ItemConfiguration {
             stringBuffer.append(compoundName(attributeQuery.getAttributeName(),
                     compoundAttributeQuery.getSupportingAttributeName()));
         } else {
-            if (compoundIndexHashKeyToIndexNameMap.keySet().contains(attributeQuery.getAttributeName())) {
+            if (isAttributeHashOfACompoundIndexButDoesNotHaveANonCompoundIndexOnIt(attributeQuery.getAttributeName())) {
                 stringBuffer.append(compoundIndexHashKeyToIndexNameMap.get(attributeQuery.getAttributeName()));
             } else {
                 stringBuffer.append(attributeQuery.getAttributeName());
@@ -226,5 +226,23 @@ public class ItemConfiguration {
 
     private String compoundName(final String propertyName, final String supportingPropertyName) {
         return propertyName + "_" + supportingPropertyName;
+    }
+
+    /*
+     * It is possible for a table to have an index defined on an attribute and a second index which is a compound index
+     * with the hash part of it the same attribute and the range some other attribute.
+     *
+     * This method returns true if there is an compound index with the hash part equal to a given attribute name and NOT
+     * another, non-compound index on the given attribute.
+     *
+     * This is to cater for the scenario where the range part of the compound key is optional which means that any items
+     * saved without the optional range value will not be copied to the table for that index. Any subsequent queries on
+     * that index which only supply the hash part will not return anything for matches where the range is not present.
+     * In this scenario, the query should be ran against the non-compound index on the attribute as they will include
+     * those items with the empty range value.
+     */
+    private boolean isAttributeHashOfACompoundIndexButDoesNotHaveANonCompoundIndexOnIt(final String attributeName) {
+        return compoundIndexHashKeyToIndexNameMap.keySet().contains(attributeName)
+                && !indexDefinitions.keySet().contains(attributeName);
     }
 }

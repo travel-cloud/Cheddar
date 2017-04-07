@@ -373,4 +373,28 @@ public class ItemConfigurationTest {
         // Then
         assertEquals("stringProperty_integerProperty_idx", indexNameForQuery);
     }
+
+    @Test
+    public void shouldGetIndexNameForQuery_withAttributeQueryAndCompoundIndexWithHashKeyEqualToAttributeNameAndNonCompoundIndexOnAttribute() {
+        // Given
+        final Class<? extends Item> itemClass = StubItem.class;
+        final String tableName = randomString(10);
+        final ItemConfiguration itemConfiguration = new ItemConfiguration(itemClass, tableName);
+        final Collection<IndexDefinition> indexDefinitions = new ArrayList<>();
+        final String stringPropertyName = "stringProperty";
+        final String integerPropertyName = "integerProperty";
+        final CompoundIndexDefinition compoundIndexDefinition = new CompoundIndexDefinition(stringPropertyName,
+                integerPropertyName);
+        final IndexDefinition indexDefinition = new IndexDefinition(stringPropertyName);
+        indexDefinitions.add(compoundIndexDefinition);
+        indexDefinitions.add(indexDefinition);
+        itemConfiguration.registerIndexes(indexDefinitions);
+        final AttributeQuery attributeQuery = new AttributeQuery(stringPropertyName, mock(Condition.class));
+
+        // When
+        final String indexNameForQuery = itemConfiguration.indexNameForQuery(attributeQuery);
+
+        // Then
+        assertEquals("stringProperty_idx", indexNameForQuery);
+    }
 }
