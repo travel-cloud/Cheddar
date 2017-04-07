@@ -204,7 +204,7 @@ public class ItemConfiguration {
             stringBuffer.append(compoundName(attributeQuery.getAttributeName(),
                     compoundAttributeQuery.getSupportingAttributeName()));
         } else {
-            if (compoundIndexHashKeyToIndexNameMap.keySet().contains(attributeQuery.getAttributeName())) {
+            if (isAttributeHashOfACompoundIndexButDoesNotHaveANonCompoundIndexOnIt(attributeQuery.getAttributeName())) {
                 stringBuffer.append(compoundIndexHashKeyToIndexNameMap.get(attributeQuery.getAttributeName()));
             } else {
                 stringBuffer.append(attributeQuery.getAttributeName());
@@ -226,5 +226,10 @@ public class ItemConfiguration {
 
     private String compoundName(final String propertyName, final String supportingPropertyName) {
         return propertyName + "_" + supportingPropertyName;
+    }
+
+    private boolean isAttributeHashOfACompoundIndexButDoesNotHaveANonCompoundIndexOnIt(final String attributeName) {
+        return compoundIndexHashKeyToIndexNameMap.keySet().contains(attributeName)
+                && !indexDefinitions.keySet().contains(attributeName);
     }
 }
