@@ -434,7 +434,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
     private <T extends Item> Collection<T> executeQuery(final AttributeQuery query, final Class<T> itemClass) {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
 
-        if (!query.getCondition().containsNonNullOrEmptyValues()) {
+        if (!query.getCondition().containsRequiredComparisonValues()) {
             return new ArrayList<>();
         }
 

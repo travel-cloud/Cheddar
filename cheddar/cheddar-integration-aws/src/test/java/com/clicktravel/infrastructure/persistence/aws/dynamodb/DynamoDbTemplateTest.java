@@ -135,7 +135,7 @@ public class DynamoDbTemplateTest {
         final AttributeQuery query = mock(AttributeQuery.class);
         final Condition mockCondition = mock(Condition.class);
         when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
         final String itemId = randomId();
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
@@ -186,7 +186,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("stringProperty");
         when(query.getCondition()).thenReturn(mockCondition);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
@@ -232,7 +232,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("gsi");
         when(query.getCondition()).thenReturn(mockCondition);
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubWithGlobalSecondaryIndexItem.class,
@@ -280,7 +280,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("stringProperty");
         when(query.getCondition()).thenReturn(mockCondition);
         final ParentItemConfiguration parentItemConfiguration = new ParentItemConfiguration(StubItem.class, tableName);
@@ -330,7 +330,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("stringProperty");
         when(query.getCondition()).thenReturn(mockCondition);
         final ParentItemConfiguration parentItemConfiguration = new ParentItemConfiguration(StubItem.class, tableName);
@@ -379,7 +379,7 @@ public class DynamoDbTemplateTest {
         final String stringProperty = randomString(10);
         final Set<String> stringPropertyValues = new HashSet<>(Arrays.asList(stringProperty));
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
         when(query.getAttributeName()).thenReturn("id");
         when(query.getCondition()).thenReturn(mockCondition);
 
@@ -1983,7 +1983,7 @@ public class DynamoDbTemplateTest {
         // Given
         final AttributeQuery query = mock(AttributeQuery.class);
         final Condition mockCondition = mock(Condition.class);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(false);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(false);
         when(query.getCondition()).thenReturn(mockCondition);
 
         final ItemConfiguration itemConfiguration = new ItemConfiguration(StubItem.class, tableName);
@@ -2019,7 +2019,7 @@ public class DynamoDbTemplateTest {
         final Condition mockCondition = mock(Condition.class);
         when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
 
         final Condition mockSupportingCondition = mock(Condition.class);
         when(mockSupportingCondition.getComparisonOperator()).thenReturn(Operators.LESS_THAN_OR_EQUALS);
@@ -2097,7 +2097,7 @@ public class DynamoDbTemplateTest {
         final Condition mockCondition = mock(Condition.class);
         when(mockCondition.getComparisonOperator()).thenReturn(Operators.EQUALS);
         when(mockCondition.getValues()).thenReturn(stringPropertyValues);
-        when(mockCondition.containsNonNullOrEmptyValues()).thenReturn(true);
+        when(mockCondition.containsRequiredComparisonValues()).thenReturn(true);
 
         final Condition mockSupportingCondition = mock(Condition.class);
         when(mockSupportingCondition.getComparisonOperator()).thenReturn(Operators.LESS_THAN_OR_EQUALS);

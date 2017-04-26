@@ -18,6 +18,7 @@ package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
 import static com.clicktravel.common.random.Randoms.randomBoolean;
 import static com.clicktravel.common.random.Randoms.randomEnum;
+import static com.clicktravel.common.random.Randoms.randomEnumInSet;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.*;
@@ -75,32 +76,74 @@ public class ConditionTest {
     }
 
     @Test
-    public void shouldReturnContainsNonNullOrEmptyValues_withConditionWithNonNullOrEmptyValues() {
+    public void shouldReturnRequiresButDoesNotContainComparisonValues_withConditionWhichRequiresNonNullOrEmptyValuesAndNonNullOrEmptyValues() {
         // Given
-        final Operators randomComparisonOperator = randomEnum(Operators.class);
+        final Set<Operators> operatorsWhichRequireNonNullOrEmptyValues = Sets.newSet(Operators.EQUALS,
+                Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichRequireNonNullOrEmptyValues);
         final String value = randomString(10);
 
-        final Condition condition = new Condition(randomComparisonOperator, value);
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
 
         // When
-        final boolean containsNonNullOrEmptyValues = condition.containsNonNullOrEmptyValues();
+        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
 
         // Then
-        assertTrue(containsNonNullOrEmptyValues);
+        assertTrue(requiresButDoesNotContainComparisonValues);
     }
 
     @Test
-    public void shouldReturnDoesNotContainNonNullOrEmptyValues_withConditionWithNullOrEmptyValues() {
+    public void shouldReturnDoesNotRequireButDoesNotContainComparisonValues_withConditionWhichRequiresNonNullOrEmptyValuesAndNullOrEmptyValues() {
         // Given
-        final Operators randomComparisonOperator = randomEnum(Operators.class);
+        final Set<Operators> operatorsWhichRequireNonNullOrEmptyValues = Sets.newSet(Operators.EQUALS,
+                Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichRequireNonNullOrEmptyValues);
         final String value = randomBoolean() ? null : "";
 
-        final Condition condition = new Condition(randomComparisonOperator, value);
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
 
         // When
-        final boolean containsNonNullOrEmptyValues = condition.containsNonNullOrEmptyValues();
+        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
 
         // Then
-        assertFalse(containsNonNullOrEmptyValues);
+        assertFalse(requiresButDoesNotContainComparisonValues);
+    }
+
+    @Test
+    public void shouldReturnDoesNotRequireButDoesNotContainComparisonValues_withConditionWhichDoesNotRequireNonNullOrEmptyValuesAndNullOrEmptyValues() {
+        // Given
+        final Set<Operators> operatorsWhichDoNotRequireNonNullOrEmptyValues = Sets.newSet(Operators.NOT_NULL,
+                Operators.NULL);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichDoNotRequireNonNullOrEmptyValues);
+        final String value = randomBoolean() ? null : "";
+
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
+
+        // When
+        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
+
+        // Then
+        assertFalse(requiresButDoesNotContainComparisonValues);
+    }
+
+    @Test
+    public void shouldReturnDoesNotRequireButDoesNotContainComparisonValues_withConditionWhichDoesNotRequireNonNullOrEmptyValuesAndNonNullOrEmptyValues() {
+        // Given
+        final Set<Operators> operatorsWhichDoNotRequireNonNullOrEmptyValues = Sets.newSet(Operators.NOT_NULL,
+                Operators.NULL);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichDoNotRequireNonNullOrEmptyValues);
+        final String value = randomString();
+
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
+
+        // When
+        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
+
+        // Then
+        assertFalse(requiresButDoesNotContainComparisonValues);
     }
 }
