@@ -79,8 +79,21 @@ public class Condition {
         values = new HashSet<>();
     }
 
-    public boolean containsNonNullOrEmptyValues() {
-        return values.stream().anyMatch(value -> value != null && !value.isEmpty());
+    public boolean hasMissingComparisonValues() {
+        if (comparisonOperator == null) {
+            throw new InvalidConditionOperatorException("Comparison operator cannot be null");
+        }
+
+        switch (comparisonOperator) {
+            case EQUALS:
+            case LESS_THAN_OR_EQUALS:
+            case GREATER_THAN_OR_EQUALS:
+                return !values.stream().anyMatch(value -> value != null && !value.isEmpty());
+            case NOT_NULL:
+            case NULL:
+            default:
+                return false;
+        }
     }
 
     public Operators getComparisonOperator() {

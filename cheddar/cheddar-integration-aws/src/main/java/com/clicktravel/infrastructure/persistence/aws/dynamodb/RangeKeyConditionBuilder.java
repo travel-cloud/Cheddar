@@ -17,6 +17,7 @@
 package com.clicktravel.infrastructure.persistence.aws.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.InvalidConditionOperatorException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
 import com.clicktravel.common.validation.Check;
 
