@@ -16,15 +16,11 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class Condition {
 
-    private final static List<Operators> OPERATORS_REQUIRING_COMPARISON_VALUE = Arrays.asList(Operators.EQUALS,
-            Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
     private final Operators comparisonOperator;
     private final Set<String> values;
 
@@ -83,9 +79,21 @@ public class Condition {
         values = new HashSet<>();
     }
 
-    public boolean containsRequiredComparisonValues() {
-        return OPERATORS_REQUIRING_COMPARISON_VALUE.contains(comparisonOperator)
-                && values.stream().anyMatch(value -> value != null && !value.isEmpty());
+    public boolean hasMissingComparisonValues() {
+        if (comparisonOperator == null) {
+            throw new InvalidConditionOperatorException("Comparison operator cannot be null");
+        }
+
+        switch (comparisonOperator) {
+            case EQUALS:
+            case LESS_THAN_OR_EQUALS:
+            case GREATER_THAN_OR_EQUALS:
+                return !values.stream().anyMatch(value -> value != null && !value.isEmpty());
+            case NOT_NULL:
+            case NULL:
+            default:
+                return false;
+        }
     }
 
     public Operators getComparisonOperator() {

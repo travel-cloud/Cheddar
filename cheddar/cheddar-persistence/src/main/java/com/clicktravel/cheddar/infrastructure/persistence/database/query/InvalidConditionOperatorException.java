@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.infrastructure.persistence.aws.dynamodb;
+package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
 import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceException;
 

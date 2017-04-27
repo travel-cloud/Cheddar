@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import com.amazonaws.services.dynamodbv2.document.KeyConditions;
 import com.amazonaws.services.dynamodbv2.document.RangeKeyCondition;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.InvalidConditionOperatorException;
 import com.clicktravel.cheddar.infrastructure.persistence.database.query.Operators;
 import com.clicktravel.common.random.Randoms;
 import com.clicktravel.common.validation.ValidationException;

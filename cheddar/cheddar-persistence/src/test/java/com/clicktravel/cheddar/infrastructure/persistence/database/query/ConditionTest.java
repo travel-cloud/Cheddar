@@ -76,7 +76,25 @@ public class ConditionTest {
     }
 
     @Test
-    public void shouldReturnRequiresButDoesNotContainComparisonValues_withConditionWhichRequiresNonNullOrEmptyValuesAndNonNullOrEmptyValues() {
+    public void shouldReturnHasMissingComparisonValues_withConditionWhichRequiresComparisonValuesAndNullOrEmptyValues() {
+        // Given
+        final Set<Operators> operatorsWhichRequireNonNullOrEmptyValues = Sets.newSet(Operators.EQUALS,
+                Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichRequireNonNullOrEmptyValues);
+        final String value = randomBoolean() ? null : "";
+
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
+
+        // When
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
+
+        // Then
+        assertTrue(hasMissingComparisonValues);
+    }
+
+    @Test
+    public void shouldReturnDoesNotHaveMissingComparisonValues_withConditionWhichRequiresComparisonValuesAndNonNullOrEmptyValues() {
         // Given
         final Set<Operators> operatorsWhichRequireNonNullOrEmptyValues = Sets.newSet(Operators.EQUALS,
                 Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
@@ -87,32 +105,14 @@ public class ConditionTest {
         final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
 
         // When
-        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
 
         // Then
-        assertTrue(requiresButDoesNotContainComparisonValues);
+        assertFalse(hasMissingComparisonValues);
     }
 
     @Test
-    public void shouldReturnDoesNotRequireButDoesNotContainComparisonValues_withConditionWhichRequiresNonNullOrEmptyValuesAndNullOrEmptyValues() {
-        // Given
-        final Set<Operators> operatorsWhichRequireNonNullOrEmptyValues = Sets.newSet(Operators.EQUALS,
-                Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
-        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
-                operatorsWhichRequireNonNullOrEmptyValues);
-        final String value = randomBoolean() ? null : "";
-
-        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
-
-        // When
-        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
-
-        // Then
-        assertFalse(requiresButDoesNotContainComparisonValues);
-    }
-
-    @Test
-    public void shouldReturnDoesNotRequireButDoesNotContainComparisonValues_withConditionWhichDoesNotRequireNonNullOrEmptyValuesAndNullOrEmptyValues() {
+    public void shouldReturnDoesNotHaveMissingComparisonValues_withConditionWhichDoesNotRequireComparisonValuesAndNullOrEmptyValues() {
         // Given
         final Set<Operators> operatorsWhichDoNotRequireNonNullOrEmptyValues = Sets.newSet(Operators.NOT_NULL,
                 Operators.NULL);
@@ -123,14 +123,14 @@ public class ConditionTest {
         final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
 
         // When
-        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
 
         // Then
-        assertFalse(requiresButDoesNotContainComparisonValues);
+        assertFalse(hasMissingComparisonValues);
     }
 
     @Test
-    public void shouldReturnDoesNotRequireButDoesNotContainComparisonValues_withConditionWhichDoesNotRequireNonNullOrEmptyValuesAndNonNullOrEmptyValues() {
+    public void shouldReturnDoesNotHaveMissingComparisonValues_withConditionWhichDoesNotRequireComparisonValuesAndNonNullOrEmptyValues() {
         // Given
         final Set<Operators> operatorsWhichDoNotRequireNonNullOrEmptyValues = Sets.newSet(Operators.NOT_NULL,
                 Operators.NULL);
@@ -141,9 +141,29 @@ public class ConditionTest {
         final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
 
         // When
-        final boolean requiresButDoesNotContainComparisonValues = condition.containsRequiredComparisonValues();
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
 
         // Then
-        assertFalse(requiresButDoesNotContainComparisonValues);
+        assertFalse(hasMissingComparisonValues);
+    }
+
+    @Test
+    public void shouldNotReturnHasMissingComparisonValues_withNullOperator() {
+        // Given
+        final Operators operators = null;
+        final String value = randomString();
+
+        final Condition condition = new Condition(operators, value);
+
+        // When
+        InvalidConditionOperatorException thrownException = null;
+        try {
+            condition.hasMissingComparisonValues();
+        } catch (final InvalidConditionOperatorException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
     }
 }
