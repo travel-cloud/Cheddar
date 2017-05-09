@@ -283,6 +283,21 @@ public class CheckTest {
     }
 
     @Test
+    public void shouldNotThrowValidationException_givenEmptyEnum() {
+
+    }
+
+    @Test
+    public void shouldNotThrowValidationException_givenValidEnum() {
+
+    }
+
+    @Test
+    public void shouldThrowValidationException_givenInvalidEnum() {
+
+    }
+
+    @Test
     public void shouldThrowValidationException_givenNullContainingString() {
         // Given
         final String string = null;

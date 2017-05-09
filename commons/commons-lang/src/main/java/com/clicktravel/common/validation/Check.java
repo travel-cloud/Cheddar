@@ -29,6 +29,7 @@ public class Check {
     private final static String NULL_OR_EMPTY = "Value is NULL or empty";
     private final static String INVALID_EMAIL_ADDRESS = "Value is an invalid email";
     private final static String INVALID_PHONE_NUMBER = "Value is an invalid phone number";
+    private final static String INVALID_ENUM = "Value is not a valid enum ";
     private final static String DOES_NOT_CONTAIN = "Value does not contain the CharSequence ";
     private final static String INVALID_LENGTH = "Value does not have the correct length of ";
     private final static String INVALID_LENGTH_ARG = "Length argument is invalid ";
@@ -102,6 +103,26 @@ public class Check {
                 || phoneNumber.replaceAll("[^0-9]", "").length() > 15) {
             final String errorMessage = String.format(INVALID_PHONE_NUMBER + " : value -> [%s]", phoneNumber);
             throw new ValidationException(errorMessage, field);
+        }
+    }
+
+    /**
+     * Check that a string contains either nothing or a valid value from the enumerated class
+     * @param field Name of field to report if check fails
+     * @param value Containing string to check
+     * @param enumClass The enumeration class containing all valid values
+     * @throws ValidationException if check fails
+     */
+    public static <E extends Enum<E>> void isValidEnumOrEmpty(final String field, final String value,
+            final Class<E> enumClass) {
+        if (value != null && !value.isEmpty()) {
+            try {
+                Enum.valueOf(enumClass, value);
+            } catch (final IllegalArgumentException e) {
+                final String errorMessage = String.format(INVALID_ENUM + " %s : value -> [%s]",
+                        enumClass.getSimpleName(), value);
+                throw new ValidationException(errorMessage, field);
+            }
         }
     }
 
