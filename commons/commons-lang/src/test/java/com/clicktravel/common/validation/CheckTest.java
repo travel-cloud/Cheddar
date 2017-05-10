@@ -16,9 +16,7 @@
  */
 package com.clicktravel.common.validation;
 
-import static com.clicktravel.common.random.Randoms.randomInt;
-import static com.clicktravel.common.random.Randoms.randomPhoneNumber;
-import static com.clicktravel.common.random.Randoms.randomString;
+import static com.clicktravel.common.random.Randoms.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
@@ -32,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.clicktravel.common.random.Randoms;
+import com.clicktravel.common.random.TestEnum;
 
 public class CheckTest {
 
@@ -283,18 +282,73 @@ public class CheckTest {
     }
 
     @Test
-    public void shouldNotThrowValidationException_givenEmptyEnum() {
-
-    }
-
-    @Test
     public void shouldNotThrowValidationException_givenValidEnum() {
+        // Given
+        final String value = randomEnum(TestEnum.class).toString();
 
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.isValidEnum(field, value, TestEnum.class);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNull(actualException);
     }
 
     @Test
     public void shouldThrowValidationException_givenInvalidEnum() {
+        // Given
+        final String value = randomString();
 
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.isValidEnum(field, value, TestEnum.class);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+        assertThat(actualException.getFields()[0], is(field));
+    }
+
+    @Test
+    public void shouldThrowValidationException_givenEmptyEnum() {
+        // Given
+        final String value = randomBoolean() ? null : "";
+
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.isValidEnum(field, value, TestEnum.class);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+        assertThat(actualException.getFields()[0], is(field));
+    }
+
+    @Test
+    public void shouldNotThrowValidationException_givenEmptyEnum() {
+        // Given
+        final String value = randomBoolean() ? null : "";
+
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.isValidEnumOrEmptyOrNull(field, value, TestEnum.class);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNull(actualException);
     }
 
     @Test

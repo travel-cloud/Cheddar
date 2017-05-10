@@ -113,16 +113,28 @@ public class Check {
      * @param enumClass The enumeration class containing all valid values
      * @throws ValidationException if check fails
      */
-    public static <E extends Enum<E>> void isValidEnumOrEmpty(final String field, final String value,
+    public static <E extends Enum<E>> void isValidEnumOrEmptyOrNull(final String field, final String value,
             final Class<E> enumClass) {
         if (value != null && !value.isEmpty()) {
-            try {
-                Enum.valueOf(enumClass, value);
-            } catch (final IllegalArgumentException e) {
-                final String errorMessage = String.format(INVALID_ENUM + " %s : value -> [%s]",
-                        enumClass.getSimpleName(), value);
-                throw new ValidationException(errorMessage, field);
-            }
+            isValidEnum(field, value, enumClass);
+        }
+    }
+
+    /**
+     * Check that a string contains a valid value from the enumerated class
+     * @param field Name of field to report if check fails
+     * @param value Containing string to check
+     * @param enumClass The enumeration class containing all valid values
+     * @throws ValidationException if check fails
+     */
+    public static <E extends Enum<E>> void isValidEnum(final String field, final String value,
+            final Class<E> enumClass) {
+        try {
+            Enum.valueOf(enumClass, value);
+        } catch (final IllegalArgumentException | NullPointerException e) {
+            final String errorMessage = String.format(INVALID_ENUM + " %s : value -> [%s]", enumClass.getSimpleName(),
+                    value);
+            throw new ValidationException(errorMessage, field);
         }
     }
 
