@@ -107,38 +107,6 @@ public class Check {
     }
 
     /**
-     * Check that a string contains either nothing or a valid value from the enumerated class
-     * @param field Name of field to report if check fails
-     * @param value Containing string to check
-     * @param enumClass The enumeration class containing all valid values
-     * @throws ValidationException if check fails
-     */
-    public static <E extends Enum<E>> void isValidEnumOrEmptyOrNull(final String field, final String value,
-            final Class<E> enumClass) {
-        if (value != null && !value.isEmpty()) {
-            isValidEnum(field, value, enumClass);
-        }
-    }
-
-    /**
-     * Check that a string contains a valid value from the enumerated class
-     * @param field Name of field to report if check fails
-     * @param value Containing string to check
-     * @param enumClass The enumeration class containing all valid values
-     * @throws ValidationException if check fails
-     */
-    public static <E extends Enum<E>> void isValidEnum(final String field, final String value,
-            final Class<E> enumClass) {
-        try {
-            Enum.valueOf(enumClass, value);
-        } catch (final IllegalArgumentException | NullPointerException e) {
-            final String errorMessage = String.format(INVALID_ENUM + " %s : value -> [%s]", enumClass.getSimpleName(),
-                    value);
-            throw new ValidationException(errorMessage, field);
-        }
-    }
-
-    /**
      * Check that a string contains a subsequence of characters
      * @param field Name of field to report if check fails
      * @param value Containing string to check
@@ -198,6 +166,25 @@ public class Check {
         if (value == null || !pattern.matcher(value).matches()) {
             final String errorMessage = String.format(
                     DOES_NOT_MATCH_PATTERN + ", value -> [%s], expected pattern -> [%s]", value, pattern.toString());
+            throw new ValidationException(errorMessage, field);
+        }
+    }
+
+    /**
+     * Check that a string contains a valid value from the enumerated class and return that enumerated value
+     * @param field Name of field to report if check fails
+     * @param value Containing string to check
+     * @param enumClass The enumeration class containing all valid values
+     * @throws ValidationException if check fails
+     * @return enumerated conversion of value
+     */
+    public static <E extends Enum<E>> E validateToEnum(final String field, final String value,
+            final Class<E> enumClass) {
+        try {
+            return Enum.valueOf(enumClass, value);
+        } catch (final IllegalArgumentException | NullPointerException e) {
+            final String errorMessage = String.format(INVALID_ENUM + " %s : value -> [%s]", enumClass.getSimpleName(),
+                    value);
             throw new ValidationException(errorMessage, field);
         }
     }

@@ -282,76 +282,6 @@ public class CheckTest {
     }
 
     @Test
-    public void shouldNotThrowValidationException_givenValidEnum() {
-        // Given
-        final String value = randomEnum(TestEnum.class).toString();
-
-        // When
-        ValidationException actualException = null;
-        try {
-            Check.isValidEnum(field, value, TestEnum.class);
-        } catch (final ValidationException e) {
-            actualException = e;
-        }
-
-        // Then
-        assertNull(actualException);
-    }
-
-    @Test
-    public void shouldThrowValidationException_givenInvalidEnum() {
-        // Given
-        final String value = randomString();
-
-        // When
-        ValidationException actualException = null;
-        try {
-            Check.isValidEnum(field, value, TestEnum.class);
-        } catch (final ValidationException e) {
-            actualException = e;
-        }
-
-        // Then
-        assertNotNull(actualException);
-        assertThat(actualException.getFields()[0], is(field));
-    }
-
-    @Test
-    public void shouldThrowValidationException_givenEmptyEnum() {
-        // Given
-        final String value = randomBoolean() ? null : "";
-
-        // When
-        ValidationException actualException = null;
-        try {
-            Check.isValidEnum(field, value, TestEnum.class);
-        } catch (final ValidationException e) {
-            actualException = e;
-        }
-
-        // Then
-        assertNotNull(actualException);
-        assertThat(actualException.getFields()[0], is(field));
-    }
-
-    @Test
-    public void shouldNotThrowValidationException_givenEmptyEnum() {
-        // Given
-        final String value = randomBoolean() ? null : "";
-
-        // When
-        ValidationException actualException = null;
-        try {
-            Check.isValidEnumOrEmptyOrNull(field, value, TestEnum.class);
-        } catch (final ValidationException e) {
-            actualException = e;
-        }
-
-        // Then
-        assertNull(actualException);
-    }
-
-    @Test
     public void shouldThrowValidationException_givenNullContainingString() {
         // Given
         final String string = null;
@@ -653,6 +583,54 @@ public class CheckTest {
         assertNotNull(actualException);
         assertEquals(1, actualException.getFields().length);
         assertEquals("phoneNumber", actualException.getFields()[0]);
+    }
+
+    @Test
+    public void shouldReturnEnumValueOf_givenValidEnum() {
+        // Given
+        final String value = randomEnum(TestEnum.class).toString();
+
+        // When
+        final TestEnum expectedValue = Check.validateToEnum(field, value, TestEnum.class);
+
+        // Then
+        assertEquals(expectedValue, TestEnum.valueOf(value));
+    }
+
+    @Test
+    public void shouldThrowValidationException_givenInvalidEnum() {
+        // Given
+        final String value = randomString();
+
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.validateToEnum(field, value, TestEnum.class);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+        assertThat(actualException.getFields()[0], is(field));
+    }
+
+    @Test
+    public void shouldThrowValidationException_givenEmptyEnum() {
+        // Given
+        final String value = randomBoolean() ? null : "";
+
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.validateToEnum(field, value, TestEnum.class);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+        assertThat(actualException.getFields()[0], is(field));
     }
 
 }
