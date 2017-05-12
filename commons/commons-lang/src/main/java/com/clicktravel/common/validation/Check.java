@@ -29,7 +29,6 @@ public class Check {
     private final static String NULL_OR_EMPTY = "Value is NULL or empty";
     private final static String INVALID_EMAIL_ADDRESS = "Value is an invalid email";
     private final static String INVALID_PHONE_NUMBER = "Value is an invalid phone number";
-    private final static String INVALID_ENUM = "Value is not a valid enum ";
     private final static String DOES_NOT_CONTAIN = "Value does not contain the CharSequence ";
     private final static String INVALID_LENGTH = "Value does not have the correct length of ";
     private final static String INVALID_LENGTH_ARG = "Length argument is invalid ";
@@ -170,22 +169,4 @@ public class Check {
         }
     }
 
-    /**
-     * Check that a string contains a valid value from the enumerated class and return that enumerated value
-     * @param field Name of field to report if check fails
-     * @param value Containing string to check
-     * @param enumClass The enumeration class containing all valid values
-     * @throws ValidationException if check fails
-     * @return enumerated conversion of value
-     */
-    public static <E extends Enum<E>> E validateToEnum(final String field, final String value,
-            final Class<E> enumClass) {
-        try {
-            return Enum.valueOf(enumClass, value);
-        } catch (final IllegalArgumentException | NullPointerException e) {
-            final String errorMessage = String.format(INVALID_ENUM + " %s : value -> [%s]", enumClass.getSimpleName(),
-                    value);
-            throw new ValidationException(errorMessage, field);
-        }
-    }
 }
