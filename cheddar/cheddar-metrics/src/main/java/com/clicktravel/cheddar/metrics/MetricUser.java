@@ -22,8 +22,8 @@ public class MetricUser {
 
     private final String id;
     private final List<String> organisationIds;
-    private final String name;
-    private final String emailAddress;
+    private String name;
+    private String emailAddress;
     private final Map<String, Object> customAttributes;
 
     public MetricUser(final String id, final String organisationId, final String name, final String emailAddress) {
@@ -43,6 +43,14 @@ public class MetricUser {
         this.name = name;
         this.emailAddress = emailAddress;
         this.customAttributes = customAttributes;
+    }
+
+    public void updateName(final String name) {
+        this.name = name;
+    }
+
+    public void updateEmailAddress(final String emailAddress) {
+        this.emailAddress = emailAddress;
     }
 
     public String id() {
