@@ -15,6 +15,7 @@ dependencies {
     compile "com.amazonaws:aws-java-sdk-cloudsearch:${awsJavaSdkVersion}"
     compile "com.amazonaws:aws-java-sdk-cloudwatch:${awsJavaSdkVersion}"
     compile "com.amazonaws:aws-java-sdk-lambda:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-java-sdk-cloudformation:${awsJavaSdkVersion}"
     compile "org.springframework:spring-context-support:${springVersion}"
     compile "org.springframework:spring-aop:${springVersion}"
 
