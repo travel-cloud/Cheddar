@@ -47,6 +47,7 @@ public class ContainerSecurityRequestFilterTest {
     private static final String CLICK_PLATFORM_SCHEME = "clickplatform";
     private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER = "Agent-Authorization";
     private static final String CLICK_PLATFORM_TEAM_ID_HEADER = "Team-Id";
+    private static final String CLICK_PLATFORM_APP_ID_HEADER = "App-Id";
 
     private ContainerRequestContext mockContainerRequestContext;
     private MultivaluedMap<String, String> headers;
@@ -65,9 +66,11 @@ public class ContainerSecurityRequestFilterTest {
         final String userId = randomId();
         final String teamId = randomId();
         final String agentUserId = randomId();
+        final String appId = randomId();
         headers.add(HttpHeaders.AUTHORIZATION, CLICK_PLATFORM_SCHEME + " " + userId);
         headers.add(CLICK_PLATFORM_TEAM_ID_HEADER, CLICK_PLATFORM_SCHEME + " " + teamId);
         headers.add(CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER, CLICK_PLATFORM_SCHEME + " " + agentUserId);
+        headers.add(CLICK_PLATFORM_APP_ID_HEADER, appId);
         final ContainerSecurityRequestFilter containerSecurityRequestFilter = new ContainerSecurityRequestFilter();
 
         // When
@@ -81,6 +84,29 @@ public class ContainerSecurityRequestFilterTest {
         assertEquals(Optional.of(userId), securityContextCaptor.getValue().userId());
         assertEquals(Optional.of(teamId), securityContextCaptor.getValue().teamId());
         assertEquals(Optional.of(agentUserId), securityContextCaptor.getValue().agentUserId());
+        assertEquals(Optional.of(appId), securityContextCaptor.getValue().appId());
+    }
+
+    @Test
+    public void shouldSetSecurityContextProperties_withJustAppIdHeaders() throws Exception {
+        // Given
+        mockStatic(SecurityContextHolder.class);
+        final String appId = randomId();
+        headers.add(CLICK_PLATFORM_APP_ID_HEADER, appId);
+        final ContainerSecurityRequestFilter containerSecurityRequestFilter = new ContainerSecurityRequestFilter();
+
+        // When
+        containerSecurityRequestFilter.filter(mockContainerRequestContext);
+
+        // Then
+        final ArgumentCaptor<DefaultSecurityContext> securityContextCaptor = ArgumentCaptor
+                .forClass(DefaultSecurityContext.class);
+        verifyStatic();
+        SecurityContextHolder.set(securityContextCaptor.capture());
+        assertEquals(Optional.empty(), securityContextCaptor.getValue().userId());
+        assertEquals(Optional.empty(), securityContextCaptor.getValue().teamId());
+        assertEquals(Optional.empty(), securityContextCaptor.getValue().agentUserId());
+        assertEquals(Optional.of(appId), securityContextCaptor.getValue().appId());
     }
 
     @Test
@@ -100,5 +126,6 @@ public class ContainerSecurityRequestFilterTest {
         assertEquals(Optional.empty(), securityContextCaptor.getValue().userId());
         assertEquals(Optional.empty(), securityContextCaptor.getValue().teamId());
         assertEquals(Optional.empty(), securityContextCaptor.getValue().agentUserId());
+        assertEquals(Optional.empty(), securityContextCaptor.getValue().appId());
     }
 }

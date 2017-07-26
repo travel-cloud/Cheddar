@@ -27,18 +27,22 @@ public class DefaultSecurityContext implements SecurityContext {
     private final Optional<String> teamId;
     private final Optional<String> agentUserId;
 
-    public DefaultSecurityContext(final String userId, final String teamId, final String agentUserId) {
+    private final Optional<String> appId;
+
+    public DefaultSecurityContext(final String userId, final String teamId, final String agentUserId,
+            final String appId) {
         this.userId = Optional.ofNullable(userId);
         this.teamId = Optional.ofNullable(teamId);
         this.agentUserId = Optional.ofNullable(agentUserId);
+        this.appId = Optional.ofNullable(appId);
     }
 
     public DefaultSecurityContext(final String userId, final String teamId) {
-        this(userId, teamId, null);
+        this(userId, teamId, null, null);
     }
 
     public DefaultSecurityContext(final String userId) {
-        this(userId, null, null);
+        this(userId, null, null, null);
     }
 
     @Override
@@ -60,5 +64,10 @@ public class DefaultSecurityContext implements SecurityContext {
     @Override
     public Optional<String> agentUserId() {
         return agentUserId;
+    }
+
+    @Override
+    public Optional<String> appId() {
+        return appId;
     }
 }
