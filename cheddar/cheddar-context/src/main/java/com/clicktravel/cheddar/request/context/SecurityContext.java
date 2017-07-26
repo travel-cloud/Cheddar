@@ -54,7 +54,7 @@ public interface SecurityContext {
     Optional<String> agentUserId();
 
     /**
-     * @return Optional of the app ID in the security context. Used for pioneer apps
+     * @return Optional of the app ID in the security context.
      */
     Optional<String> appId();
 }
