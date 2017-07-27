@@ -48,4 +48,9 @@ public class NullSecurityContext implements SecurityContext {
         return Optional.empty();
     }
 
+    @Override
+    public Optional<String> appId() {
+        return Optional.empty();
+    }
+
 }

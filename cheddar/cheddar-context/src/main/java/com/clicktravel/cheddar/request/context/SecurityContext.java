@@ -52,4 +52,9 @@ public interface SecurityContext {
      *         against, see {@link #userId}
      */
     Optional<String> agentUserId();
+
+    /**
+     * @return Optional of the app ID in the security context.
+     */
+    Optional<String> appId();
 }

@@ -32,7 +32,8 @@ public class DefaultSecurityContextTest {
         final String userId = randomId();
         final String teamId = randomBoolean() ? null : randomId();
         final String agentUserId = randomBoolean() ? null : randomId();
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId);
+        final String appId = randomBoolean() ? null : randomId();
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId, appId);
 
         // When
         final Optional<String> returnedUserId = context.userId();
@@ -47,7 +48,8 @@ public class DefaultSecurityContextTest {
         final String userId = randomId();
         final String teamId = randomId();
         final String agentUserId = randomBoolean() ? null : randomId();
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId);
+        final String appId = randomBoolean() ? null : randomId();
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId, appId);
 
         // When
         final Optional<String> returnedTeamId = context.teamId();
@@ -62,7 +64,8 @@ public class DefaultSecurityContextTest {
         final String userId = randomId();
         final String teamId = randomBoolean() ? null : randomId();
         final String agentUserId = randomId();
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId);
+        final String appId = randomBoolean() ? null : randomId();
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId, appId);
 
         // When
         final Optional<String> returnedAgentUserId = context.agentUserId();
@@ -77,13 +80,30 @@ public class DefaultSecurityContextTest {
         final String userId = null;
         final String teamId = null;
         final String agentUserId = null;
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId);
+        final String appId = null;
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId, appId);
 
         // When
         final Optional<String> returnedUserId = context.userId();
 
         // Then
         assertEquals(Optional.empty(), returnedUserId);
+    }
+
+    @Test
+    public void shouldReturnAppId() {
+        // Given
+        final String userId = null;
+        final String teamId = null;
+        final String agentUserId = null;
+        final String appId = randomId();
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, agentUserId, appId);
+
+        // When
+        final Optional<String> returnedUserId = context.appId();
+
+        // Then
+        assertEquals(appId, returnedUserId.get());
     }
 
     @Test
