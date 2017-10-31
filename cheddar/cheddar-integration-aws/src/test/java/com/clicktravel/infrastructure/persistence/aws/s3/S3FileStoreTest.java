@@ -16,6 +16,7 @@
  */
 package com.clicktravel.infrastructure.persistence.aws.s3;
 
+import static com.clicktravel.common.random.Randoms.randomBoolean;
 import static com.clicktravel.common.random.Randoms.randomDateTime;
 import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomString;
@@ -49,6 +50,7 @@ import com.amazonaws.services.s3.model.*;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
 import com.clicktravel.common.random.Randoms;
+import com.clicktravel.common.validation.ValidationException;
 
 public class S3FileStoreTest {
 
@@ -154,6 +156,74 @@ public class S3FileStoreTest {
     private String inputStreamToString(final InputStream inputStream) throws Exception {
         final Scanner s = new Scanner(inputStream, "UTF-8").useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
+    }
+
+    @Test
+    public void shouldWriteFile_withStringContentAndFilename() throws Exception {
+        // Given
+        final String key = "file-id" + randomId();
+        final String fileContent = randomString(255);
+        final FileItem fileItem = new FileItem(key, fileContent);
+        final String filename = randomString();
+        final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
+        s3FileStore.initialize(mockAmazonS3Client);
+
+        // When
+        s3FileStore.write(filePath, fileItem, filename);
+
+        // Then
+        final ArgumentCaptor<PutObjectRequest> putObjectRequestArgumentCaptor = ArgumentCaptor
+                .forClass(PutObjectRequest.class);
+        verify(mockAmazonS3Client).putObject(putObjectRequestArgumentCaptor.capture());
+        final PutObjectRequest putObjectRequest = putObjectRequestArgumentCaptor.getValue();
+        assertEquals(bucketSchema + "-" + filePath.directory(), putObjectRequest.getBucketName());
+        assertEquals(filePath.filename(), putObjectRequest.getKey());
+        final InputStream inputStream = putObjectRequest.getInputStream();
+        assertEquals(fileContent, inputStreamToString(inputStream));
+        final ObjectMetadata objectMetadata = putObjectRequest.getMetadata();
+        assertEquals(2, objectMetadata.getUserMetadata().size());
+        assertEquals(filename, objectMetadata.getUserMetadata().get("filename"));
+        assertEquals(formatter.print(fileItem.lastUpdatedTime()),
+                objectMetadata.getUserMetadata().get("last-updated-time"));
+        assertEquals(fileContent.getBytes(Charset.forName("UTF-8")).length, objectMetadata.getContentLength());
+        assertEquals("attachment; filename=\"" + filename + "\"", objectMetadata.getContentDisposition());
+    }
+
+    @Test
+    public void shouldNotWrite_whenFilenameNotInitialized() {
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
+        final String filename = randomString();
+
+        // When
+        IllegalStateException actualException = null;
+        try {
+            s3FileStore.write(filePath, mockFileItem, filename);
+        } catch (final IllegalStateException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+    }
+
+    @Test
+    public void shouldNotWrite_whenNullOrEmptyFilename() {
+        // Given
+        final S3FileStore s3FileStore = new S3FileStore(bucketSchema);
+        s3FileStore.initialize(mockAmazonS3Client);
+        final String filename = randomBoolean() ? null : "";
+
+        // When
+        ValidationException actualException = null;
+        try {
+            s3FileStore.write(filePath, mockFileItem, filename);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
     }
 
     @Test
