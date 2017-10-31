@@ -29,4 +29,13 @@ public interface InternetFileStore extends FileStore {
 
     URL publicUrlForFilePath(FilePath filePath) throws NonExistentItemException;
 
+    /**
+     * Write a {@link FileItem} to the given {@link FilePath} with a specified name.
+     *
+     * @param filePath {@link FilePath} to write the file to.
+     * @param fileItem {@link FileItem} to write.
+     * @param filename The name to give the file.
+     */
+    void write(FilePath filePath, FileItem fileItem, String filename);
+
 }
