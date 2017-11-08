@@ -16,18 +16,15 @@
  */
 package com.clicktravel.cheddar.rest.exception.mapper.cdm1;
 
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import com.clicktravel.cheddar.rest.media.MediaTypes;
 import com.clicktravel.common.validation.ValidationException;
 import com.clicktravel.schema.canonical.data.model.v1.common.ErrorResponse;
 import com.clicktravel.schema.canonical.data.model.v1.common.ValidationError;
 
 @Provider
-@Produces(MediaTypes.CDM_V1_JSON)
 public class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
 
     @Override
