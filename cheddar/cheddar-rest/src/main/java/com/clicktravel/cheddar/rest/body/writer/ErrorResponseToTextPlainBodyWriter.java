@@ -60,7 +60,6 @@ public class ErrorResponseToTextPlainBodyWriter implements MessageBodyWriter<Err
     public void writeTo(final ErrorResponse errorResponse, final Class<?> type, final Type genericType,
             final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders,
             final OutputStream entityStream) throws IOException, WebApplicationException {
-
         final Writer writer = new PrintWriter(entityStream);
         writer.write(objectMapper.writeValueAsString(errorResponse));
         writer.flush();
