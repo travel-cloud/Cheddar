@@ -16,7 +16,6 @@
  */
 package com.clicktravel.cheddar.rest.exception.mapper.cdm1;
 
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -25,12 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.domain.model.exception.ConstraintViolationException;
-import com.clicktravel.cheddar.rest.media.MediaTypes;
 import com.clicktravel.schema.canonical.data.model.v1.common.Error;
 import com.clicktravel.schema.canonical.data.model.v1.common.ErrorResponse;
 
 @Provider
-@Produces(MediaTypes.CDM_V1_JSON)
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

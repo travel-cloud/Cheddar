@@ -58,7 +58,8 @@ public class RestResourceConfig extends ResourceConfig {
         register(ObjectMapperProvider.class);
         register(JacksonFeature.class);
         registerResources("com.clicktravel.cheddar.rest.exception.mapper", "com.clicktravel.cheddar.server.http.filter",
-                "com.clicktravel.cheddar.server.rest.resource.status", "com.clicktravel.services");
+                "com.clicktravel.cheddar.server.rest.resource.status", "com.clicktravel.services",
+                "com.clicktravel.cheddar.rest.body.writer");
         property(ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED, true);
     }
 
