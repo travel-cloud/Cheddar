@@ -53,6 +53,7 @@ public class SnsTopicResource {
      * @throws AmazonClientException
      */
     public void publish(final String subject, final String message) throws AmazonClientException {
+        // Auto setting the subject as a message attribute to support sns message filtering by subject
         final Map<String, MessageAttributeValue> attributes = new HashMap<String, MessageAttributeValue>();
         attributes.put("subject", new MessageAttributeValue().withStringValue(subject));
 
