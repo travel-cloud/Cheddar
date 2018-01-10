@@ -69,6 +69,7 @@ public class SnsTopicResourceTest {
         assertEquals(topicArn, publishRequest.getTopicArn());
         assertEquals(subject, publishRequest.getSubject());
         assertEquals(message, publishRequest.getMessage());
+        assertEquals(subject, publishRequest.getMessageAttributes().get("subject").getStringValue());
     }
 
     @Test
@@ -155,8 +156,8 @@ public class SnsTopicResourceTest {
         final Policy mockPolicy = mock(Policy.class);
         final String mockPolicyJson = randomString();
         when(mockPolicy.toJson()).thenReturn(mockPolicyJson);
-        doThrow(AmazonClientException.class).when(mockAmazonSnsClient).setTopicAttributes(
-                any(SetTopicAttributesRequest.class));
+        doThrow(AmazonClientException.class).when(mockAmazonSnsClient)
+                .setTopicAttributes(any(SetTopicAttributesRequest.class));
 
         // When
         AmazonClientException thrownException = null;
