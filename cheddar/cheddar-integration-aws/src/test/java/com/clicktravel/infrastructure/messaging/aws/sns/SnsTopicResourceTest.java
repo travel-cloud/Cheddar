@@ -70,6 +70,7 @@ public class SnsTopicResourceTest {
         assertEquals(subject, publishRequest.getSubject());
         assertEquals(message, publishRequest.getMessage());
         assertEquals(subject, publishRequest.getMessageAttributes().get("subject").getStringValue());
+        assertEquals("String", publishRequest.getMessageAttributes().get("subject").getDataType());
     }
 
     @Test
