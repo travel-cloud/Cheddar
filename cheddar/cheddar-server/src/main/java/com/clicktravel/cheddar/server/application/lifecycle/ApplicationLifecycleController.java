@@ -37,7 +37,7 @@ public class ApplicationLifecycleController {
      * time must cover the completion of processing current REST requests. This time must also cover the maximum queue
      * poll time for message listeners and completion of processing for all messages already received.
      */
-    static final long SHUTDOWN_TIMEOUT_MILLIS = 60000; // = 60s
+    static final long SHUTDOWN_TIMEOUT_MILLIS = 65000; // = 65s
 
     private final RestServer restServer;
     private final MessageListener systemEventMessageListener;
