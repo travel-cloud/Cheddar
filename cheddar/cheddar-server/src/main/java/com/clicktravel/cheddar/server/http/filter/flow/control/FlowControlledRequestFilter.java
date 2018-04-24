@@ -41,7 +41,7 @@ import com.clicktravel.common.concurrent.RateLimiter;
 public class FlowControlledRequestFilter implements ContainerRequestFilter {
 
     @Autowired
-    @Value("${flow.control.rateLimitLogging:true}")
+    @Value("${flow.control.rateLimitLogging:false}")
     private boolean rateLimitLogging;
 
     private final Logger logger = Logger.getLogger(FlowControlledRequestFilter.class);
