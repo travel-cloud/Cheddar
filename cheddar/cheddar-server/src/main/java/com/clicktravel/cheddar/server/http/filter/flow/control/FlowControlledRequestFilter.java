@@ -25,6 +25,10 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 
+import org.jboss.logging.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
 
@@ -35,6 +39,12 @@ import com.clicktravel.common.concurrent.RateLimiter;
 @Provider
 @Priority(Priorities.USER)
 public class FlowControlledRequestFilter implements ContainerRequestFilter {
+
+    @Autowired
+    @Value("${flow.control.rateLimitLogging:true}")
+    private boolean rateLimitLogging;
+
+    private final Logger logger = Logger.getLogger(FlowControlledRequestFilter.class);
 
     private final RateLimiter restRequestRateLimiter;
 
@@ -49,7 +59,12 @@ public class FlowControlledRequestFilter implements ContainerRequestFilter {
         final boolean isStatusResource = path.matches("/status(/.*)?");
         if (!isStatusResource) {
             try {
+                final long start = rateLimitLogging ? System.currentTimeMillis() : 0l;
                 restRequestRateLimiter.takeToken(); // block until allowed by rate limit
+                if (rateLimitLogging) {
+                    logger.debug(path + " took " + ((System.currentTimeMillis() - start) / 1000)
+                            + "s to obtain a token to process");
+                }
             } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
