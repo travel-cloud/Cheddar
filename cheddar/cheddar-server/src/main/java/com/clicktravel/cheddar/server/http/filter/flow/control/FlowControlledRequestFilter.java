@@ -25,7 +25,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -44,7 +45,7 @@ public class FlowControlledRequestFilter implements ContainerRequestFilter {
     @Value("${flow.control.rateLimitLogging:false}")
     private boolean rateLimitLogging;
 
-    private final Logger logger = Logger.getLogger(FlowControlledRequestFilter.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final RateLimiter restRequestRateLimiter;
 
