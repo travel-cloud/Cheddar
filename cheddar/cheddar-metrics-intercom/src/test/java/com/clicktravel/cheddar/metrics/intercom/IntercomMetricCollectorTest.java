@@ -300,22 +300,22 @@ public class IntercomMetricCollectorTest {
         final String userId = randomId();
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", userId);
-        final User mockUser = randomIntercomUser();
-        when(User.find(params)).thenReturn(mockUser);
-        final Map<String, Object> mockCustomAttributes = mock(Map.class);
-        when(intercomToMetricMapper.apply(mockUser.getCustomAttributes())).thenReturn(mockCustomAttributes);
+        final User user = randomIntercomUser();
+        when(User.find(params)).thenReturn(user);
+        final Map<String, CustomAttribute> mockCustomAttributes = mock(Map.class);
+        user.setCustomAttributes(mockCustomAttributes);
 
         // When
         final MetricUser result = intercomMetricCollector.getUser(userId);
 
         // Then
         assertNotNull(result);
-        assertThat(result.id(), is(mockUser.getUserId()));
-        mockUser.getCompanyCollection().forEachRemaining(company -> {
-            assertTrue(result.organisationIds().contains(company.getId()));
+        assertThat(result.id(), is(user.getUserId()));
+        user.getCompanyCollection().getPage().forEach(company -> {
+            assertTrue(result.organisationIds().contains(company.getCompanyID()));
         });
-        assertThat(result.name(), is(mockUser.getName()));
-        assertThat(result.emailAddress(), is(mockUser.getEmail()));
+        assertThat(result.name(), is(user.getName()));
+        assertThat(result.emailAddress(), is(user.getEmail()));
         assertThat(result.customAttributes(), is(mockCustomAttributes));
     }
 

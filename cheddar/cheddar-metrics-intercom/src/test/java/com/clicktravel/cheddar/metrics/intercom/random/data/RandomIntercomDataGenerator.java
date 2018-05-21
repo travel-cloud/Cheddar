@@ -48,19 +48,19 @@ public class RandomIntercomDataGenerator {
 
     public static CompanyCollection randomCompanyCollection() {
         final List<Company> companies = new ArrayList<>();
-        final CompanyCollection companyCollection = mock(CompanyCollection.class);
         final int numberOfCompanies = randomIntInRange(1, 10);
 
         for (int i = 0; i < numberOfCompanies; i++) {
             final Company mockCompany = mock(Company.class);
+            final String id = randomId();
+            when(mockCompany.getId()).thenReturn(id);
             final String companyId = randomId();
             when(mockCompany.getCompanyID()).thenReturn(companyId);
 
             companies.add(mockCompany);
         }
 
-        when(companyCollection.getPage()).thenReturn(companies);
-        return companyCollection;
+        return new CompanyCollection(companies);
     }
 
     public static Map<String, CustomAttribute> randomCustomAttributes() {
