@@ -237,7 +237,7 @@ public class IntercomMetricCollector implements MetricCollector {
         final CompanyCollection companyCollection = user.getCompanyCollection();
         final List<String> companies = new ArrayList<>();
         while (companyCollection.hasNext()) {
-            companies.add(companyCollection.next().getId());
+            companies.add(companyCollection.next().getCompanyID());
         }
         return companies;
     }
