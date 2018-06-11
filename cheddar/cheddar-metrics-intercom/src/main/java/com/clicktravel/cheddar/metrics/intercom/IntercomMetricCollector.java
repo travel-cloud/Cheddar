@@ -113,8 +113,7 @@ public class IntercomMetricCollector implements MetricCollector {
             intercomUser.addCompany(company);
             User.update(intercomUser);
         } catch (final Exception e) {
-            logger.warn("Error adding organisation with id: {} to  Intercom user with id: {} - {} ", organisationId,
-                    userId, e.getMessage());
+            throw new MetricOrganisationUpdateException(organisationId);
         }
     }
 

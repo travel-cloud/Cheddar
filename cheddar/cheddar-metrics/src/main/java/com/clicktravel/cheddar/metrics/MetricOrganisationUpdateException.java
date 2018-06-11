@@ -21,11 +21,9 @@ public class MetricOrganisationUpdateException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     private final String organisationId;
-    private final String organisationName;
 
-    public MetricOrganisationUpdateException(final String organisationId, final String organisationName) {
+    public MetricOrganisationUpdateException(final String organisationId) {
         this.organisationId = organisationId;
-        this.organisationName = organisationName;
     }
 
     @Override
@@ -33,8 +31,6 @@ public class MetricOrganisationUpdateException extends RuntimeException {
         final StringBuilder builder = new StringBuilder();
         builder.append("MetricOrganisationUpdateException [organisationId=");
         builder.append(organisationId);
-        builder.append(", organisationName=");
-        builder.append(organisationName);
         builder.append("]");
         return builder.toString();
     }
