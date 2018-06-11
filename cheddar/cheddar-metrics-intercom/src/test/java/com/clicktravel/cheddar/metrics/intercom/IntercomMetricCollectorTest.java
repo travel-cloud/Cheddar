@@ -46,6 +46,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.clicktravel.cheddar.metrics.MetricOrganisation;
+import com.clicktravel.cheddar.metrics.MetricOrganisationUpdateException;
 import com.clicktravel.cheddar.metrics.MetricUser;
 import com.clicktravel.cheddar.metrics.MetricUserNotFoundException;
 import com.clicktravel.common.validation.ValidationException;
@@ -248,9 +249,15 @@ public class IntercomMetricCollectorTest {
         when(User.find(params)).thenThrow(Exception.class);
 
         // When
-        intercomMetricCollector.addOrganisationToUser(userId, organisationId);
+        MetricOrganisationUpdateException actualException = null;
+        try {
+            intercomMetricCollector.addOrganisationToUser(userId, organisationId);
+        } catch (final MetricOrganisationUpdateException e) {
+            actualException = e;
+        }
 
         // Then
+        assertNotNull(actualException);
         verifyStatic(never());
         User.update(any(User.class));
     }
