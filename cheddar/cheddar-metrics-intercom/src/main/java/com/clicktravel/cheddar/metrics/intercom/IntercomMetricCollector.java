@@ -20,10 +20,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.clicktravel.cheddar.metrics.Metric;
-import com.clicktravel.cheddar.metrics.MetricCollector;
-import com.clicktravel.cheddar.metrics.MetricOrganisation;
-import com.clicktravel.cheddar.metrics.MetricUser;
+import com.clicktravel.cheddar.metrics.*;
 import com.clicktravel.common.functional.Equals;
 
 import io.intercom.api.*;
@@ -158,7 +155,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             Company.create(company);
         } catch (final Exception e) {
-            logger.debug("Error creating/updating a Intercom company: " + company + " - " + e.getMessage());
+            throw new MetricOrganisationUpdateException(companyId, name);
         }
     }
 }
