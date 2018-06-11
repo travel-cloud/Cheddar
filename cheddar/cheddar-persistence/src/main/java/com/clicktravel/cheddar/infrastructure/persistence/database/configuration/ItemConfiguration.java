@@ -29,6 +29,8 @@ import java.util.Map;
 
 import com.clicktravel.cheddar.infrastructure.persistence.database.Item;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.AttributeQuery;
+import com.clicktravel.cheddar.infrastructure.persistence.database.query.CompoundAttributeQuery;
 
 public class ItemConfiguration {
 
@@ -37,6 +39,7 @@ public class ItemConfiguration {
     private final PrimaryKeyDefinition primaryKeyDefinition;
     private final Map<String, PropertyDescriptor> properties = new HashMap<>();
     private final Map<String, IndexDefinition> indexDefinitions;
+    private final Map<String, String> compoundIndexHashKeyToIndexNameMap;
     private final Map<String, UniqueConstraint> uniqueConstraints;
 
     public ItemConfiguration(final Class<? extends Item> itemClass, final String tableName) {
@@ -48,6 +51,7 @@ public class ItemConfiguration {
         this.itemClass = itemClass;
         this.tableName = tableName;
         indexDefinitions = new HashMap<>();
+        compoundIndexHashKeyToIndexNameMap = new HashMap<>();
         uniqueConstraints = new HashMap<>();
         try {
             final BeanInfo beanInfo = Introspector.getBeanInfo(itemClass);
@@ -86,14 +90,24 @@ public class ItemConfiguration {
 
     public void registerIndexes(final Collection<IndexDefinition> indexDefinitions) {
         for (final IndexDefinition indexDefinition : indexDefinitions) {
-            final String indexPropertyName = indexDefinition.propertyName();
-            final PropertyDescriptor propertyDescriptor = properties.get(indexPropertyName);
-            if (propertyDescriptor == null) {
-                throw new IllegalStateException("No property found '" + indexPropertyName + "' for item :" + itemClass);
-            }
-            final Class<?> propertyType = propertyDescriptor.getPropertyType();
+            final String propertyName = indexDefinition.propertyName();
+            final Class<?> propertyType = getPropertyType(propertyName);
             indexDefinition.setPropertyType(propertyType);
-            this.indexDefinitions.put(indexPropertyName, indexDefinition);
+            String indexName;
+
+            if (CompoundIndexDefinition.class.isAssignableFrom(indexDefinition.getClass())) {
+                final CompoundIndexDefinition compoundIndexDefinition = (CompoundIndexDefinition) indexDefinition;
+                final String supportingPropertyName = compoundIndexDefinition.supportingPropertyName();
+
+                final Class<?> supportingPropertyType = getPropertyType(supportingPropertyName);
+                compoundIndexDefinition.setSupportingPropertyType(supportingPropertyType);
+                indexName = compoundName(propertyName, supportingPropertyName);
+                compoundIndexHashKeyToIndexNameMap.put(propertyName, indexName);
+            } else {
+                indexName = indexDefinition.propertyName();
+            }
+
+            this.indexDefinitions.put(indexName, indexDefinition);
         }
     }
 
@@ -111,8 +125,8 @@ public class ItemConfiguration {
     }
 
     public boolean hasIndexOn(final String propertyName) {
-        return primaryKeyDefinition.propertyName().equals(propertyName)
-                || indexDefinitions().stream().map(IndexDefinition::propertyName).anyMatch(propertyName::equals);
+        return primaryKeyDefinition.propertyName().equals(propertyName) || indexDefinitions.containsKey(propertyName)
+                || compoundIndexHashKeyToIndexNameMap.containsKey(propertyName);
     }
 
     public ItemId getItemId(final Item item) {
@@ -159,4 +173,76 @@ public class ItemConfiguration {
         return Collections.unmodifiableCollection(uniqueConstraints.values());
     }
 
+    public boolean hasIndexForQuery(final AttributeQuery attributeQuery) {
+        String indexName;
+
+        if (CompoundAttributeQuery.class.isAssignableFrom(attributeQuery.getClass())) {
+            final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) attributeQuery;
+            indexName = compoundName(attributeQuery.getAttributeName(),
+                    compoundAttributeQuery.getSupportingAttributeName());
+        } else {
+            indexName = attributeQuery.getAttributeName();
+        }
+
+        return hasIndexOn(indexName);
+    }
+
+    public PropertyDescriptor getPropertyDescriptor(final String propertyName) {
+        final PropertyDescriptor propertyDescriptor = properties.get(propertyName);
+        if (propertyDescriptor == null) {
+            throw new IllegalStateException("No property found '" + propertyName + "' for item :" + itemClass);
+        }
+
+        return propertyDescriptor;
+    }
+
+    public String indexNameForQuery(final AttributeQuery attributeQuery) {
+        final StringBuffer stringBuffer = new StringBuffer();
+
+        if (CompoundAttributeQuery.class.isAssignableFrom(attributeQuery.getClass())) {
+            final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) attributeQuery;
+            stringBuffer.append(compoundName(attributeQuery.getAttributeName(),
+                    compoundAttributeQuery.getSupportingAttributeName()));
+        } else {
+            if (isAttributeHashOfACompoundIndexButDoesNotHaveANonCompoundIndexOnIt(attributeQuery.getAttributeName())) {
+                stringBuffer.append(compoundIndexHashKeyToIndexNameMap.get(attributeQuery.getAttributeName()));
+            } else {
+                stringBuffer.append(attributeQuery.getAttributeName());
+            }
+        }
+
+        stringBuffer.append("_idx");
+
+        return stringBuffer.toString();
+    }
+
+    Map<String, String> compoundIndexHashKeyToIndexNameMap() {
+        return compoundIndexHashKeyToIndexNameMap;
+    }
+
+    private Class<?> getPropertyType(final String propertyName) {
+        return getPropertyDescriptor(propertyName).getPropertyType();
+    }
+
+    private String compoundName(final String propertyName, final String supportingPropertyName) {
+        return propertyName + "_" + supportingPropertyName;
+    }
+
+    /*
+     * It is possible for a table to have an index defined on an attribute and a second index which is a compound index
+     * with the hash part of it the same attribute and the range some other attribute.
+     *
+     * This method returns true if there is an compound index with the hash part equal to a given attribute name and NOT
+     * another, non-compound index on the given attribute.
+     *
+     * This is to cater for the scenario where the range part of the compound key is optional which means that any items
+     * saved without the optional range value will not be copied to the table for that index. Any subsequent queries on
+     * that index which only supply the hash part will not return anything for matches where the range is not present.
+     * In this scenario, the query should be ran against the non-compound index on the attribute as they will include
+     * those items with the empty range value.
+     */
+    private boolean isAttributeHashOfACompoundIndexButDoesNotHaveANonCompoundIndexOnIt(final String attributeName) {
+        return compoundIndexHashKeyToIndexNameMap.keySet().contains(attributeName)
+                && !indexDefinitions.keySet().contains(attributeName);
+    }
 }

@@ -37,6 +37,7 @@ import com.clicktravel.cheddar.infrastructure.persistence.exception.PersistenceR
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FileItem;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.FilePath;
 import com.clicktravel.cheddar.infrastructure.persistence.filestore.InternetFileStore;
+import com.clicktravel.common.validation.Check;
 
 public class S3FileStore implements InternetFileStore {
 
@@ -139,20 +140,13 @@ public class S3FileStore implements InternetFileStore {
 
     @Override
     public void write(final FilePath filePath, final FileItem fileItem) {
-        checkInitialization();
+        writeFileItem(filePath, fileItem, fileItem.filename());
+    }
 
-        final ObjectMetadata metadata = new ObjectMetadata();
-        metadata.addUserMetadata(USER_METADATA_FILENAME, fileItem.filename());
-        metadata.addUserMetadata(USER_METADATA_LAST_UPDATED_TIME, formatter.print(fileItem.lastUpdatedTime()));
-        metadata.setContentLength(fileItem.getBytes().length);
-        metadata.setContentDisposition("attachment; filename=\"" + fileItem.filename() + "\"");
-        final InputStream is = new ByteArrayInputStream(fileItem.getBytes());
-        final String bucketName = bucketNameForFilePath(filePath);
-        if (!amazonS3Client.doesBucketExist(bucketName)) {
-            createBucket(bucketName);
-        }
-        final PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, filePath.filename(), is, metadata);
-        amazonS3Client.putObject(putObjectRequest);
+    @Override
+    public void write(final FilePath filePath, final FileItem fileItem, final String filename) {
+        Check.isNotEmptyOrNull("filename", filename);
+        writeFileItem(filePath, fileItem, filename);
     }
 
     @Override
@@ -214,5 +208,22 @@ public class S3FileStore implements InternetFileStore {
                     "An error occurred obtaining a listing of directory -> " + directory + " with prefix -> " + prefix,
                     e);
         }
+    }
+
+    private void writeFileItem(final FilePath filePath, final FileItem fileItem, final String filename) {
+        checkInitialization();
+
+        final ObjectMetadata metadata = new ObjectMetadata();
+        metadata.addUserMetadata(USER_METADATA_FILENAME, filename);
+        metadata.addUserMetadata(USER_METADATA_LAST_UPDATED_TIME, formatter.print(fileItem.lastUpdatedTime()));
+        metadata.setContentLength(fileItem.getBytes().length);
+        metadata.setContentDisposition("attachment; filename=\"" + filename + "\"");
+        final InputStream is = new ByteArrayInputStream(fileItem.getBytes());
+        final String bucketName = bucketNameForFilePath(filePath);
+        if (!amazonS3Client.doesBucketExist(bucketName)) {
+            createBucket(bucketName);
+        }
+        final PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, filePath.filename(), is, metadata);
+        amazonS3Client.putObject(putObjectRequest);
     }
 }

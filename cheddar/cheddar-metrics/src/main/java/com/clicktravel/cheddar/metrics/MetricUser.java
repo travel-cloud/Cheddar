@@ -16,18 +16,40 @@
  */
 package com.clicktravel.cheddar.metrics;
 
+import java.util.*;
+
 public class MetricUser {
 
     private final String id;
-    private final String organisationId;
-    private final String name;
-    private final String emailAddress;
+    private final List<String> organisationIds;
+    private String name;
+    private String emailAddress;
+    private final Map<String, Object> customAttributes;
 
     public MetricUser(final String id, final String organisationId, final String name, final String emailAddress) {
         super();
         this.id = id;
-        this.organisationId = organisationId;
+        organisationIds = organisationId != null ? Arrays.asList(organisationId) : new ArrayList<>();
         this.name = name;
+        this.emailAddress = emailAddress;
+        customAttributes = new HashMap<>();
+    }
+
+    public MetricUser(final String id, final List<String> organisationIds, final String name, final String emailAddress,
+            final Map<String, Object> customAttributes) {
+        super();
+        this.id = id;
+        this.organisationIds = organisationIds;
+        this.name = name;
+        this.emailAddress = emailAddress;
+        this.customAttributes = customAttributes;
+    }
+
+    public void updateName(final String name) {
+        this.name = name;
+    }
+
+    public void updateEmailAddress(final String emailAddress) {
         this.emailAddress = emailAddress;
     }
 
@@ -35,8 +57,12 @@ public class MetricUser {
         return id;
     }
 
+    public List<String> organisationIds() {
+        return organisationIds;
+    }
+
     public String organisationId() {
-        return organisationId;
+        return organisationIds != null ? organisationIds.get(0) : null;
     }
 
     public String name() {
@@ -46,4 +72,9 @@ public class MetricUser {
     public String emailAddress() {
         return emailAddress;
     }
+
+    public Map<String, Object> customAttributes() {
+        return customAttributes;
+    }
+
 }

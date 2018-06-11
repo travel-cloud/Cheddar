@@ -1,0 +1,5 @@
+apply from: '../../test.gradle'
+
+dependencies {
+    compile project(':commons:commons-lang')
+}

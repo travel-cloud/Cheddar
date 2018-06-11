@@ -32,6 +32,7 @@ public class InMemoryDbDataGenerator {
     static final String UNIT_TEST_SCHEMA_NAME = "unittest";
     static final String STUB_ITEM_TABLE_NAME = "stub_item_" + randomString(10);
     static final String STUB_ITEM_WITH_RANGE_TABLE_NAME = "stub_item_with_range_" + randomString(10);
+    static final String STUB_ITEM_WITH_GSI_TABLE_NAME = "stub_item_with_gsi_" + randomString(10);
 
     public final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -88,4 +89,12 @@ public class InMemoryDbDataGenerator {
         return stubItem;
     }
 
+    public StubWithGlobalSecondaryIndexItem randomStubWithGlobalSecondaryIndexItem() {
+        final StubWithGlobalSecondaryIndexItem stubItem = new StubWithGlobalSecondaryIndexItem();
+        stubItem.setId(randomId());
+        stubItem.setGsiHashProperty(randomString(10));
+        stubItem.setGsiRangeProperty(randomInt(100));
+        stubItem.setVersion((long) randomInt(100));
+        return stubItem;
+    }
 }

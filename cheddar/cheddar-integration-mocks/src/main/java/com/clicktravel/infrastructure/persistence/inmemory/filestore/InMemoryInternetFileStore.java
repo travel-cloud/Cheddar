@@ -36,4 +36,9 @@ public class InMemoryInternetFileStore extends InMemoryFileStore implements Inte
                     + filePath.filename() + "]");
         }
     }
+
+    @Override
+    public void write(final FilePath filePath, final FileItem fileItem, final String filename) {
+        super.write(filePath, fileItem);
+    }
 }

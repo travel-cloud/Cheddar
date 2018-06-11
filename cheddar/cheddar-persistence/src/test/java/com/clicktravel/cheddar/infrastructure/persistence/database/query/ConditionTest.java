@@ -16,12 +16,12 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.query;
 
+import static com.clicktravel.common.random.Randoms.randomBoolean;
 import static com.clicktravel.common.random.Randoms.randomEnum;
+import static com.clicktravel.common.random.Randoms.randomEnumInSet;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.util.Set;
 
@@ -75,4 +75,95 @@ public class ConditionTest {
         assertEquals(0, condition.getValues().size());
     }
 
+    @Test
+    public void shouldReturnHasMissingComparisonValues_withConditionWhichRequiresComparisonValuesAndNullOrEmptyValues() {
+        // Given
+        final Set<Operators> operatorsWhichRequireNonNullOrEmptyValues = Sets.newSet(Operators.EQUALS,
+                Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichRequireNonNullOrEmptyValues);
+        final String value = randomBoolean() ? null : "";
+
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
+
+        // When
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
+
+        // Then
+        assertTrue(hasMissingComparisonValues);
+    }
+
+    @Test
+    public void shouldReturnDoesNotHaveMissingComparisonValues_withConditionWhichRequiresComparisonValuesAndNonNullOrEmptyValues() {
+        // Given
+        final Set<Operators> operatorsWhichRequireNonNullOrEmptyValues = Sets.newSet(Operators.EQUALS,
+                Operators.GREATER_THAN_OR_EQUALS, Operators.LESS_THAN_OR_EQUALS);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichRequireNonNullOrEmptyValues);
+        final String value = randomString(10);
+
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
+
+        // When
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
+
+        // Then
+        assertFalse(hasMissingComparisonValues);
+    }
+
+    @Test
+    public void shouldReturnDoesNotHaveMissingComparisonValues_withConditionWhichDoesNotRequireComparisonValuesAndNullOrEmptyValues() {
+        // Given
+        final Set<Operators> operatorsWhichDoNotRequireNonNullOrEmptyValues = Sets.newSet(Operators.NOT_NULL,
+                Operators.NULL);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichDoNotRequireNonNullOrEmptyValues);
+        final String value = randomBoolean() ? null : "";
+
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
+
+        // When
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
+
+        // Then
+        assertFalse(hasMissingComparisonValues);
+    }
+
+    @Test
+    public void shouldReturnDoesNotHaveMissingComparisonValues_withConditionWhichDoesNotRequireComparisonValuesAndNonNullOrEmptyValues() {
+        // Given
+        final Set<Operators> operatorsWhichDoNotRequireNonNullOrEmptyValues = Sets.newSet(Operators.NOT_NULL,
+                Operators.NULL);
+        final Operators operatorWhichRequiresNonNullOrEmptyValue = randomEnumInSet(
+                operatorsWhichDoNotRequireNonNullOrEmptyValues);
+        final String value = randomString();
+
+        final Condition condition = new Condition(operatorWhichRequiresNonNullOrEmptyValue, value);
+
+        // When
+        final boolean hasMissingComparisonValues = condition.hasMissingComparisonValues();
+
+        // Then
+        assertFalse(hasMissingComparisonValues);
+    }
+
+    @Test
+    public void shouldNotReturnHasMissingComparisonValues_withNullOperator() {
+        // Given
+        final Operators operators = null;
+        final String value = randomString();
+
+        final Condition condition = new Condition(operators, value);
+
+        // When
+        InvalidConditionOperatorException thrownException = null;
+        try {
+            condition.hasMissingComparisonValues();
+        } catch (final InvalidConditionOperatorException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
 }

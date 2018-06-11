@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 
+import com.clicktravel.common.validation.ValidationException;
+
 public class StringUtilsTest {
 
     @Test
@@ -99,6 +101,24 @@ public class StringUtilsTest {
 
         // Then
         assertNull(result);
+    }
+
+    @Test
+    public void shouldNotParseEnum_withUnknownStringValue() {
+        // Given
+        final String s = "unknown";
+        final Class<TestEnum> enumClass = TestEnum.class;
+
+        // When
+        ValidationException thrownException = null;
+        try {
+            StringUtils.parseEnum(s, enumClass);
+        } catch (final ValidationException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
     }
 
     @Test

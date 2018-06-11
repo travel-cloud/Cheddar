@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.clicktravel.common.validation.ValidationException;
+
 public class StringUtils {
 
     /**
@@ -71,8 +73,13 @@ public class StringUtils {
         if (t.isEmpty()) {
             return null;
         }
-        final E value = E.valueOf(enumClass, t);
-        return value;
+        try {
+            return Enum.valueOf(enumClass, t);
+        } catch (final IllegalArgumentException e) {
+            final String errorMessage = String.format("Value is not a valid enum %s : value -> [%s]",
+                    enumClass.getSimpleName(), t);
+            throw new ValidationException(errorMessage);
+        }
     }
 
     /**

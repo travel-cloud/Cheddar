@@ -28,7 +28,7 @@ public class AuthenticatedAspect {
 
     @Before("@annotation(com.clicktravel.cheddar.application.security.Authenticated)")
     public void checkAuthenticated() {
-        SecurityChecker.checkAuthenticated();
+        SecurityChecker.checkAnyUser();
     }
 
 }

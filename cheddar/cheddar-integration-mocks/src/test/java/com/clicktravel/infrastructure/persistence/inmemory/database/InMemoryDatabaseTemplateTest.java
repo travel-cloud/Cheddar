@@ -60,14 +60,19 @@ public class InMemoryDatabaseTemplateTest {
         final ParentItemConfiguration stubParentItemConfiguration = new ParentItemConfiguration(StubParentItem.class,
                 InMemoryDbDataGenerator.STUB_ITEM_TABLE_NAME);
         final ItemConfiguration stubItemWithRangeConfiguration = new ItemConfiguration(StubWithRangeItem.class,
-                InMemoryDbDataGenerator.STUB_ITEM_WITH_RANGE_TABLE_NAME, new CompoundPrimaryKeyDefinition("id",
-                        "supportingId"));
+                InMemoryDbDataGenerator.STUB_ITEM_WITH_RANGE_TABLE_NAME,
+                new CompoundPrimaryKeyDefinition("id", "supportingId"));
+        final ItemConfiguration stubItemwithGsiConfiguration = new ItemConfiguration(
+                StubWithGlobalSecondaryIndexItem.class, InMemoryDbDataGenerator.STUB_ITEM_WITH_GSI_TABLE_NAME);
+        stubItemwithGsiConfiguration
+                .registerIndexes((Arrays.asList(new CompoundIndexDefinition("gsiHashProperty", "gsiRangeProperty"))));
         itemConfigurations.add(stubItemConfiguration);
         itemConfigurations.add(stubParentItemConfiguration);
         itemConfigurations.add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantItem.class, "a"));
         itemConfigurations
                 .add(new VariantItemConfiguration(stubParentItemConfiguration, StubVariantTwoItem.class, "b"));
         itemConfigurations.add(stubItemWithRangeConfiguration);
+        itemConfigurations.add(stubItemwithGsiConfiguration);
         databaseSchemaHolder = new DatabaseSchemaHolder(InMemoryDbDataGenerator.UNIT_TEST_SCHEMA_NAME,
                 itemConfigurations);
     }
@@ -286,6 +291,42 @@ public class InMemoryDatabaseTemplateTest {
         assertNotNull(itemResults);
         assertEquals(1, itemResults.size());
         assertEquals(createdItem, itemResults.iterator().next());
+    }
+
+    @Test
+    public void shouldFetch_withCompoundAttributeQuery() throws Exception {
+        // Given
+        final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(databaseSchemaHolder);
+
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final String gsiFetchCriteriaValue = Randoms.randomString(10);
+        final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(20);
+        final Query query = new CompoundAttributeQuery("gsiHashProperty",
+                new Condition(Operators.EQUALS, gsiFetchCriteriaValue), "gsiRangeProperty",
+                new Condition(Operators.EQUALS, gsiSupportingFetchCriteriaValue.toString()));
+
+        for (int i = 0; i < 20; i++) {
+            final StubWithGlobalSecondaryIndexItem item = dataGenerator.randomStubWithGlobalSecondaryIndexItem();
+
+            if (Randoms.randomBoolean() || item.getGsiHashProperty().equals(gsiFetchCriteriaValue)) {
+                item.setGsiHashProperty(gsiFetchCriteriaValue);
+
+                if (Randoms.randomBoolean() || item.getGsiRangeProperty().equals(gsiSupportingFetchCriteriaValue)) {
+                    item.setGsiRangeProperty(gsiSupportingFetchCriteriaValue);
+                    expectedMatchingItems.add(item);
+                }
+            }
+
+            databaseTemplate.create(item);
+        }
+
+        // When
+        final Collection<StubWithGlobalSecondaryIndexItem> itemResults = databaseTemplate.fetch(query,
+                StubWithGlobalSecondaryIndexItem.class);
+
+        // Then
+        assertEquals(expectedMatchingItems.size(), itemResults.size());
+        assertTrue(itemResults.containsAll(expectedMatchingItems));
     }
 
     @Test
@@ -696,15 +737,15 @@ public class InMemoryDatabaseTemplateTest {
         databaseTemplate.create(stubItem);
 
         // When
-        IllegalAccessError actaulException = null;
+        ItemConstraintViolationException actualException = null;
         try {
             databaseTemplate.create(stubItem);
-        } catch (final IllegalAccessError e) {
-            actaulException = e;
+        } catch (final ItemConstraintViolationException e) {
+            actualException = e;
         }
 
         // Then
-        assertNotNull(actaulException);
+        assertNotNull(actualException);
     }
 
     @Test
@@ -715,9 +756,10 @@ public class InMemoryDatabaseTemplateTest {
         final String stubItemIndexAttributeValue = stubItem.getStringProperty();
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        stubItemConfigurationWithUniqueConstraints
+                .registerUniqueConstraints(Arrays.asList(new UniqueConstraint(uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(
+                stubItemConfigurationWithUniqueConstraints);
         final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
                 databaseSchemaHolderWithUniqueConstraints);
 
@@ -744,9 +786,10 @@ public class InMemoryDatabaseTemplateTest {
         final String stubItemIndexAttributeValue = stubItem.getStringProperty();
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        stubItemConfigurationWithUniqueConstraints
+                .registerUniqueConstraints(Arrays.asList(new UniqueConstraint(uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(
+                stubItemConfigurationWithUniqueConstraints);
         final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
                 databaseSchemaHolderWithUniqueConstraints);
 
@@ -778,9 +821,10 @@ public class InMemoryDatabaseTemplateTest {
         final String stubItemIndexAttributeValue = stubItem.getStringProperty();
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        stubItemConfigurationWithUniqueConstraints
+                .registerUniqueConstraints(Arrays.asList(new UniqueConstraint(uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(
+                stubItemConfigurationWithUniqueConstraints);
         final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
                 databaseSchemaHolderWithUniqueConstraints);
 
@@ -813,9 +857,10 @@ public class InMemoryDatabaseTemplateTest {
         final String uniqueConstraintAttributeName = "stringProperty";
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        stubItemConfigurationWithUniqueConstraints
+                .registerUniqueConstraints(Arrays.asList(new UniqueConstraint(uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(
+                stubItemConfigurationWithUniqueConstraints);
         final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
                 databaseSchemaHolderWithUniqueConstraints);
 
@@ -846,9 +891,10 @@ public class InMemoryDatabaseTemplateTest {
         final String updatedPropertyValue = randomString();
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        stubItemConfigurationWithUniqueConstraints
+                .registerUniqueConstraints(Arrays.asList(new UniqueConstraint(uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(
+                stubItemConfigurationWithUniqueConstraints);
         final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
                 databaseSchemaHolderWithUniqueConstraints);
 
@@ -877,9 +923,10 @@ public class InMemoryDatabaseTemplateTest {
         final String uniqueConstraintAttributeName = "stringProperty";
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        stubItemConfigurationWithUniqueConstraints
+                .registerUniqueConstraints(Arrays.asList(new UniqueConstraint(uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(
+                stubItemConfigurationWithUniqueConstraints);
         final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
                 databaseSchemaHolderWithUniqueConstraints);
 
@@ -911,9 +958,10 @@ public class InMemoryDatabaseTemplateTest {
         final String existingUniqueConstraint = stubItem.getStringProperty();
         final ItemConfiguration stubItemConfigurationWithUniqueConstraints = new ItemConfiguration(stubItem.getClass(),
                 "stubTable");
-        stubItemConfigurationWithUniqueConstraints.registerUniqueConstraints(Arrays.asList(new UniqueConstraint(
-                uniqueConstraintAttributeName)));
-        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(stubItemConfigurationWithUniqueConstraints);
+        stubItemConfigurationWithUniqueConstraints
+                .registerUniqueConstraints(Arrays.asList(new UniqueConstraint(uniqueConstraintAttributeName)));
+        final DatabaseSchemaHolder databaseSchemaHolderWithUniqueConstraints = databaseSchemaHolderWithItemConfiguration(
+                stubItemConfigurationWithUniqueConstraints);
         final InMemoryDatabaseTemplate databaseTemplate = new InMemoryDatabaseTemplate(
                 databaseSchemaHolderWithUniqueConstraints);
 

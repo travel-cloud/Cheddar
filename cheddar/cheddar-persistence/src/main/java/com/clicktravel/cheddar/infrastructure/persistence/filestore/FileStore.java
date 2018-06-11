@@ -25,6 +25,13 @@ public interface FileStore {
 
     FileItem read(FilePath filePath) throws NonExistentItemException;
 
+    /**
+     * Write a {@link FileItem} to the given {@link FilePath}. The name of the file is taken from the given
+     * {@link FileItem}.
+     *
+     * @param filePath {@link FilePath} to write the file to.
+     * @param fileItem {@link FileItem} to write.
+     */
     void write(FilePath filePath, FileItem fileItem);
 
     void delete(FilePath filePath) throws NonExistentItemException;

@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.joda.time.*;
 
@@ -150,6 +152,19 @@ public class Randoms {
     }
 
     /**
+     * Returns a random enum present in the given enum Set.
+     *
+     * @param enumSet Set of enumerations to pick from.
+     * @return Random enum from the given set.
+     */
+    public static <E extends Enum<E>> E randomEnumInSet(final Set<E> enumSet) {
+        final int size = enumSet.size();
+        final int positionToSelect = randomIntInRange(0, size);
+
+        return enumSet.stream().skip((positionToSelect)).findFirst().get();
+    }
+
+    /**
      * Returns a subset of a specified original set. The original set is not modified by this method.
      * @param set Original set
      * @return A random subset (may be the empty set) of the specified original set. Each member of the original set has
@@ -226,8 +241,8 @@ public class Randoms {
     public static BigDecimal randomPositiveBigDecimal(final int maxValue, final int precision) {
         final BigInteger maxiumValue = BigInteger.valueOf(maxValue).multiply(BigInteger.TEN.pow(precision))
                 .subtract(BigInteger.ONE);
-        return BigDecimal.valueOf(Randoms.randomInt(maxiumValue.intValue()), precision).add(
-                BigDecimal.valueOf(BigInteger.ONE.intValue(), precision));
+        return BigDecimal.valueOf(Randoms.randomInt(maxiumValue.intValue()), precision)
+                .add(BigDecimal.valueOf(BigInteger.ONE.intValue(), precision));
     }
 
     /**
@@ -334,6 +349,32 @@ public class Randoms {
      */
     public static String randomId() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * @param array
+     * @return An item from the given array
+     */
+    public static <T> T randomItem(final T[] array) {
+        return array[Randoms.randomInt(array.length)];
+    }
+
+    /**
+     * @param collection
+     * @return An item from the given collection
+     */
+    public static <T> T randomItem(final Collection<T> collection) {
+        @SuppressWarnings("unchecked")
+        final T[] collectionAsArray = (T[]) collection.toArray();
+        return Randoms.randomItem(collectionAsArray);
+    }
+
+    /**
+     * @return A randomly generated set of IDs.
+     */
+    public static Set<String> randomIdSet() {
+        final int numberToCreate = randomIntInRange(0, 10);
+        return IntStream.range(0, numberToCreate).mapToObj(i -> randomId()).collect(Collectors.toSet());
     }
 
     private static Random newRandom() {

@@ -16,20 +16,17 @@
  */
 package com.clicktravel.cheddar.rest.exception.mapper.cdm1;
 
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.clicktravel.cheddar.rest.exception.ContentMissingWebApplicationException;
-import com.clicktravel.cheddar.rest.media.MediaTypes;
 import com.clicktravel.schema.canonical.data.model.v1.common.Error;
 import com.clicktravel.schema.canonical.data.model.v1.common.ErrorResponse;
 
 @Provider
-@Produces(MediaTypes.CDM_V1_JSON)
-public class ContentMissingWebApplicationExceptionMapper implements
-        ExceptionMapper<ContentMissingWebApplicationException> {
+public class ContentMissingWebApplicationExceptionMapper
+        implements ExceptionMapper<ContentMissingWebApplicationException> {
 
     @Override
     public Response toResponse(final ContentMissingWebApplicationException e) {

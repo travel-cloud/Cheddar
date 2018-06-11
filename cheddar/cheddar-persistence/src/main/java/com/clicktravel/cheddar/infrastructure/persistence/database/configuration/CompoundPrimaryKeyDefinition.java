@@ -16,7 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.persistence.database.configuration;
 
-public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition {
+public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition implements CompoundKeyDefinition {
 
     private final String supportingPropertyName;
     private Class<?> supportingPropertyType;
@@ -26,10 +26,12 @@ public class CompoundPrimaryKeyDefinition extends PrimaryKeyDefinition {
         this.supportingPropertyName = supportingPropertyName;
     }
 
+    @Override
     public String supportingPropertyName() {
         return supportingPropertyName;
     }
 
+    @Override
     public Class<?> supportingPropertyType() {
         if (supportingPropertyType == null) {
             throw new IllegalStateException("Key not registered with ItemConfiguration");

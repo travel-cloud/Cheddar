@@ -67,13 +67,14 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
     }
 
     @Override
-    public <T extends Item> T create(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T create(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemId itemId = getItemId(item);
         final String tableName = getItemTableName(item.getClass());
         final SerializedItem oldSerializedItem = getItemMap(tableName).get(itemId);
         if (oldSerializedItem != null) {
-            throw new IllegalAccessError("Item already exist with identifier [" + itemId.value() + "] in ["
-                    + item.getClass() + "] repository");
+            throw new ItemConstraintViolationException(itemId.value(),
+                    "Item already exist with identifier in [" + item.getClass() + "] repository");
         }
         createUniqueConstraints(item);
         item.setVersion(1L);
@@ -83,7 +84,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Item> T update(final T item, final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
+    public <T extends Item> T update(final T item,
+            final PersistenceExceptionHandler<?>... persistenceExceptionHandlers) {
         final ItemId itemId = getItemId(item);
         final Class<? extends Item> itemType = item.getClass();
         final String tableName = getItemTableName(itemType);
@@ -93,8 +95,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
         }
         final T oldItem = (T) oldSerializedItem.getEntity(item.getClass());
         if (!item.getVersion().equals(oldItem.getVersion())) {
-            throw new IllegalAccessError("Expected version [" + item.getVersion() + "] but was ["
-                    + oldItem.getVersion() + "]");
+            throw new IllegalAccessError(
+                    "Expected version [" + item.getVersion() + "] but was [" + oldItem.getVersion() + "]");
         }
         deleteUniqueConstraints(oldItem);
         try {
@@ -177,7 +179,7 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
 
     /**
      * Checks the presence of a matching unique constraint for the given item property
-     * 
+     *
      * @param item The Item for which to check unique constraints
      * @param propertyName The name of the property for which the unique constraint should be checked
      * @param propertyValue The value of the property which needs to be checked for presence of unique constraint
@@ -186,8 +188,8 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
     boolean hasMatchingUniqueConstraint(final Item item, final String propertyName, final String propertyValue) {
         final Class<? extends Item> itemClass = item.getClass();
         final String tableName = getItemTableName(itemClass);
-        final Map<String, ItemId> uniqueConstraintsForProperty = uniqueConstraints.get(newUniqueConstraintKey(
-                tableName, propertyName));
+        final Map<String, ItemId> uniqueConstraintsForProperty = uniqueConstraints
+                .get(newUniqueConstraintKey(tableName, propertyName));
         final ItemId itemId = getItemId(item);
         for (final Entry<String, ItemId> entry : uniqueConstraintsForProperty.entrySet()) {
             if (entry.getValue().equals(itemId)) {
@@ -272,60 +274,81 @@ public class InMemoryDatabaseTemplate extends AbstractDatabaseTemplate implement
         final Map<ItemId, T> allItems = getAllItems(itemClass);
         final Collection<T> matches = new ArrayList<>();
         for (final T item : allItems.values()) {
-            final String attribute = query.getAttributeName();
-            try {
-                final Method getter = new PropertyDescriptor(attribute, item.getClass()).getReadMethod();
-                final Object itemPropertyValue = getter.invoke(item);
-                final Class<?> itemPropertyType = getter.getReturnType();
-                final Condition condition = query.getCondition();
-                final Set<String> values = condition.getValues();
-                String singleValue = null;
-                if (values != null && !values.isEmpty()) {
-                    singleValue = values.iterator().next();
-                }
-                final boolean isSingleItemProperty = !Collection.class.isAssignableFrom(itemPropertyType);
-                String singleItemPropertyValue = null;
-                if (isSingleItemProperty) {
-                    singleItemPropertyValue = String.valueOf(itemPropertyValue);
-                }
-                switch (query.getCondition().getComparisonOperator()) {
-                    case NULL:
-                        if (itemPropertyValue == null) {
-                            matches.add(item);
-                        }
-                        break;
-                    case NOT_NULL:
-                        if (itemPropertyValue != null) {
-                            matches.add(item);
-                        }
-                        break;
-                    case LESS_THAN_OR_EQUALS:
-                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) <= 0) {
-                            matches.add(item);
-                        }
-                        break;
-                    case GREATER_THAN_OR_EQUALS:
-                        if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) >= 0) {
-                            matches.add(item);
-                        }
-                        break;
-                    case EQUALS:
-                        if (isSingleItemProperty && singleItemPropertyValue.equals(singleValue)) {
-                            matches.add(item);
-                        } else if (values.equals(itemPropertyValue)) {
-                            matches.add(item);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            } catch (final Exception e) {
-                throw new IllegalStateException("No getter for property [" + attribute + "] on class: ["
-                        + item.getClass() + "]");
+            if (itemMatches(query, item)) {
+                matches.add(item);
             }
-
         }
         return matches;
+    }
+
+    private <T extends Item> boolean itemMatches(final AttributeQuery attributeQuery, final T item) {
+        final String attribute = attributeQuery.getAttributeName();
+        final Condition condition = attributeQuery.getCondition();
+
+        if (CompoundAttributeQuery.class.isAssignableFrom(attributeQuery.getClass())) {
+            final CompoundAttributeQuery compoundAttributeQuery = (CompoundAttributeQuery) attributeQuery;
+            return propertyMatches(item, attribute, condition)
+                    && propertyMatches(item, compoundAttributeQuery.getSupportingAttributeName(),
+                            compoundAttributeQuery.getSupportingCondition());
+        }
+
+        return propertyMatches(item, attribute, condition);
+    }
+
+    private <T extends Item> boolean propertyMatches(final T item, final String attribute, final Condition condition) {
+        try {
+            final Method getter = new PropertyDescriptor(attribute, item.getClass()).getReadMethod();
+            final Object itemPropertyValue = getter.invoke(item);
+            final Class<?> itemPropertyType = getter.getReturnType();
+            final Set<String> values = condition.getValues();
+            String singleValue = null;
+            if (values != null && !values.isEmpty()) {
+                singleValue = values.iterator().next();
+            }
+            final boolean isSingleItemProperty = !Collection.class.isAssignableFrom(itemPropertyType);
+            String singleItemPropertyValue = null;
+            if (isSingleItemProperty) {
+                singleItemPropertyValue = String.valueOf(itemPropertyValue);
+            }
+
+            boolean matches = false;
+            switch (condition.getComparisonOperator()) {
+                case NULL:
+                    if (itemPropertyValue == null) {
+                        matches = true;
+                    }
+                    break;
+                case NOT_NULL:
+                    if (itemPropertyValue != null) {
+                        matches = true;
+                    }
+                    break;
+                case LESS_THAN_OR_EQUALS:
+                    if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) <= 0) {
+                        matches = true;
+                    }
+                    break;
+                case GREATER_THAN_OR_EQUALS:
+                    if (isSingleItemProperty && singleItemPropertyValue.compareTo(singleValue) >= 0) {
+                        matches = true;
+                    }
+                    break;
+                case EQUALS:
+                    if (isSingleItemProperty && singleItemPropertyValue.equals(singleValue)) {
+                        matches = true;
+                    } else if (values.equals(itemPropertyValue)) {
+                        matches = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            return matches;
+        } catch (final Exception e) {
+            throw new IllegalStateException(
+                    "No getter for property [" + attribute + "] on class: [" + item.getClass() + "]");
+        }
     }
 
     private <T extends Item> Map<ItemId, T> getAllItems(final Class<T> itemClass) {

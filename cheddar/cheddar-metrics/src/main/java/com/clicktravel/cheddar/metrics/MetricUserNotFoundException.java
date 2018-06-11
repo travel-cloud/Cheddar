@@ -14,26 +14,13 @@
  * limitations under the License.
  *
  */
-package com.clicktravel.cheddar.request.context;
+package com.clicktravel.cheddar.metrics;
 
-import static com.clicktravel.common.random.Randoms.randomId;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+public class MetricUserNotFoundException extends IllegalStateException {
 
-import org.junit.Test;
+    private static final long serialVersionUID = 5674381015114502022L;
 
-public class BasicSecurityContextTest {
-
-    @Test
-    public void shouldCreateSecurityContext_withPrincipal() {
-        // Given
-        final String principal = randomId();
-
-        // When
-        final BasicSecurityContext securityContext = new BasicSecurityContext(principal);
-
-        // Then
-        assertThat(securityContext.principal(), is(principal));
+    public MetricUserNotFoundException(final String metricUserId) {
+        super(String.format("Metric user with ID %s not found", metricUserId));
     }
-
 }

@@ -16,9 +16,13 @@
  */
 package com.clicktravel.infrastructure.messaging.aws.sns;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
 import com.amazonaws.services.sns.model.SubscribeRequest;
@@ -49,7 +53,13 @@ public class SnsTopicResource {
      * @throws AmazonClientException
      */
     public void publish(final String subject, final String message) throws AmazonClientException {
-        amazonSnsClient.publish(new PublishRequest().withTopicArn(topicArn).withSubject(subject).withMessage(message));
+        // Auto setting the subject as a message attribute to support sns message filtering by subject
+        final Map<String, MessageAttributeValue> attributes = new HashMap<String, MessageAttributeValue>();
+        attributes.put("subject", new MessageAttributeValue().withDataType("String").withStringValue(subject));
+
+        final PublishRequest request = new PublishRequest().withTopicArn(topicArn).withSubject(subject)
+                .withMessage(message).withMessageAttributes(attributes);
+        amazonSnsClient.publish(request);
     }
 
     /**
