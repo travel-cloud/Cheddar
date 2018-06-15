@@ -42,6 +42,14 @@ public class DomainServiceRegistry {
         logger.debug("Registered the following domain services: [" + sb.toString() + "]");
     }
 
+    /**
+     * Get a domain service of a given class. NOTE: This is only intended for obtaining access to domain services from
+     * domain objects as they are not managed via dependency injection. Where a class is managed via dependency
+     * injection, domain services should be added as a dependency to the class.
+     *
+     * @param domainServiceClass
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public static <T extends DomainService> T getService(final Class<T> domainServiceClass) {
         if (domainServiceClass.equals(DomainService.class)) {
