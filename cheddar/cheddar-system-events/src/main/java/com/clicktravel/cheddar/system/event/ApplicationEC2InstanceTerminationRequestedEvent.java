@@ -32,6 +32,36 @@ public class ApplicationEC2InstanceTerminationRequestedEvent extends AbstractSys
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((ec2InstanceId == null) ? 0 : ec2InstanceId.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ApplicationEC2InstanceTerminationRequestedEvent other = (ApplicationEC2InstanceTerminationRequestedEvent) obj;
+        if (ec2InstanceId == null) {
+            if (other.ec2InstanceId != null) {
+                return false;
+            }
+        } else if (!ec2InstanceId.equals(other.ec2InstanceId)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public String toString() {
         return "ApplicationEC2InstanceTerminationRequestedEvent [ec2InstanceId=" + ec2InstanceId
                 + ", getEc2InstanceId()=" + getEc2InstanceId() + ", type()=" + type() + ", getTargetApplicationName()="
