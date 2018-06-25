@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-
 package com.clicktravel.cheddar.server.application.lifecycle;
 
 import java.io.IOException;
@@ -43,6 +42,7 @@ public class ApplicationLifecycleController {
     private final MessageListener systemEventMessageListener;
     private final Collection<MessageListener> messageListeners;
     private long shutdownDeadline;
+    private boolean shutdownRequested;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public ApplicationLifecycleController(final RestServer restServer, final MessageListener systemEventMessageListener,
@@ -63,16 +63,21 @@ public class ApplicationLifecycleController {
         logger.info("Application started");
     }
 
-    public void shutdownApplication() {
-        logger.info("Shutting down application");
-        shutdownDeadline = DateTimeUtils.currentTimeMillis() + SHUTDOWN_TIMEOUT_MILLIS;
-        messageListeners.stream().forEach(MessageListener::prepareForShutdown);
-        restServer.shutdownAndAwait(millisToShutdownDeadline());
-        logger.info("Shutting down message listeners (except system message listener)");
-        shutdownAndAwait(messageListenersExcept(systemEventMessageListener));
-        logger.info("Shutting down system event message listener");
-        shutdownAndAwait(Collections.singleton(systemEventMessageListener));
-        logger.info("Application shutdown completed");
+    public synchronized void shutdownApplication() {
+        if (!shutdownRequested) {
+            shutdownRequested = true;
+            logger.info("Shutting down application");
+            shutdownDeadline = DateTimeUtils.currentTimeMillis() + SHUTDOWN_TIMEOUT_MILLIS;
+            messageListeners.stream().forEach(MessageListener::prepareForShutdown);
+            restServer.shutdownAndAwait(millisToShutdownDeadline());
+            logger.info("Shutting down message listeners (except system message listener)");
+            shutdownAndAwait(messageListenersExcept(systemEventMessageListener));
+            logger.info("Shutting down system event message listener");
+            shutdownAndAwait(Collections.singleton(systemEventMessageListener));
+            logger.info("Application shutdown completed");
+        } else {
+            logger.debug("Application already shut down");
+        }
     }
 
     private void shutdownAndAwait(final Set<MessageListener> messageListenersToShutdown) {

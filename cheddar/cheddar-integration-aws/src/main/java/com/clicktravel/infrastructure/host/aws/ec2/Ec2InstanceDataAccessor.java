@@ -38,7 +38,6 @@ public class Ec2InstanceDataAccessor implements Ec2InstanceData {
     @Override
     public String getInstanceId() {
         if (instanceId == null) {
-            logger.debug("About to retrieve EC2 instance id");
             instanceId = readMetadata("/instance-id");
             logger.debug("Retrieved EC2 instance id: [" + instanceId + "]");
         }
