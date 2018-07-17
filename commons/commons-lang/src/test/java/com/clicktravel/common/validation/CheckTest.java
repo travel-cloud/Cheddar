@@ -586,4 +586,20 @@ public class CheckTest {
         assertEquals("phoneNumber", actualException.getFields()[0]);
     }
 
+    @Test
+    public void shouldCheckPhoneNumber_withPhoneNumberWithoutLeadingPlusSign() throws Exception {
+        // Given
+        final String phoneNumber = "020 02020202";
+
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.isValidPhoneNumber("phoneNumber", phoneNumber);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+    }
 }

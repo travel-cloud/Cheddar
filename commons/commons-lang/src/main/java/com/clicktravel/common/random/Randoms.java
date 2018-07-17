@@ -79,11 +79,9 @@ public class Randoms {
      */
     public static String randomPhoneNumber() {
         final StringBuffer sb = new StringBuffer();
-        if (randomBoolean()) {
-            sb.append("+");
-            sb.append(randomInt(100));
-            sb.append(" ");
-        }
+        sb.append("+");
+        sb.append(randomInt(100));
+        sb.append(" ");
         if (randomBoolean()) {
             sb.append(randomInt(1000));
             sb.append(" ");

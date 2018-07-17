@@ -34,7 +34,7 @@ public class Check {
     private final static String INVALID_LENGTH_ARG = "Length argument is invalid ";
     private final static String IS_NOT_BETWEEN = "Value is not between the allowed minimum & maximum values";
     private final static String DOES_NOT_MATCH_PATTERN = "Value does not match pattern";
-    private final static Pattern PHONE_NUMBER_PATERN = Pattern.compile("\\+?[\\d -]+");
+    private final static Pattern PHONE_NUMBER_PATTERN = Pattern.compile("\\+[\\d -]+");
     private final static Pattern EMAIL_ADDRESS_PATTERN = Pattern.compile(
             "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$");
 
@@ -98,7 +98,7 @@ public class Check {
      * @throws ValidationException if check fails
      */
     public static void isValidPhoneNumber(final String field, final String phoneNumber) throws ValidationException {
-        if (phoneNumber == null || !PHONE_NUMBER_PATERN.matcher(phoneNumber).matches()
+        if (phoneNumber == null || !PHONE_NUMBER_PATTERN.matcher(phoneNumber).matches()
                 || phoneNumber.replaceAll("[^0-9]", "").length() > 15) {
             final String errorMessage = String.format(INVALID_PHONE_NUMBER + " : value -> [%s]", phoneNumber);
             throw new ValidationException(errorMessage, field);
