@@ -42,4 +42,6 @@ public interface MetricCollector {
 
     MetricUser getUser(String userId);
 
+    void convertExistingContactToUser(String contactId, MetricUser metricUser);
+
 }
