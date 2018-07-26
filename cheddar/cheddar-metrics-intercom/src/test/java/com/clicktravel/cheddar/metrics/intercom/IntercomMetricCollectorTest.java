@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
@@ -45,20 +46,14 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.clicktravel.cheddar.metrics.MetricOrganisation;
-import com.clicktravel.cheddar.metrics.MetricOrganisationUpdateException;
-import com.clicktravel.cheddar.metrics.MetricUser;
-import com.clicktravel.cheddar.metrics.MetricUserNotFoundException;
+import com.clicktravel.cheddar.metrics.*;
 import com.clicktravel.common.validation.ValidationException;
 
-import io.intercom.api.Company;
-import io.intercom.api.CustomAttribute;
-import io.intercom.api.Tag;
-import io.intercom.api.User;
+import io.intercom.api.*;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ User.class, Company.class, IntercomMetricCollector.class, Tag.class })
+@PrepareForTest({ User.class, Company.class, IntercomMetricCollector.class, Tag.class, Contact.class })
 public class IntercomMetricCollectorTest {
 
     private MetricCustomAttributeToIntercomCustomAttributeMapper metricToIntercomMapper;
@@ -70,6 +65,7 @@ public class IntercomMetricCollectorTest {
         PowerMockito.mockStatic(User.class);
         PowerMockito.mockStatic(Company.class);
         PowerMockito.mockStatic(Tag.class);
+        PowerMockito.mockStatic(Contact.class);
         final String personalAccessToken = randomString();
         metricToIntercomMapper = mock(MetricCustomAttributeToIntercomCustomAttributeMapper.class);
         intercomToMetricMapper = mock(IntercomCustomAttributeToMetricCustomAttributeMapper.class);
@@ -384,5 +380,52 @@ public class IntercomMetricCollectorTest {
 
         // Then
         assertNotNull(thrownException);
+    }
+
+    @Test
+    public void shouldConvertExistingContactToUser_withContactIdMetricUser() throws Exception {
+        // Given
+        final String contactId = randomId();
+        final MetricUser metricUser = randomMetricUser();
+        final Contact mockContact = mock(Contact.class);
+
+        when(Contact.findByUserID(contactId)).thenReturn(mockContact);
+
+        // When
+        intercomMetricCollector.convertExistingContactToUser(contactId, metricUser);
+
+        // Then
+        final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verifyStatic();
+        Contact.convert(eq(mockContact), userCaptor.capture());
+        final User intercomUser = userCaptor.getValue();
+        assertThat(intercomUser.getId(), is(metricUser.id()));
+        assertThat(intercomUser.getUserId(), is(metricUser.id()));
+        assertThat(intercomUser.getCompanyCollection().getPage().size(), is(metricUser.organisationIds().size()));
+        intercomUser.getCompanyCollection().getPage()
+                .forEach(company -> assertTrue(metricUser.organisationIds().contains(company.getCompanyID())));
+    }
+
+    @Test
+    public void shouldNotConvertExistingContactToUser_withFindContactException() {
+        // Given
+        final String contactId = randomId();
+        final MetricUser metricUser = randomMetricUser();
+
+        when(Contact.findByUserID(contactId)).thenThrow(Exception.class);
+
+        // When
+        MetricException actualException = null;
+        try {
+            intercomMetricCollector.convertExistingContactToUser(contactId, metricUser);
+        } catch (final MetricException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNotNull(actualException);
+        verifyStatic(never());
+        Contact.convert(any(Contact.class), any(User.class));
+
     }
 }

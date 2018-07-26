@@ -203,6 +203,19 @@ public class IntercomMetricCollector implements MetricCollector {
 
     }
 
+    @Override
+    public void convertExistingContactToUser(final String contactId, final MetricUser metricUser) {
+        final User intercomUser = createIntercomUser(metricUser);
+        try {
+            final Contact contact = Contact.findByUserID(contactId);
+            Contact.convert(contact, intercomUser);
+        } catch (final Exception e) {
+            logger.debug("Error converting existing Intercom contact {} to user: {} - {}", contactId, intercomUser,
+                    e.getMessage());
+            throw new MetricException(e.getMessage());
+        }
+    }
+
     private User createIntercomUser(final MetricUser user) {
         if (user == null) {
             return null;
