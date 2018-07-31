@@ -208,10 +208,11 @@ public class IntercomMetricCollector implements MetricCollector {
         final User intercomUser = createIntercomUser(metricUser);
         try {
             final Contact contact = Contact.findByUserID(contactId);
+            logger.debug("Converting existing Intercom contact {} with id {} to user: {} - {}", contact, contactId,
+                    intercomUser);
             Contact.convert(contact, intercomUser);
         } catch (final Exception e) {
-            logger.debug("Error converting existing Intercom contact {} to user: {} - {}", contactId, intercomUser,
-                    e.getMessage());
+            logger.debug("Error converting existing Intercom contact to user: {}", e.getMessage());
             throw new MetricException(e.getMessage());
         }
     }
