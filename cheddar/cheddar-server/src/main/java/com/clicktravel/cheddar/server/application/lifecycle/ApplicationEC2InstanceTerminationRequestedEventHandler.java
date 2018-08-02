@@ -23,13 +23,10 @@ import com.clicktravel.cheddar.system.event.handler.AbstractSystemEventHandler;
 public class ApplicationEC2InstanceTerminationRequestedEventHandler extends AbstractSystemEventHandler {
 
     private final String ec2InstanceId;
-    private final ApplicationLifecycleController applicationLifecycleController;
 
-    public ApplicationEC2InstanceTerminationRequestedEventHandler(final String ec2InstanceId,
-            final ApplicationLifecycleController applicationLifecycleController) {
+    public ApplicationEC2InstanceTerminationRequestedEventHandler(final String ec2InstanceId) {
         super(null, null);
         this.ec2InstanceId = ec2InstanceId;
-        this.applicationLifecycleController = applicationLifecycleController;
     }
 
     @Override
@@ -45,8 +42,7 @@ public class ApplicationEC2InstanceTerminationRequestedEventHandler extends Abst
             logger.info(String.format(
                     "Received event that EC2 instance %s is being terminated - Commencing graceful termination of Java process",
                     ec2InstanceId));
-            applicationLifecycleController.shutdownApplication();
-            logger.info("Java process terminating");
+            System.exit(0); // Cause shutdown hook to run
         }).start();
     }
 
