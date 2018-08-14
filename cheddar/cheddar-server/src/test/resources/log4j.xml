@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration debug="true">
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{ABSOLUTE}  %60.60c:%-5.5L %-4.4X{context} %-5.5p %m%n" />
+        </layout>
+    </appender>
+    <logger name="com.clicktravel" additivity="false">
+        <level value="debug" />
+        <appender-ref ref="console" />
+    </logger>
+    <root>
+        <priority value="warn" />
+        <appender-ref ref="console" />
+    </root>
+</log4j:configuration>
