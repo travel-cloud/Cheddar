@@ -73,12 +73,12 @@ public class IntercomMetricCollector implements MetricCollector {
         if (organisation == null) {
             return;
         }
-        final Company company = Company.find(organisation.id());
-        company.setName(organisation.name());
         try {
+            final Company company = Company.find(organisation.id());
+            company.setName(organisation.name());
             Company.update(company);
         } catch (final Exception e) {
-            logger.warn("Error updating an Intercom company: {} - {}", company, e.getMessage());
+            logger.warn("Error updating an Intercom company: {} - {}", organisation.id(), e.getMessage());
         }
     }
 
