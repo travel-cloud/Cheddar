@@ -18,6 +18,7 @@ package com.clicktravel.cheddar.metrics.intercom;
 
 import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomIntercomDataGenerator.randomIntercomUser;
 import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomMetricDataGenerator.randomMetricOrganisation;
+import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomMetricDataGenerator.randomMetricOrganisationWithCreatedAt;
 import static com.clicktravel.cheddar.metrics.intercom.random.data.RandomMetricDataGenerator.randomMetricUser;
 import static com.clicktravel.common.random.Randoms.randomId;
 import static com.clicktravel.common.random.Randoms.randomString;
@@ -30,6 +31,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -77,7 +79,8 @@ public class IntercomMetricCollectorTest {
     @Test
     public void shouldCreateIntercomCompany_withMetricOrganisation() throws Exception {
         // Given
-        final MetricOrganisation metricOrganisation = randomMetricOrganisation();
+        final MetricOrganisation metricOrganisation = randomMetricOrganisationWithCreatedAt();
+        final long expectedRemoteCreatedAt = metricOrganisation.createdAt().getMillis();
 
         // When
         intercomMetricCollector.createOrganisation(metricOrganisation);
@@ -89,23 +92,26 @@ public class IntercomMetricCollectorTest {
         final Company company = companyCaptor.getValue();
         assertThat(company.getCompanyID(), is(metricOrganisation.id()));
         assertThat(company.getName(), is(metricOrganisation.name()));
+        assertThat(company.getRemoteCreatedAt(), is(expectedRemoteCreatedAt));
     }
 
     @Test
     public void shouldUpdateIntercomCompany_withMetricOrganisation() throws Exception {
         // Given
         final MetricOrganisation metricOrganisation = randomMetricOrganisation();
+        final String metricOrganisationId = metricOrganisation.id();
+        final Company mockCompany = mock(Company.class);
+
+        mockStatic(Company.class);
+        when(Company.find(metricOrganisationId)).thenReturn(mockCompany);
 
         // When
         intercomMetricCollector.updateOrganisation(metricOrganisation);
 
         // Then
+        verify(mockCompany).setName(metricOrganisation.name());
         verifyStatic();
-        final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
-        Company.create(companyCaptor.capture());
-        final Company company = companyCaptor.getValue();
-        assertThat(company.getCompanyID(), is(metricOrganisation.id()));
-        assertThat(company.getName(), is(metricOrganisation.name()));
+        Company.update(mockCompany);
     }
 
     @Test

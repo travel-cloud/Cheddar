@@ -54,12 +54,32 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void createOrganisation(final MetricOrganisation organisation) {
-        createOrUpdateIntercomCompany(organisation);
+        if (organisation == null) {
+            return;
+        }
+        final Company company = new Company();
+        company.setCompanyID(organisation.id());
+        company.setName(organisation.name());
+        company.setRemoteCreatedAt(organisation.createdAt().getMillis());
+        try {
+            Company.create(company);
+        } catch (final Exception e) {
+            logger.warn("Error creating an Intercom company: {} - {}", company, e.getMessage());
+        }
     }
 
     @Override
     public void updateOrganisation(final MetricOrganisation organisation) {
-        createOrUpdateIntercomCompany(organisation);
+        if (organisation == null) {
+            return;
+        }
+        final Company company = Company.find(organisation.id());
+        company.setName(organisation.name());
+        try {
+            Company.update(company);
+        } catch (final Exception e) {
+            logger.warn("Error updating an Intercom company: {} - {}", company, e.getMessage());
+        }
     }
 
     @Override
@@ -253,24 +273,6 @@ public class IntercomMetricCollector implements MetricCollector {
             companies.add(companyCollection.next().getCompanyID());
         }
         return companies;
-    }
-
-    private void createOrUpdateIntercomCompany(final MetricOrganisation organisation) {
-        if (organisation == null) {
-            return;
-        }
-        final Company company = new Company();
-
-        final String companyId = organisation.id();
-        final String name = organisation.name();
-
-        company.setCompanyID(companyId);
-        company.setName(name);
-        try {
-            Company.create(company);
-        } catch (final Exception e) {
-            logger.warn("Error creating/updating a Intercom company: {} - {}", company, e.getMessage());
-        }
     }
 
     private User findIntercomUserByUserId(final String travelCloudUserId) {

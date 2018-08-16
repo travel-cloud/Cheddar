@@ -16,10 +16,7 @@
  */
 package com.clicktravel.cheddar.metrics.intercom.random.data;
 
-import static com.clicktravel.common.random.Randoms.randomEmailAddress;
-import static com.clicktravel.common.random.Randoms.randomId;
-import static com.clicktravel.common.random.Randoms.randomIntInRange;
-import static com.clicktravel.common.random.Randoms.randomString;
+import static com.clicktravel.common.random.Randoms.*;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
 import java.util.ArrayList;
@@ -34,8 +31,20 @@ import io.intercom.api.CustomAttribute;
 
 public class RandomMetricDataGenerator {
 
+    public static MetricOrganisation randomMetricOrganisationWithCreatedAt() {
+        return randomMetricOrganisation(true);
+    }
+
     public static MetricOrganisation randomMetricOrganisation() {
-        return new MetricOrganisation(randomId(), randomString());
+        return randomMetricOrganisation(false);
+    }
+
+    public static MetricOrganisation randomMetricOrganisation(final boolean setCreatedAt) {
+        final MetricOrganisation metricOrganisation = new MetricOrganisation(randomId(), randomString());
+        if (setCreatedAt) {
+            metricOrganisation.setCreatedAt(randomDateTime());
+        }
+        return metricOrganisation;
     }
 
     public static MetricUser randomMetricUser() {
