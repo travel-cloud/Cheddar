@@ -16,14 +16,21 @@
  */
 package com.clicktravel.cheddar.metrics;
 
+import org.joda.time.DateTime;
+
 public class MetricOrganisation {
 
-    public String id;
-    public String name;
+    private final String id;
+    private final String name;
+    private DateTime createdAt;
 
     public MetricOrganisation(final String id, final String name) {
         this.id = id;
         this.name = name;
+    }
+
+    public void setCreatedAt(final DateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public String id() {
@@ -32,6 +39,10 @@ public class MetricOrganisation {
 
     public String name() {
         return name;
+    }
+
+    public DateTime createdAt() {
+        return createdAt;
     }
 
 }
