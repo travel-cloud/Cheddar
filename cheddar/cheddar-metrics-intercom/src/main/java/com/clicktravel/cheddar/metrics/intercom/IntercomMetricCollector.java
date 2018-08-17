@@ -60,7 +60,8 @@ public class IntercomMetricCollector implements MetricCollector {
         final Company company = new Company();
         company.setCompanyID(organisation.id());
         company.setName(organisation.name());
-        company.setRemoteCreatedAt(organisation.createdAt().getMillis());
+        final long remoteCreatedAtTimestampInSeconds = organisation.createdAt().getMillis() / 1000;
+        company.setRemoteCreatedAt(remoteCreatedAtTimestampInSeconds);
         try {
             logger.debug("Creating Intercom company: {}", company);
             Company.create(company);

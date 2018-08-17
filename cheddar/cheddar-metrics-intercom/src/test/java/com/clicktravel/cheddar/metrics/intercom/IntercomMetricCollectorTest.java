@@ -80,7 +80,7 @@ public class IntercomMetricCollectorTest {
     public void shouldCreateIntercomCompany_withMetricOrganisation() throws Exception {
         // Given
         final MetricOrganisation metricOrganisation = randomMetricOrganisationWithCreatedAt();
-        final long expectedRemoteCreatedAt = metricOrganisation.createdAt().getMillis();
+        final long expectedRemoteCreatedAt = metricOrganisation.createdAt().getMillis() / 1000;
 
         // When
         intercomMetricCollector.createOrganisation(metricOrganisation);
