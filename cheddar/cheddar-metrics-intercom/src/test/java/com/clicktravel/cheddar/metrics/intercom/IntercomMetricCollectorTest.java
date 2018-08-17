@@ -100,10 +100,12 @@ public class IntercomMetricCollectorTest {
         // Given
         final MetricOrganisation metricOrganisation = randomMetricOrganisation();
         final String metricOrganisationId = metricOrganisation.id();
+        final Map<String, String> expectedFindParams = new HashMap<>();
+        expectedFindParams.put("company_id", metricOrganisationId);
         final Company mockCompany = mock(Company.class);
 
         mockStatic(Company.class);
-        when(Company.find(metricOrganisationId)).thenReturn(mockCompany);
+        when(Company.find(expectedFindParams)).thenReturn(mockCompany);
 
         // When
         intercomMetricCollector.updateOrganisation(metricOrganisation);

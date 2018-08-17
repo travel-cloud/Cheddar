@@ -62,6 +62,7 @@ public class IntercomMetricCollector implements MetricCollector {
         company.setName(organisation.name());
         company.setRemoteCreatedAt(organisation.createdAt().getMillis());
         try {
+            logger.debug("Creating Intercom company: {}", company);
             Company.create(company);
         } catch (final Exception e) {
             logger.warn("Error creating an Intercom company: {} - {}", company, e.getMessage());
@@ -74,7 +75,7 @@ public class IntercomMetricCollector implements MetricCollector {
             return;
         }
         try {
-            final Company company = Company.find(organisation.id());
+            final Company company = findIntercomCompanyByExternalCompanyId(organisation.id());
             company.setName(organisation.name());
             Company.update(company);
         } catch (final Exception e) {
@@ -279,6 +280,12 @@ public class IntercomMetricCollector implements MetricCollector {
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", travelCloudUserId);
         return User.find(params);
+    }
+
+    private Company findIntercomCompanyByExternalCompanyId(final String externalCompanyId) {
+        final Map<String, String> params = new HashMap<>();
+        params.put("company_id", externalCompanyId);
+        return Company.find(params);
     }
 
 }
