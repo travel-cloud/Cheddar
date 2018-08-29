@@ -68,4 +68,13 @@ public class LuceneQuery extends Query {
         return true;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("LuceneQuery [query=");
+        builder.append(query);
+        builder.append("]");
+        return builder.toString();
+    }
+
 }
