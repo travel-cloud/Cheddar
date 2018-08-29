@@ -331,9 +331,9 @@ public class CloudSearchEngine implements DocumentSearchEngine {
             }
             final long totalResults = searchResult.getHits().getFound();
             final String cursor = searchResult.getHits().getCursor();
-            return new DocumentSearchResponse<T>((int) totalResults, cursor, documents);
+            return new DocumentSearchResponse<>((int) totalResults, cursor, documents);
         } catch (final AmazonServiceException | JsonProcessingException e) {
-            throw new PersistenceResourceFailureException("Unable to perform CloudSearch query", e);
+            throw new PersistenceResourceFailureException("Unable to perform CloudSearch query: " + query, e);
         }
     }
 
