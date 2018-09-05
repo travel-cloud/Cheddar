@@ -53,8 +53,9 @@ public class RestApplication {
         final Logger logger = LoggerFactory.getLogger(RestApplication.class);
         try {
             logger.info("Java process starting");
-            logger.debug(String.format("java.version:[%s] java.vendor:[%s]", System.getProperty("java.version"),
-                    System.getProperty("java.vendor")));
+            logger.debug(String.format("java.version:[%s] java.vendor:[%s] maxMemoryMb:[%d]",
+                    System.getProperty("java.version"), System.getProperty("java.vendor"),
+                    Runtime.getRuntime().maxMemory() / (1024 * 1024)));
             @SuppressWarnings("resource")
             final ConfigurableApplicationContext applicationContext = new ClassPathXmlApplicationContext(
                     "applicationContext.xml");
