@@ -42,7 +42,6 @@ import io.swagger.models.Info;
  */
 public class RestServer {
 
-    private static final int SERVICE_WORKER_THREADS = 16;
     private static final int STATUS_WORKER_THREADS = 2;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -53,14 +52,15 @@ public class RestServer {
         this.resourceConfig = resourceConfig;
     }
 
-    public void start(final int servicePort, final int statusPort, final String bindAddress) throws IOException {
+    public void start(final int servicePort, final int statusPort, final String bindAddress, final int workerThreads)
+            throws IOException {
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
         enableAutoGenerationOfSwaggerSpecification();
-        configureThreadPools(httpServer.getListener("grizzly"), SERVICE_WORKER_THREADS);
+        configureWorkerThreadPool(httpServer.getListener("grizzly"), workerThreads);
         final NetworkListener statusPortListener = new NetworkListener("status", baseUri.getHost(), statusPort);
-        configureThreadPools(statusPortListener, STATUS_WORKER_THREADS);
+        configureWorkerThreadPool(statusPortListener, STATUS_WORKER_THREADS);
         httpServer.addListener(statusPortListener);
         logger.info("Starting REST server; servicePort:[" + servicePort + "] statusPort:[" + statusPort + "]");
         httpServer.start();
@@ -80,7 +80,7 @@ public class RestServer {
         beanConfig.setScan(true);
     }
 
-    private void configureThreadPools(final NetworkListener networkListener, final int workerThreads) {
+    private void configureWorkerThreadPool(final NetworkListener networkListener, final int workerThreads) {
         final TCPNIOTransport transport = networkListener.getTransport();
 
         if (transport.getWorkerThreadPoolConfig() == null) {
