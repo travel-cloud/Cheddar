@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-
 package com.clicktravel.cheddar.server.application.lifecycle;
 
 import static com.clicktravel.cheddar.server.application.lifecycle.ApplicationLifecycleController.SHUTDOWN_TIMEOUT_MILLIS;
@@ -35,6 +34,7 @@ import org.mockito.InOrder;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 import com.clicktravel.cheddar.server.rest.RestServer;
+import com.clicktravel.common.random.Randoms;
 
 public class ApplicationLifecycleControllerTest {
 
@@ -66,16 +66,17 @@ public class ApplicationLifecycleControllerTest {
         final int servicePort = randomInt(16384);
         final int statusPort = randomInt(16384);
         final String bindAddress = randomString();
+        final int workerThreads = Randoms.randomIntInRange(2, 16);
 
         // When
-        applicationLifecycleController.startApplication(servicePort, statusPort, bindAddress);
+        applicationLifecycleController.startApplication(servicePort, statusPort, bindAddress, workerThreads);
 
         // Then
         final InOrder inOrder = inOrder(mockRestServer, mockSystemEventMessageListener, mockOtherMessageListener);
         inOrder.verify(mockSystemEventMessageListener).start();
         inOrder.verify(mockOtherMessageListener).start();
         verifyNoMoreInteractions(mockSystemEventMessageListener, mockOtherMessageListener);
-        inOrder.verify(mockRestServer).start(servicePort, statusPort, bindAddress);
+        inOrder.verify(mockRestServer).start(servicePort, statusPort, bindAddress, workerThreads);
     }
 
     @Test

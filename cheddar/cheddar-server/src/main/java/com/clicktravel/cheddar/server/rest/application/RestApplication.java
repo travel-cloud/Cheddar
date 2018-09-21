@@ -27,6 +27,11 @@ import com.clicktravel.cheddar.server.application.lifecycle.ApplicationLifecycle
 
 public class RestApplication {
 
+    private static final String DEFAULT_CONTEXT = "UNKNOWN";
+    private static final int DEFAULT_SERVICE_PORT = 8080;
+    private static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
+    private static final String DEFAULT_WORKER_THREADS = "16";
+
     /**
      * Starts the RestServer to listen on the given port and address combination
      *
@@ -42,10 +47,11 @@ public class RestApplication {
      * @throws Exception
      */
     public static void main(final String... args) {
-        final String context = args.length > 0 ? args[0] : "UNKNOWN";
-        final int servicePort = args.length > 1 ? Integer.parseInt(args[1]) : 8080;
+        final String context = args.length > 0 ? args[0] : DEFAULT_CONTEXT;
+        final int servicePort = args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_SERVICE_PORT;
         final int statusPort = args.length > 2 ? Integer.parseInt(args[2]) : servicePort + 100;
-        final String bindAddress = args.length > 3 ? args[3] : "0.0.0.0";
+        final String bindAddress = args.length > 3 ? args[3] : DEFAULT_BIND_ADDRESS;
+        final int workerThreads = Integer.parseInt(System.getProperty("worker.threads", DEFAULT_WORKER_THREADS));
         MDC.put("context", context);
         MDC.put("hostId", System.getProperty("host.id", "UNKNOWN"));
         SLF4JBridgeHandler.removeHandlersForRootLogger();
@@ -67,7 +73,7 @@ public class RestApplication {
                 applicationLifecycleController.shutdownApplication();
                 logger.info("Java process terminating");
             }));
-            applicationLifecycleController.startApplication(servicePort, statusPort, bindAddress);
+            applicationLifecycleController.startApplication(servicePort, statusPort, bindAddress, workerThreads);
             Thread.currentThread().join();
         } catch (final InterruptedException e) {
             logger.info("Java process interrupted");
