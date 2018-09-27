@@ -59,7 +59,7 @@ public class PersistedTracker<T1 extends Process, T2 extends Item> implements Tr
     public void completeProcess(final T1 process) {
         final T2 processItem = processToItemMapper.map(process);
         databaseTemplate.delete(processItem);
-        logger.info("ProcessTracker ended with process: " + processItem);
+        logger.info("ProcessTracker ended with id: " + process.processId().id());
     }
 
     @Override
