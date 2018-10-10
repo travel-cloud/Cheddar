@@ -134,6 +134,7 @@ public class IntercomMetricCollector implements MetricCollector {
             company.setCompanyID(organisationId);
 
             intercomUser.addCompany(company);
+            intercomUser.setUpdateLastRequestAt(true);
             User.update(intercomUser);
         } catch (final Exception e) {
             throw new MetricOrganisationUpdateException(organisationId);
