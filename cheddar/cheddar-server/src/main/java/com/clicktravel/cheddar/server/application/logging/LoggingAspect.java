@@ -22,6 +22,9 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clicktravel.cheddar.request.context.SecurityContext;
+import com.clicktravel.cheddar.request.context.SecurityContextHolder;
+
 //@formatter:off
 /**
  * Aspect for automatically logging method calls. The methods to log are identified by a {@code @Pointcut} definition.
@@ -54,16 +57,17 @@ public abstract class LoggingAspect {
 
     private Object proceedAndLog(final ProceedingJoinPoint point) throws Throwable {
         final String methodCallDetail = methodCallDetail(point);
+        final String securityContextDetail = securityContextDetail();
         final long startTime = System.currentTimeMillis();
         try {
-            logger.debug("Entering method call; call:[{}]", methodCallDetail);
+            logger.debug("Entering method call; call:[{}] {}", methodCallDetail, securityContextDetail);
             final Object result = point.proceed();
-            logger.debug("Method call returned; call:[{}] return:[{}] timeMillis:[{}]", methodCallDetail, result,
-                    System.currentTimeMillis() - startTime);
+            logger.debug("Method call returned; call:[{}] return:[{}] timeMillis:[{}] {}", methodCallDetail, result,
+                    System.currentTimeMillis() - startTime, securityContextDetail);
             return result;
         } catch (final Throwable e) {
-            logger.debug("Method call exception; call:[{}] exception:[{}] timeMillis:[{}]", methodCallDetail, e,
-                    System.currentTimeMillis() - startTime);
+            logger.debug("Method call exception; call:[{}] exception:[{}] timeMillis:[{}] {}", methodCallDetail, e,
+                    System.currentTimeMillis() - startTime, securityContextDetail);
             throw e;
         }
     }
@@ -83,6 +87,17 @@ public abstract class LoggingAspect {
             sb.append(arg == null ? "null" : arg.toString());
         }
         sb.append(')');
+        return sb.toString();
+    }
+
+    private String securityContextDetail() {
+        final StringBuilder sb = new StringBuilder();
+        final SecurityContext securityContext = SecurityContextHolder.get();
+        sb.append("principal:[");
+        sb.append(securityContext.userId().orElse("null"));
+        sb.append("] team:[");
+        sb.append(securityContext.teamId().orElse("null"));
+        sb.append("]");
         return sb.toString();
     }
 }

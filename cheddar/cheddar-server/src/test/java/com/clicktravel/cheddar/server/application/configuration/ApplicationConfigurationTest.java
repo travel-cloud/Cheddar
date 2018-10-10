@@ -20,8 +20,11 @@ import static com.clicktravel.common.random.Randoms.randomString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import org.junit.Test;
+
 public class ApplicationConfigurationTest {
 
+    @Test
     public void shouldCreateApplicationConfiguration_withNameAndVersionandFrameworkVersion() throws Exception {
         // Given
         final String name = randomString(10);

@@ -54,12 +54,34 @@ public class IntercomMetricCollector implements MetricCollector {
 
     @Override
     public void createOrganisation(final MetricOrganisation organisation) {
-        createOrUpdateIntercomCompany(organisation);
+        if (organisation == null) {
+            return;
+        }
+        final Company company = new Company();
+        company.setCompanyID(organisation.id());
+        company.setName(organisation.name());
+        final long remoteCreatedAtTimestampInSeconds = organisation.createdAt().getMillis() / 1000;
+        company.setRemoteCreatedAt(remoteCreatedAtTimestampInSeconds);
+        try {
+            logger.debug("Creating Intercom company: {}", company);
+            Company.create(company);
+        } catch (final Exception e) {
+            logger.warn("Error creating an Intercom company: {} - {}", company, e.getMessage());
+        }
     }
 
     @Override
     public void updateOrganisation(final MetricOrganisation organisation) {
-        createOrUpdateIntercomCompany(organisation);
+        if (organisation == null) {
+            return;
+        }
+        try {
+            final Company company = findIntercomCompanyByExternalCompanyId(organisation.id());
+            company.setName(organisation.name());
+            Company.update(company);
+        } catch (final Exception e) {
+            logger.warn("Error updating an Intercom company: {} - {}", organisation.id(), e.getMessage());
+        }
     }
 
     @Override
@@ -256,28 +278,16 @@ public class IntercomMetricCollector implements MetricCollector {
         return companies;
     }
 
-    private void createOrUpdateIntercomCompany(final MetricOrganisation organisation) {
-        if (organisation == null) {
-            return;
-        }
-        final Company company = new Company();
-
-        final String companyId = organisation.id();
-        final String name = organisation.name();
-
-        company.setCompanyID(companyId);
-        company.setName(name);
-        try {
-            Company.create(company);
-        } catch (final Exception e) {
-            logger.warn("Error creating/updating a Intercom company: {} - {}", company, e.getMessage());
-        }
-    }
-
     private User findIntercomUserByUserId(final String travelCloudUserId) {
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", travelCloudUserId);
         return User.find(params);
+    }
+
+    private Company findIntercomCompanyByExternalCompanyId(final String externalCompanyId) {
+        final Map<String, String> params = new HashMap<>();
+        params.put("company_id", externalCompanyId);
+        return Company.find(params);
     }
 
 }
