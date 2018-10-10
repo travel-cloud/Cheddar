@@ -97,6 +97,7 @@ public class IntercomMetricCollector implements MetricCollector {
     public void createUser(final MetricUser user) {
         final User intercomUser = createIntercomUser(user);
         intercomUser.setSignedUpAt(DateTime.now().getMillis() / 1000);
+        intercomUser.setUpdateLastRequestAt(true);
         try {
             User.create(intercomUser);
         } catch (final Exception e) {
@@ -133,6 +134,7 @@ public class IntercomMetricCollector implements MetricCollector {
             company.setCompanyID(organisationId);
 
             intercomUser.addCompany(company);
+            intercomUser.setUpdateLastRequestAt(true);
             User.update(intercomUser);
         } catch (final Exception e) {
             throw new MetricOrganisationUpdateException(organisationId);
