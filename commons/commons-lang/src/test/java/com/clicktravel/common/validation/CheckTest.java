@@ -227,13 +227,9 @@ public class CheckTest {
         validEmails.add("other.email-with-dash@example.com");
         validEmails.add("x@example.com");
         validEmails.add("example-indeed@strange-example.com");
-        validEmails.add("admin@mailserver1");
         validEmails.add("#!$%&'*+-/=?^_`{}|~@example.org");
-        validEmails.add("example@localhost");
         validEmails.add("example@s.solutions");
-        validEmails.add("user@com");
-        validEmails.add("user@localserver");
-        validEmails.add("john..doe@example.com");
+        validEmails.add("Example@s.solutions");
 
         // When
         final List<String> invalidatedEmails = new ArrayList<>();
@@ -263,6 +259,7 @@ public class CheckTest {
         invalidEmails.add("this is\"not\\allowed@example.com");
         invalidEmails.add("this\\ still\\\"not\\allowed@example.com");
         invalidEmails.add("john.doe@example..com");
+        invalidEmails.add("Modapat@1");
 
         // When
         final List<String> validatedEmails = new ArrayList<>();
