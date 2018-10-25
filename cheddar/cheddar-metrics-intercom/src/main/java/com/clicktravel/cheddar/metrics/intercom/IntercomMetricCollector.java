@@ -214,7 +214,7 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             intercomUser = findIntercomUserByUserId(userId);
         } catch (final Exception e) {
-            logger.warn("Failed to get user with Id: {} from Intercom - {}", userId, e.getMessage());
+            logger.info("Failed to get user with Id: {} from Intercom - {}", userId, e.getMessage());
             throw new MetricUserNotFoundException(userId);
         }
 
