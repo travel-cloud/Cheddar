@@ -52,14 +52,14 @@ public class ApplicationLifecycleController {
         this.messageListeners = messageListeners;
     }
 
-    public void startApplication(final int servicePort, final int statusPort, final String bindAddress,
-            final int workerThreads) throws IOException {
+    public void startApplication(final int servicePort, final String bindAddress, final int workerThreads)
+            throws IOException {
         logger.info("Starting application");
         logger.info("Starting system event message listener");
         systemEventMessageListener.start();
         logger.info("Starting remaining message listeners");
         messageListenersExcept(systemEventMessageListener).stream().forEach(MessageListener::start);
-        restServer.start(servicePort, statusPort, bindAddress, workerThreads);
+        restServer.start(servicePort, bindAddress, workerThreads);
         logger.info("Application started");
     }
 
