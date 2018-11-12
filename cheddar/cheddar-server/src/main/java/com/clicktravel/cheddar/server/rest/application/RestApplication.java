@@ -39,8 +39,7 @@ public class RestApplication {
      *            <ul>
      *            <li>{@code context} - Name of application, defaults to {@code UNKNOWN}</li>
      *            <li>{@code service-port} - Port number for REST service endpoints, defaults to {@code 8080}</li>
-     *            <li>{@code status-port} - Port number for REST status endpoints ({@code /status} and
-     *            {@code /status/healthCheck}), defaults to {@code service-port + 100}</li>
+     *            <li>{@code status-port} - unused</li>
      *            <li>{@code bind-address} - Local IP address to bind server to, defaults to {@code 0.0.0.0}</li>
      *            </ul>
      *
@@ -49,7 +48,6 @@ public class RestApplication {
     public static void main(final String... args) {
         final String context = args.length > 0 ? args[0] : DEFAULT_CONTEXT;
         final int servicePort = args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_SERVICE_PORT;
-        final int statusPort = args.length > 2 ? Integer.parseInt(args[2]) : servicePort + 100;
         final String bindAddress = args.length > 3 ? args[3] : DEFAULT_BIND_ADDRESS;
         final int workerThreads = Integer.parseInt(System.getProperty("worker.threads", DEFAULT_WORKER_THREADS));
         MDC.put("context", context);
@@ -73,7 +71,7 @@ public class RestApplication {
                 applicationLifecycleController.shutdownApplication();
                 logger.info("Java process terminating");
             }));
-            applicationLifecycleController.startApplication(servicePort, statusPort, bindAddress, workerThreads);
+            applicationLifecycleController.startApplication(servicePort, bindAddress, workerThreads);
             Thread.currentThread().join();
         } catch (final InterruptedException e) {
             logger.info("Java process interrupted");

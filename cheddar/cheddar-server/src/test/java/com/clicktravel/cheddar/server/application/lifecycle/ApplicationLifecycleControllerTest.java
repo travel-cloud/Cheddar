@@ -64,19 +64,18 @@ public class ApplicationLifecycleControllerTest {
     public void shouldStartApplication_withServicePortStatusPortAndBindAddress() throws Exception {
         // Given
         final int servicePort = randomInt(16384);
-        final int statusPort = randomInt(16384);
         final String bindAddress = randomString();
         final int workerThreads = Randoms.randomIntInRange(2, 16);
 
         // When
-        applicationLifecycleController.startApplication(servicePort, statusPort, bindAddress, workerThreads);
+        applicationLifecycleController.startApplication(servicePort, bindAddress, workerThreads);
 
         // Then
         final InOrder inOrder = inOrder(mockRestServer, mockSystemEventMessageListener, mockOtherMessageListener);
         inOrder.verify(mockSystemEventMessageListener).start();
         inOrder.verify(mockOtherMessageListener).start();
         verifyNoMoreInteractions(mockSystemEventMessageListener, mockOtherMessageListener);
-        inOrder.verify(mockRestServer).start(servicePort, statusPort, bindAddress, workerThreads);
+        inOrder.verify(mockRestServer).start(servicePort, bindAddress, workerThreads);
     }
 
     @Test

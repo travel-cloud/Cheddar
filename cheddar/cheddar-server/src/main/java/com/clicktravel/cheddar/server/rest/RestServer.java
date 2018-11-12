@@ -42,8 +42,6 @@ import io.swagger.models.Info;
  */
 public class RestServer {
 
-    private static final int STATUS_WORKER_THREADS = 2;
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ResourceConfig resourceConfig;
     private HttpServer httpServer;
@@ -52,17 +50,13 @@ public class RestServer {
         this.resourceConfig = resourceConfig;
     }
 
-    public void start(final int servicePort, final int statusPort, final String bindAddress, final int workerThreads)
-            throws IOException {
+    public void start(final int servicePort, final String bindAddress, final int workerThreads) throws IOException {
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
         enableAutoGenerationOfSwaggerSpecification();
         configureWorkerThreadPool(httpServer.getListener("grizzly"), workerThreads);
-        final NetworkListener statusPortListener = new NetworkListener("status", baseUri.getHost(), statusPort);
-        configureWorkerThreadPool(statusPortListener, STATUS_WORKER_THREADS);
-        httpServer.addListener(statusPortListener);
-        logger.info("Starting REST server; servicePort:[" + servicePort + "] statusPort:[" + statusPort + "]");
+        logger.info("Starting REST server; servicePort:[" + servicePort + "]");
         httpServer.start();
     }
 
