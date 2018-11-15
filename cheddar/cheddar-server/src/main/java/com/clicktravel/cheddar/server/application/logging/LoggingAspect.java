@@ -93,11 +93,11 @@ public abstract class LoggingAspect {
     private String securityContextDetail() {
         final StringBuilder sb = new StringBuilder();
         final SecurityContext securityContext = SecurityContextHolder.get();
-        sb.append("principal:[");
-        sb.append(securityContext.userId().orElse("null"));
-        sb.append("] team:[");
-        sb.append(securityContext.teamId().orElse("null"));
-        sb.append("]");
+        sb.append(String.format("principal:[%s] team:[%]", securityContext.userId().orElse("null"),
+                securityContext.teamId().orElse("null")));
+        if (securityContext.agentUserId().isPresent()) {
+            sb.append(String.format(" agent:[%s]", securityContext.agentUserId().get()));
+        }
         return sb.toString();
     }
 }
