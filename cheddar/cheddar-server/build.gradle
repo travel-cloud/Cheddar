@@ -16,6 +16,7 @@ dependencies {
     compile 'io.swagger:swagger-jersey2-jaxrs:1.5.8'
     compile "org.slf4j:jul-to-slf4j:${slf4jVersion}"
 
-    testRuntime "org.slf4j:slf4j-log4j12:${slf4jVersion}"
-    testRuntime 'log4j:log4j:1.2.17'
+    testRuntime 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+    testRuntime 'org.apache.logging.log4j:log4j-api:2.11.1'
+    testRuntime 'org.apache.logging.log4j:log4j-core:2.11.1'
 }
