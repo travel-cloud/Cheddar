@@ -135,6 +135,26 @@ public class IntercomMetricCollectorTest {
     }
 
     @Test
+    public void shouldNotTagIntercomOrganisation_withExceptionThrownDuringTagging() throws Exception {
+        // Given
+        final String tagName = randomString();
+        final MetricOrganisation metricOrganisation = randomMetricOrganisation();
+
+        when(Tag.tag(any(Tag.class), any(Company.class))).thenThrow(Exception.class);
+
+        // When
+        MetricException thrownException = null;
+        try {
+            intercomMetricCollector.tagOrganisation(tagName, metricOrganisation);
+        } catch (final MetricException e) {
+            thrownException = e;
+        }
+
+        // Then
+        assertNotNull(thrownException);
+    }
+
+    @Test
     public void shouldCreateUser_withMetricUser() throws Exception {
         // Given
         final MetricUser metricUser = randomMetricUser();
