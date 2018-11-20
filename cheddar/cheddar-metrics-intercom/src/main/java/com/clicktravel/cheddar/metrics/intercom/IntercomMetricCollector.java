@@ -89,7 +89,8 @@ public class IntercomMetricCollector implements MetricCollector {
         try {
             Tag.tag(new Tag().setName(tagName), new Company().setCompanyID(metricOrganisation.id()));
         } catch (final Exception e) {
-            logger.warn("Error tagging Intercom organisation: {} - {} ", metricOrganisation, e.getMessage());
+            throw new MetricException(
+                    String.format("Error tagging Intercom organisation: %s - %s ", metricOrganisation, e.getMessage()));
         }
     }
 
