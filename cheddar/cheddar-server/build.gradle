@@ -9,7 +9,7 @@ dependencies {
     compile project(':commons:commons-json-provider')
     compile project(':cheddar:cheddar-context')
     
-    compile "org.glassfish.jersey.ext:jersey-spring4:${jerseyVersion}"
+    compile "org.glassfish.jersey.ext:jersey-spring3:${jerseyVersion}"
     compile "org.glassfish.jersey.containers:jersey-container-grizzly2-http:${jerseyVersion}"
     compile "org.glassfish.jersey.media:jersey-media-multipart:${jerseyVersion}"
     compile 'javax.servlet:javax.servlet-api:3.1.0'
