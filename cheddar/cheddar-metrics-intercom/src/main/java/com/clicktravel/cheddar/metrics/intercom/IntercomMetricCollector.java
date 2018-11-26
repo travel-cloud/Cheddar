@@ -138,7 +138,8 @@ public class IntercomMetricCollector implements MetricCollector {
             intercomUser.setUpdateLastRequestAt(true);
             User.update(intercomUser);
         } catch (final Exception e) {
-            throw new MetricOrganisationUpdateException(organisationId);
+            throw new MetricException(String.format("Error adding user %s to Intercom organisation: %s - %s ", userId,
+                    organisationId, e.getMessage()));
         }
     }
 
