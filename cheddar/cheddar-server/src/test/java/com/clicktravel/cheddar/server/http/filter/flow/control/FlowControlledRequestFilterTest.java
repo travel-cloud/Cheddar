@@ -29,7 +29,6 @@ import javax.ws.rs.core.UriInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
 import com.clicktravel.common.random.Randoms;
 
@@ -42,10 +41,8 @@ public class FlowControlledRequestFilterTest {
     @Before
     public void setUp() {
         mockContainerRequestContext = mock(ContainerRequestContext.class);
-        final RateLimiterConfiguration mockRateLimiterConfiguration = mock(RateLimiterConfiguration.class);
         mockRateLimiter = mock(RateLimiter.class);
-        when(mockRateLimiterConfiguration.restRequestRateLimiter()).thenReturn(mockRateLimiter);
-        flowControlledRequestFilter = new FlowControlledRequestFilter(mockRateLimiterConfiguration);
+        flowControlledRequestFilter = new FlowControlledRequestFilter(mockRateLimiter);
     }
 
     @Test

@@ -19,7 +19,6 @@ package com.clicktravel.cheddar.server.http.filter.flow.control;
 import java.io.IOException;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -30,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
 
 /**
@@ -49,9 +47,9 @@ public class FlowControlledRequestFilter implements ContainerRequestFilter {
 
     private final RateLimiter restRequestRateLimiter;
 
-    @Inject
-    public FlowControlledRequestFilter(final RateLimiterConfiguration rateLimiterConfiguration) {
-        restRequestRateLimiter = rateLimiterConfiguration.restRequestRateLimiter();
+    @Autowired
+    public FlowControlledRequestFilter(final RateLimiter restRequestRateLimiter) {
+        this.restRequestRateLimiter = restRequestRateLimiter;
     }
 
     @Override

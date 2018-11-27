@@ -19,8 +19,7 @@ package com.clicktravel.cheddar.server.rest.resource.status;
 public class MaximumWorkRates {
 
     private MaximumWorkRate restRequest;
-    private MaximumWorkRate highPriorityDomainEventHandler;
-    private MaximumWorkRate lowPriorityDomainEventHandler;
+    private MaximumWorkRate domainEventHandler;
 
     public MaximumWorkRate getRestRequest() {
         return restRequest;
@@ -30,20 +29,12 @@ public class MaximumWorkRates {
         this.restRequest = restRequest;
     }
 
-    public MaximumWorkRate getHighPriorityDomainEventHandler() {
-        return highPriorityDomainEventHandler;
+    public MaximumWorkRate getDomainEventHandler() {
+        return domainEventHandler;
     }
 
-    public void setHighPriorityDomainEventHandler(final MaximumWorkRate highPriorityDomainEventHandler) {
-        this.highPriorityDomainEventHandler = highPriorityDomainEventHandler;
-    }
-
-    public MaximumWorkRate getLowPriorityDomainEventHandler() {
-        return lowPriorityDomainEventHandler;
-    }
-
-    public void setLowPriorityDomainEventHandler(final MaximumWorkRate lowPriorityDomainEventHandler) {
-        this.lowPriorityDomainEventHandler = lowPriorityDomainEventHandler;
+    public void setDomainEventHandler(final MaximumWorkRate domainEventHandler) {
+        this.domainEventHandler = domainEventHandler;
     }
 
 }

@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
 
 @Path("/status")
@@ -39,17 +38,15 @@ public class StatusResource {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ApplicationConfiguration applicationConfiguration;
     private final RateLimiter restRequestRateLimiter;
-    private final RateLimiter highPriorityDomainEventHandlerRateLimiter;
-    private final RateLimiter lowPriorityDomainEventHandlerRateLimiter;
+    private final RateLimiter domainEventHandlerRateLimiter;
 
     @Inject
     public StatusResource(final ApplicationConfiguration applicationConfiguration,
-            final RateLimiterConfiguration rateLimiterConfiguration) throws IOException {
+            final RateLimiter restRequestRateLimiter, final RateLimiter domainEventHandlerRateLimiter)
+            throws IOException {
         this.applicationConfiguration = applicationConfiguration;
-        restRequestRateLimiter = rateLimiterConfiguration.restRequestRateLimiter();
-        highPriorityDomainEventHandlerRateLimiter = rateLimiterConfiguration
-                .highPriorityDomainEventHandlerRateLimiter();
-        lowPriorityDomainEventHandlerRateLimiter = rateLimiterConfiguration.lowPriorityDomainEventHandlerRateLimiter();
+        this.restRequestRateLimiter = restRequestRateLimiter;
+        this.domainEventHandlerRateLimiter = domainEventHandlerRateLimiter;
     }
 
     @GET
@@ -69,20 +66,13 @@ public class StatusResource {
         final MaximumWorkRate restResultMaximumWorkRate = new MaximumWorkRate();
         restResultMaximumWorkRate.setBucketCapacity(restRequestRateLimiter.getBucketCapacity());
         restResultMaximumWorkRate.setTokenReplacementDelay(restRequestRateLimiter.getTokenReplacementDelayMillis());
-        final MaximumWorkRate highPriorityDomainEventHandlerMaximumWorkRate = new MaximumWorkRate();
-        highPriorityDomainEventHandlerMaximumWorkRate
-                .setBucketCapacity(highPriorityDomainEventHandlerRateLimiter.getBucketCapacity());
-        highPriorityDomainEventHandlerMaximumWorkRate
-                .setTokenReplacementDelay(highPriorityDomainEventHandlerRateLimiter.getTokenReplacementDelayMillis());
-        final MaximumWorkRate lowPriorityDomainEventHandlerMaximumWorkRate = new MaximumWorkRate();
-        lowPriorityDomainEventHandlerMaximumWorkRate
-                .setBucketCapacity(lowPriorityDomainEventHandlerRateLimiter.getBucketCapacity());
-        lowPriorityDomainEventHandlerMaximumWorkRate
-                .setTokenReplacementDelay(lowPriorityDomainEventHandlerRateLimiter.getTokenReplacementDelayMillis());
+        final MaximumWorkRate domainEventHandlerMaximumWorkRate = new MaximumWorkRate();
+        domainEventHandlerMaximumWorkRate.setBucketCapacity(domainEventHandlerRateLimiter.getBucketCapacity());
+        domainEventHandlerMaximumWorkRate
+                .setTokenReplacementDelay(domainEventHandlerRateLimiter.getTokenReplacementDelayMillis());
         final MaximumWorkRates maximumWorkRates = new MaximumWorkRates();
         maximumWorkRates.setRestRequest(restResultMaximumWorkRate);
-        maximumWorkRates.setHighPriorityDomainEventHandler(highPriorityDomainEventHandlerMaximumWorkRate);
-        maximumWorkRates.setLowPriorityDomainEventHandler(lowPriorityDomainEventHandlerMaximumWorkRate);
+        maximumWorkRates.setDomainEventHandler(domainEventHandlerMaximumWorkRate);
         return maximumWorkRates;
     }
 
