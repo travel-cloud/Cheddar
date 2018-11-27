@@ -32,18 +32,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.clicktravel.cheddar.server.application.configuration.ApplicationConfiguration;
-import com.clicktravel.cheddar.server.flow.control.RateLimiterConfiguration;
 import com.clicktravel.common.concurrent.RateLimiter;
 
 public class StatusResourceTest {
 
     private ApplicationConfiguration mockApplicationConfiguration;
-    private RateLimiterConfiguration mockRateLimiterConfiguration;
+    private RateLimiter mockRestRequestRateLimiter;
+    private RateLimiter mockDomainEventHandlerRateLimiter;
 
     @Before
     public void setUp() {
         mockApplicationConfiguration = mock(ApplicationConfiguration.class);
-        mockRateLimiterConfiguration = mock(RateLimiterConfiguration.class);
+        mockRestRequestRateLimiter = mock(RateLimiter.class);
+        mockDomainEventHandlerRateLimiter = mock(RateLimiter.class);
     }
 
     @Test
@@ -56,23 +57,13 @@ public class StatusResourceTest {
         when(mockApplicationConfiguration.version()).thenReturn(applicationVersion);
         when(mockApplicationConfiguration.frameworkVersion()).thenReturn(frameworkVersion);
         final RateLimiter mockRestRequestRateLimiter = mock(RateLimiter.class);
-        final RateLimiter mockHighPriorityEventHandlerRateLimiter = mock(RateLimiter.class);
-        final RateLimiter mockLowPriorityEventHandlerRateLimiter = mock(RateLimiter.class);
+        final RateLimiter mockDomainEventHandlerRateLimiter = mock(RateLimiter.class);
         when(mockRestRequestRateLimiter.getBucketCapacity()).thenReturn(randomInt(1000) + 1);
         when(mockRestRequestRateLimiter.getTokenReplacementDelayMillis()).thenReturn(Math.abs(randomLong()));
-        when(mockHighPriorityEventHandlerRateLimiter.getBucketCapacity()).thenReturn(randomInt(1000) + 1);
-        when(mockHighPriorityEventHandlerRateLimiter.getTokenReplacementDelayMillis())
-                .thenReturn(Math.abs(randomLong()));
-        when(mockLowPriorityEventHandlerRateLimiter.getBucketCapacity()).thenReturn(randomInt(1000) + 1);
-        when(mockLowPriorityEventHandlerRateLimiter.getTokenReplacementDelayMillis())
-                .thenReturn(Math.abs(randomLong()));
-        when(mockRateLimiterConfiguration.restRequestRateLimiter()).thenReturn(mockRestRequestRateLimiter);
-        when(mockRateLimiterConfiguration.highPriorityDomainEventHandlerRateLimiter())
-                .thenReturn(mockHighPriorityEventHandlerRateLimiter);
-        when(mockRateLimiterConfiguration.lowPriorityDomainEventHandlerRateLimiter())
-                .thenReturn(mockLowPriorityEventHandlerRateLimiter);
+        when(mockDomainEventHandlerRateLimiter.getBucketCapacity()).thenReturn(randomInt(1000) + 1);
+        when(mockDomainEventHandlerRateLimiter.getTokenReplacementDelayMillis()).thenReturn(Math.abs(randomLong()));
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
-                mockRateLimiterConfiguration);
+                mockRestRequestRateLimiter, mockDomainEventHandlerRateLimiter);
 
         // When
         final Response status = statusResource.getStatus();
@@ -89,20 +80,16 @@ public class StatusResourceTest {
                 statusResult.getMaximumWorkRates().getRestRequest().getBucketCapacity());
         assertEquals(mockRestRequestRateLimiter.getTokenReplacementDelayMillis(),
                 statusResult.getMaximumWorkRates().getRestRequest().getTokenReplacementDelay());
-        assertEquals(mockHighPriorityEventHandlerRateLimiter.getBucketCapacity(),
-                statusResult.getMaximumWorkRates().getHighPriorityDomainEventHandler().getBucketCapacity());
-        assertEquals(mockHighPriorityEventHandlerRateLimiter.getTokenReplacementDelayMillis(),
-                statusResult.getMaximumWorkRates().getHighPriorityDomainEventHandler().getTokenReplacementDelay());
-        assertEquals(mockLowPriorityEventHandlerRateLimiter.getBucketCapacity(),
-                statusResult.getMaximumWorkRates().getLowPriorityDomainEventHandler().getBucketCapacity());
-        assertEquals(mockLowPriorityEventHandlerRateLimiter.getTokenReplacementDelayMillis(),
-                statusResult.getMaximumWorkRates().getLowPriorityDomainEventHandler().getTokenReplacementDelay());
+        assertEquals(mockDomainEventHandlerRateLimiter.getBucketCapacity(),
+                statusResult.getMaximumWorkRates().getDomainEventHandler().getBucketCapacity());
+        assertEquals(mockDomainEventHandlerRateLimiter.getTokenReplacementDelayMillis(),
+                statusResult.getMaximumWorkRates().getDomainEventHandler().getTokenReplacementDelay());
     }
 
     public void shouldReturnReady() throws Exception {
         // Given
         final StatusResource statusResource = new StatusResource(mockApplicationConfiguration,
-                mockRateLimiterConfiguration);
+                mockRestRequestRateLimiter, mockDomainEventHandlerRateLimiter);
 
         // When
         final Response response = statusResource.getHealthCheck();
