@@ -69,6 +69,10 @@ public class RetryableAspect {
             } catch (final Throwable thrownException) {
                 attempts++;
                 if (shouldRetryMethod(thrownException.getClass(), retryable, attempts)) {
+                    if (logger.isTraceEnabled()) {
+                        logger.trace(String.format("Exception thrown on attempt %d of %d", attempts,
+                                retryable.maxAttempts()), thrownException);
+                    }
                     Thread.sleep(retryable.retryDelayMillis());
                 } else {
                     return processMethodFailure(proceedingJoinPoint, retryable.exceptionHandlers(), thrownException);
