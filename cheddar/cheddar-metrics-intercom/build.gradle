@@ -4,7 +4,7 @@ apply from: '../../logging-api.gradle'
 dependencies {
     compile project(':cheddar:cheddar-metrics')
     compile project(':commons:commons-lang')
-    compile 'io.intercom:intercom-java:2.2.2'
+    compile 'io.intercom:intercom-java:2.8.0'
 
     // Workaround for Eclipse pulling in older Jackson dependencies
     runtime "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
