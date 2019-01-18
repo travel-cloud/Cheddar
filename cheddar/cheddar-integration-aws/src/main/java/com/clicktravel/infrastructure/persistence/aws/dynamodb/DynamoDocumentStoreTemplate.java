@@ -79,10 +79,10 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
      * @return
      */
     private <T> List<List<T>> split(final List<T> list, final int length) {
-        final List<List<T>> parts = new ArrayList<List<T>>();
+        final List<List<T>> parts = new ArrayList<>();
         final int size = list.size();
         for (int i = 0; i < size; i += length) {
-            parts.add(new ArrayList<T>(list.subList(i, Math.min(size, i + length))));
+            parts.add(new ArrayList<>(list.subList(i, Math.min(size, i + length))));
         }
         return parts;
     }
@@ -91,8 +91,8 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
         final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
         // max 100 keys per fetch
-        final List<List<ItemId>> split_ids = split(new ArrayList<ItemId>(query.itemIds()), 100);
-        final List<T> fetchedItems = new ArrayList<T>();
+        final List<List<ItemId>> split_ids = split(new ArrayList<>(query.itemIds()), 100);
+        final List<T> fetchedItems = new ArrayList<>();
         for (final List<ItemId> ids : split_ids) {
             final TableKeysAndAttributes keys = new TableKeysAndAttributes(tableName);
             for (final ItemId id : ids) {
@@ -238,7 +238,7 @@ public class DynamoDocumentStoreTemplate extends AbstractDynamoDbTemplate {
             throw new UnsupportedQueryException(query.getClass());
         }
         final long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
-        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]");
+        logger.trace("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]");
         return result;
     }
 
