@@ -427,7 +427,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             throw new UnsupportedQueryException(query.getClass());
         }
         final long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
-        logger.debug("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]");
+        logger.trace("Database fetch executed in " + elapsedTimeMillis + "ms. Query:[" + query + "]");
         return result;
     }
 
@@ -536,10 +536,10 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
     public <T extends Item> List<T> batchWrite(final List<T> items, final Class<T> itemClass)
             throws IllegalArgumentException, PersistenceResourceFailureException {
         final ItemConfiguration itemConfiguration = getItemConfiguration(itemClass);
-        final List<T> itemsWritten = new ArrayList<T>();
-        final Map<T, Long> itemVersions = new HashMap<T, Long>();
-        final Map<String, List<WriteRequest>> requestItems = new HashMap<String, List<WriteRequest>>();
-        final Map<PutRequest, T> itemPutRequests = new HashMap<PutRequest, T>();
+        final List<T> itemsWritten = new ArrayList<>();
+        final Map<T, Long> itemVersions = new HashMap<>();
+        final Map<String, List<WriteRequest>> requestItems = new HashMap<>();
+        final Map<PutRequest, T> itemPutRequests = new HashMap<>();
 
         if (!itemConfiguration.uniqueConstraints().isEmpty()) {
             throw new IllegalArgumentException("Cannot perform batch write for item of type" + itemClass);
@@ -611,7 +611,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             final String tableName = databaseSchemaHolder.schemaName() + "." + itemConfiguration.tableName();
             List<WriteRequest> writeRequestsForTable = requestItems.get(tableName);
             if (writeRequestsForTable == null) {
-                writeRequestsForTable = new ArrayList<WriteRequest>();
+                writeRequestsForTable = new ArrayList<>();
                 requestItems.put(tableName, writeRequestsForTable);
             }
 
@@ -649,7 +649,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
 
     private <T extends Item> com.amazonaws.services.dynamodbv2.model.Condition createDynamoDbCondition(
             final Condition condition, final String propertyName, final ItemConfiguration itemConfiguration)
-                    throws Exception {
+            throws Exception {
         final com.amazonaws.services.dynamodbv2.model.Condition dynamoDbCondition = new com.amazonaws.services.dynamodbv2.model.Condition();
 
         if (condition.getComparisonOperator() == Operators.NULL) {
