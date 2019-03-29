@@ -29,7 +29,7 @@ public class DomainServiceRegistry {
     private static Logger logger = LoggerFactory.getLogger(DomainServiceRegistry.class);
     private static final Map<Class<? extends DomainService>, DomainService> DOMAIN_SERVICES = new HashMap<>();
 
-    public static void init(final Collection<? extends DomainService> domainServices) {
+    public static synchronized void init(final Collection<? extends DomainService> domainServices) {
         final StringBuilder sb = new StringBuilder();
         DOMAIN_SERVICES.clear();
         for (final DomainService domainService : domainServices) {
@@ -51,7 +51,7 @@ public class DomainServiceRegistry {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T extends DomainService> T getService(final Class<T> domainServiceClass) {
+    public static synchronized <T extends DomainService> T getService(final Class<T> domainServiceClass) {
         if (domainServiceClass.equals(DomainService.class)) {
             throw new IllegalArgumentException("No matching DomainService found for: " + domainServiceClass);
         }
