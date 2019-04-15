@@ -62,7 +62,9 @@ public abstract class LoggingAspect {
         try {
             logger.debug("Enter;[{}] {}", methodCallDetail, securityContextDetail);
             final Object result = point.proceed();
-            logger.debug("Return;[{}] ms:[{}]", result, System.currentTimeMillis() - startTime);
+            logger.debug("Exit; [{}] returned [{}] ms:[{}]",
+                    ((MethodSignature) (point.getSignature())).getMethod().getName(), result,
+                    System.currentTimeMillis() - startTime);
             return result;
         } catch (final Throwable e) {
             logger.debug("Exception;[{}] ms:[{}]", e, System.currentTimeMillis() - startTime);
