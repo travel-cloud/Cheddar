@@ -34,8 +34,8 @@ if (file('site.gradle').exists()) {
 
 // Configuration for all subprojects, but not this root project
 configure(subproj) {
-    apply plugin: 'java'
-    apply plugin: 'maven'
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
     apply plugin: 'checkstyle'
@@ -58,11 +58,19 @@ configure(subproj) {
 
     task sourcesJar(type: Jar, dependsOn: classes) {
         description 'Creates a jar file of all project sources'
-        classifier = 'sources'
+        archiveClassifier = 'sources'
         from sourceSets.main.allSource
     }
 
-    artifacts { archives sourcesJar }
+    publishing {
+        // Configure artifacts to publish
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java // main artifact
+                artifact sourcesJar // sources artifact
+            }
+        }
+    }
 }
 
 task checkstyleAggregate {
@@ -104,20 +112,19 @@ task checkAllWithIntegrationIfNeeded {
 }
 integrationTestTask.mustRunAfter checkAll
 
-task uploadAll(dependsOn: subproj.uploadArchives) {
-    description 'Upload source and binaries for all subprojects'
+task publishAll(dependsOn: subproj.publish) {
+    description 'Publish source and binaries for all subprojects'
     doLast {
-        println "Uploaded Cheddar version ${version}"
+        println "Published Cheddar version ${version}"
     }
 }
 
-task checkAndUploadAll {
-    description 'Upload source and binaries, but only if checks pass for all subprojects'
-    dependsOn { [checkAllWithIntegrationIfNeeded, uploadAll] }
+task checkAndPublishAll {
+    description 'Publish source and binaries, but only if checks pass for all subprojects'
+    dependsOn { [checkAllWithIntegrationIfNeeded, publishAll] }
 }
-uploadAll.mustRunAfter checkAllWithIntegrationIfNeeded
+publishAll.mustRunAfter checkAllWithIntegrationIfNeeded
 
-task wrapper(type: Wrapper) {
-    description "Produce Gradle Wrapper scripts for running Gradle on machines that don't have Gradle installed"
-    gradleVersion = '3.3'
+wrapper {
+    gradleVersion = '5.4.1'
 }
