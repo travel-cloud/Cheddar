@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.clicktravel.common.functional.Equals;
 import com.clicktravel.common.random.Randoms;
 
 public class EqualsTest {

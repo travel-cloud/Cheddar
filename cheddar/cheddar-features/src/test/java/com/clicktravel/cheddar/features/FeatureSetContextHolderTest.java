@@ -22,9 +22,6 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.clicktravel.cheddar.features.FeaturesContext;
-import com.clicktravel.cheddar.features.FeaturesContextHolder;
-
 public class FeatureSetContextHolderTest {
 
     @Test

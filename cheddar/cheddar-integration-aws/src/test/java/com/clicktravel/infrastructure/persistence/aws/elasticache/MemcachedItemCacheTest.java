@@ -27,13 +27,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.internal.GetFuture;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import com.clicktravel.common.random.Randoms;
+
+import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.internal.GetFuture;
 
 public class MemcachedItemCacheTest {
 

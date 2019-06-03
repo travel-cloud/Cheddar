@@ -16,9 +16,6 @@
  */
 package com.clicktravel.cheddar.event;
 
-import com.clicktravel.cheddar.event.Event;
-import com.clicktravel.cheddar.event.EventHandler;
-
 public class TestConcreteEventHandler implements EventHandler<Event> {
 
     @Override
