@@ -26,8 +26,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
@@ -89,8 +89,8 @@ public class IntercomMetricCollectorTest {
         intercomMetricCollector.createOrganisation(metricOrganisation);
 
         // Then
-        verifyStatic();
         final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+        verifyStatic(Company.class);
         Company.create(companyCaptor.capture());
         final Company company = companyCaptor.getValue();
         assertThat(company.getCompanyID(), is(metricOrganisation.id()));
@@ -115,7 +115,7 @@ public class IntercomMetricCollectorTest {
 
         // Then
         verify(mockCompany).setName(metricOrganisation.name());
-        verifyStatic();
+        verifyStatic(Company.class);
         Company.update(mockCompany);
     }
 
@@ -129,9 +129,9 @@ public class IntercomMetricCollectorTest {
         intercomMetricCollector.tagOrganisation(tagName, metricOrganisation);
 
         // Then
-        verifyStatic();
         final ArgumentCaptor<Tag> tagCaptor = ArgumentCaptor.forClass(Tag.class);
         final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+        verifyStatic(Tag.class);
         Tag.tag(tagCaptor.capture(), companyCaptor.capture());
         assertThat(tagCaptor.getValue().getName(), is(tagName));
         assertThat(companyCaptor.getValue().getCompanyID(), is(metricOrganisation.id()));
@@ -143,7 +143,7 @@ public class IntercomMetricCollectorTest {
         final String tagName = randomString();
         final MetricOrganisation metricOrganisation = randomMetricOrganisation();
 
-        when(Tag.tag(any(Tag.class), any(Company.class))).thenThrow(Exception.class);
+        when(Tag.tag(any(Tag.class), any(Company.class))).thenThrow(IntercomException.class);
 
         // When
         MetricException thrownException = null;
@@ -168,8 +168,8 @@ public class IntercomMetricCollectorTest {
         intercomMetricCollector.createUser(metricUser);
 
         // Then
-        verifyStatic();
         final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verifyStatic(User.class);
         User.create(userCaptor.capture());
         final User intercomUser = userCaptor.getValue();
         assertThat(intercomUser.getId(), is(metricUser.id()));
@@ -192,8 +192,8 @@ public class IntercomMetricCollectorTest {
         intercomMetricCollector.updateUser(metricUser);
 
         // Then
-        verifyStatic();
         final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verifyStatic(User.class);
         User.update(userCaptor.capture());
         final User intercomUser = userCaptor.getValue();
         assertThat(intercomUser.getId(), is(metricUser.id()));
@@ -222,8 +222,8 @@ public class IntercomMetricCollectorTest {
         intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
 
         // Then
-        verifyStatic();
         final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verifyStatic(User.class);
         User.update(userCaptor.capture());
         assertThat(userCaptor.getValue().getCustomAttributes(), is(mockCustomAttributes));
     }
@@ -234,14 +234,14 @@ public class IntercomMetricCollectorTest {
         final String userId = randomId();
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", userId);
-        when(User.find(params)).thenThrow(Exception.class);
+        when(User.find(params)).thenThrow(IntercomException.class);
         final Map<String, Object> customAttributes = mock(Map.class);
 
         // When
         intercomMetricCollector.addCustomAttributesToUser(userId, customAttributes);
 
         // Then
-        verifyStatic(never());
+        verifyStatic(User.class, never());
         User.update(any(User.class));
     }
 
@@ -262,7 +262,7 @@ public class IntercomMetricCollectorTest {
         final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
         verify(mockUser).addCompany(companyCaptor.capture());
         assertThat(companyCaptor.getValue().getCompanyID(), is(organisationId));
-        verifyStatic();
+        verifyStatic(User.class);
         User.update(mockUser);
     }
 
@@ -273,7 +273,7 @@ public class IntercomMetricCollectorTest {
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", userId);
         final String organisationId = randomId();
-        when(User.find(params)).thenThrow(Exception.class);
+        when(User.find(params)).thenThrow(IntercomException.class);
 
         // When
         MetricException actualException = null;
@@ -285,7 +285,7 @@ public class IntercomMetricCollectorTest {
 
         // Then
         assertNotNull(actualException);
-        verifyStatic(never());
+        verifyStatic(User.class, never());
         User.update(any(User.class));
     }
 
@@ -308,7 +308,7 @@ public class IntercomMetricCollectorTest {
         final ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
         verify(mockUser).removeCompany(companyCaptor.capture());
         assertThat(companyCaptor.getValue().getCompanyID(), is(organisationId));
-        verifyStatic();
+        verifyStatic(User.class);
         User.update(mockUser);
     }
 
@@ -319,13 +319,13 @@ public class IntercomMetricCollectorTest {
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", userId);
         final String organisationId = randomId();
-        when(User.find(params)).thenThrow(Exception.class);
+        when(User.find(params)).thenThrow(IntercomException.class);
 
         // When
         intercomMetricCollector.removeOrganisationFromUser(userId, organisationId);
 
         // Then
-        verifyStatic(never());
+        verifyStatic(User.class, never());
         User.update(any(User.class));
     }
 
@@ -378,7 +378,7 @@ public class IntercomMetricCollectorTest {
         final Map<String, String> params = new HashMap<>();
         params.put("user_id", userId);
 
-        when(User.find(params)).thenThrow(Exception.class);
+        when(User.find(params)).thenThrow(IntercomException.class);
 
         // When
         MetricUserNotFoundException thrownException = null;
@@ -428,7 +428,7 @@ public class IntercomMetricCollectorTest {
 
         // Then
         final ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verifyStatic();
+        verifyStatic(Contact.class);
         Contact.convert(eq(mockContact), userCaptor.capture());
         final User intercomUser = userCaptor.getValue();
         assertThat(intercomUser.getId(), is(metricUser.id()));
@@ -444,7 +444,7 @@ public class IntercomMetricCollectorTest {
         final String contactId = randomId();
         final MetricUser metricUser = randomMetricUser();
 
-        when(Contact.findByUserID(contactId)).thenThrow(Exception.class);
+        when(Contact.findByUserID(contactId)).thenThrow(IntercomException.class);
 
         // When
         MetricException actualException = null;
@@ -456,7 +456,7 @@ public class IntercomMetricCollectorTest {
 
         // Then
         assertNotNull(actualException);
-        verifyStatic(never());
+        verifyStatic(Contact.class, never());
         Contact.convert(any(Contact.class), any(User.class));
 
     }

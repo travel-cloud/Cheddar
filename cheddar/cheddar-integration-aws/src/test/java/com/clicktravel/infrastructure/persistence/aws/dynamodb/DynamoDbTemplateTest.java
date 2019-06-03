@@ -22,7 +22,7 @@ import static com.clicktravel.common.random.Randoms.randomLong;
 import static com.clicktravel.common.random.Randoms.randomString;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.*;

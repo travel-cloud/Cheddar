@@ -55,7 +55,7 @@ public class ContainerSecurityRequestFilterTest {
     @Before
     public void setUp() {
         mockContainerRequestContext = mock(ContainerRequestContext.class);
-        headers = new MultivaluedHashMap<String, String>();
+        headers = new MultivaluedHashMap<>();
         when(mockContainerRequestContext.getHeaders()).thenReturn(headers);
     }
 
@@ -79,7 +79,7 @@ public class ContainerSecurityRequestFilterTest {
         // Then
         final ArgumentCaptor<DefaultSecurityContext> securityContextCaptor = ArgumentCaptor
                 .forClass(DefaultSecurityContext.class);
-        verifyStatic();
+        verifyStatic(SecurityContextHolder.class);
         SecurityContextHolder.set(securityContextCaptor.capture());
         assertEquals(Optional.of(userId), securityContextCaptor.getValue().userId());
         assertEquals(Optional.of(teamId), securityContextCaptor.getValue().teamId());
@@ -101,7 +101,7 @@ public class ContainerSecurityRequestFilterTest {
         // Then
         final ArgumentCaptor<DefaultSecurityContext> securityContextCaptor = ArgumentCaptor
                 .forClass(DefaultSecurityContext.class);
-        verifyStatic();
+        verifyStatic(SecurityContextHolder.class);
         SecurityContextHolder.set(securityContextCaptor.capture());
         assertEquals(Optional.empty(), securityContextCaptor.getValue().userId());
         assertEquals(Optional.empty(), securityContextCaptor.getValue().teamId());
@@ -121,7 +121,7 @@ public class ContainerSecurityRequestFilterTest {
         // Then
         final ArgumentCaptor<DefaultSecurityContext> securityContextCaptor = ArgumentCaptor
                 .forClass(DefaultSecurityContext.class);
-        verifyStatic();
+        verifyStatic(SecurityContextHolder.class);
         SecurityContextHolder.set(securityContextCaptor.capture());
         assertEquals(Optional.empty(), securityContextCaptor.getValue().userId());
         assertEquals(Optional.empty(), securityContextCaptor.getValue().teamId());

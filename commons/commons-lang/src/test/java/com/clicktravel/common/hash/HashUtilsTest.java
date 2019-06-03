@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.clicktravel.common.hash.HashUtils;
-
 public class HashUtilsTest {
 
     private static final String NULL_ARG_SECRET_SHA = "bfc9bde19df9f91546b5b7bc97d5ede901c1976c6924c4a4268b105ebc54b4af09d2dc7b4505aaf7101ca7b3a5106d5d8a3586d6cdaf642700cd9b1d1dad5537";

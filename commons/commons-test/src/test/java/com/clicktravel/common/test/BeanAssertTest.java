@@ -19,7 +19,6 @@ package com.clicktravel.common.test;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.clicktravel.common.test.BeanAssert;
 import com.clicktravel.common.test.bean.*;
 
 public class BeanAssertTest {

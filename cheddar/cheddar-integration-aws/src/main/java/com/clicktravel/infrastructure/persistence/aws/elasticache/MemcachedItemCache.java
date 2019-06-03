@@ -21,12 +21,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.spy.memcached.MemcachedClient;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.clicktravel.cheddar.infrastructure.persistence.cache.ItemCache;
+
+import net.spy.memcached.MemcachedClient;
 
 public class MemcachedItemCache implements ItemCache {
 

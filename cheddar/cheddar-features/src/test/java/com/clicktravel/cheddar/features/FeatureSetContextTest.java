@@ -23,8 +23,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import com.clicktravel.cheddar.features.FeaturesContext;
-
 public class FeatureSetContextTest {
 
     @Test

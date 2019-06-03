@@ -46,7 +46,7 @@ public class ContainerSecurityResponseFilterTest {
         containerSecurityResponseFilter.filter(mockContainerRequestContext, mockContainerResponseContext);
 
         // Then
-        verifyStatic();
+        verifyStatic(SecurityContextHolder.class);
         SecurityContextHolder.clear();
     }
 }

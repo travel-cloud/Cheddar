@@ -23,6 +23,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.clicktravel.cheddar.infrastructure.messaging.MessageListener;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessageListener;
 
 /**

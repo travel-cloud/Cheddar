@@ -4,6 +4,6 @@ dependencies {
 
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.hamcrest:hamcrest-library:${hamcrestVersion}"
-    testCompile "org.powermock:powermock-api-mockito:${powermockVersion}"
+    testCompile "org.powermock:powermock-api-mockito2:${powermockVersion}"
     testCompile "org.powermock:powermock-module-junit4:${powermockVersion}"
 }

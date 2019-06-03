@@ -38,7 +38,7 @@ public class AuthenticatedAspectTest {
         aspect.checkAuthenticated();
 
         // Then
-        verifyStatic();
+        verifyStatic(SecurityChecker.class);
         SecurityChecker.checkAnyUser();
     }
 }
