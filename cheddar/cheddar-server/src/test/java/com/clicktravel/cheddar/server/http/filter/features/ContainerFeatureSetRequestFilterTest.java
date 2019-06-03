@@ -59,7 +59,7 @@ public class ContainerFeatureSetRequestFilterTest {
 
         // Then
         final ArgumentCaptor<FeaturesContext> featuresContextCaptor = ArgumentCaptor.forClass(FeaturesContext.class);
-        verifyStatic();
+        verifyStatic(FeaturesContextHolder.class);
         FeaturesContextHolder.set(featuresContextCaptor.capture());
         assertThat(featuresContextCaptor.getValue().featureSetId(), is(featureSetId));
     }
@@ -77,7 +77,7 @@ public class ContainerFeatureSetRequestFilterTest {
         containerFeatureSetRequestFilter.filter(mockContainerRequestContext);
 
         // Then
-        verifyStatic();
+        verifyStatic(FeaturesContextHolder.class);
         FeaturesContextHolder.clear();
     }
 }

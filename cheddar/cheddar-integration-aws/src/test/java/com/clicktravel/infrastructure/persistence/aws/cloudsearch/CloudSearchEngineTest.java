@@ -22,10 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyCollection;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.*;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
@@ -38,7 +39,6 @@ import java.util.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -161,7 +161,7 @@ public class CloudSearchEngineTest {
         final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
         final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
                 .forClass(UploadDocumentsRequest.class);
-        PowerMockito.verifyStatic();
+        verifyStatic(JsonDocumentUpdateMarshaller.class);
         JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
         verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
         final DocumentUpdate documentUpdate = (DocumentUpdate) documentUpdateCollectionCaptor.getValue().iterator()
@@ -222,7 +222,7 @@ public class CloudSearchEngineTest {
         final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
         final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
                 .forClass(UploadDocumentsRequest.class);
-        PowerMockito.verifyStatic();
+        verifyStatic(JsonDocumentUpdateMarshaller.class);
         JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
         verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
         final DocumentUpdate documentUpdate = (DocumentUpdate) documentUpdateCollectionCaptor.getValue().iterator()
@@ -279,7 +279,7 @@ public class CloudSearchEngineTest {
         final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
                 .forClass(UploadDocumentsRequest.class);
         final int numberOfBatches = (numberOfDocumentsToUpdate / 1000) + 1;
-        PowerMockito.verifyStatic(times(numberOfBatches));
+        verifyStatic(JsonDocumentUpdateMarshaller.class, times(numberOfBatches));
         JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
         verify(mockDocumentServiceClient, times(numberOfBatches))
                 .uploadDocuments(uploadDocumentsRequestCaptor.capture());
@@ -392,7 +392,7 @@ public class CloudSearchEngineTest {
         final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
         final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
                 .forClass(UploadDocumentsRequest.class);
-        PowerMockito.verifyStatic();
+        verifyStatic(JsonDocumentUpdateMarshaller.class);
         JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
         verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
         final DocumentUpdate documentUpdate = (DocumentUpdate) documentUpdateCollectionCaptor.getValue().iterator()
@@ -486,7 +486,7 @@ public class CloudSearchEngineTest {
         final ArgumentCaptor<Collection> documentUpdateCollectionCaptor = ArgumentCaptor.forClass(Collection.class);
         final ArgumentCaptor<UploadDocumentsRequest> uploadDocumentsRequestCaptor = ArgumentCaptor
                 .forClass(UploadDocumentsRequest.class);
-        PowerMockito.verifyStatic();
+        verifyStatic(JsonDocumentUpdateMarshaller.class);
         JsonDocumentUpdateMarshaller.marshall(documentUpdateCollectionCaptor.capture());
         verify(mockDocumentServiceClient).uploadDocuments(uploadDocumentsRequestCaptor.capture());
         final Collection<DocumentUpdate> documentUpdates = documentUpdateCollectionCaptor.getValue();
@@ -587,7 +587,7 @@ public class CloudSearchEngineTest {
         final CloudSearchEngine cloudSearchEngine = new CloudSearchEngine(documentConfigurationHolder,
                 mockAmazonCloudSearch);
 
-        final Map<String, String> expressions = new HashMap<String, String>();
+        final Map<String, String> expressions = new HashMap<>();
         expressions.put("key", "expression");
 
         final SearchOptions options = new SearchOptions().withExpressions(expressions);

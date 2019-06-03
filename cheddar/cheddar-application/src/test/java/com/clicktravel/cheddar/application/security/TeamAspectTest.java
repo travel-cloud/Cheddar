@@ -39,7 +39,7 @@ public class TeamAspectTest {
         aspect.checkTeamInSecurityContext(mockTeam);
 
         // Then
-        verifyStatic();
+        verifyStatic(SecurityChecker.class);
         SecurityChecker.checkAnyTeam();
     }
 
@@ -55,7 +55,6 @@ public class TeamAspectTest {
         aspect.checkTeamInSecurityContext(mockTeam);
 
         // Then
-        verifyStatic();
         verifyZeroInteractions(SecurityChecker.class);
     }
 }

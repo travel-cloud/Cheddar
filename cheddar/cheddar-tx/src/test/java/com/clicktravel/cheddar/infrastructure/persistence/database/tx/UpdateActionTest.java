@@ -20,7 +20,7 @@ import static com.clicktravel.common.random.Randoms.randomLong;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -51,7 +51,7 @@ public class UpdateActionTest {
                 .asList(mockItemConstraintViolationExceptionHandler, mockPersistenceResourceFailureExceptionHandler);
 
         // When
-        final UpdateAction<StubItem> updateAction = new UpdateAction<StubItem>(item, persistenceExceptionHandlers);
+        final UpdateAction<StubItem> updateAction = new UpdateAction<>(item, persistenceExceptionHandlers);
 
         // Then
         assertNotNull(updateAction);
@@ -64,7 +64,7 @@ public class UpdateActionTest {
         final StubItem item = new StubItem();
         final Long itemVersion = randomLong();
         final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlers = Collections.EMPTY_LIST;
-        final UpdateAction<StubItem> updateAction = new UpdateAction<StubItem>(item, persistenceExceptionHandlers);
+        final UpdateAction<StubItem> updateAction = new UpdateAction<>(item, persistenceExceptionHandlers);
         final DatabaseTemplate mockDatabaseTemplate = mock(DatabaseTemplate.class);
 
         item.setVersion(itemVersion);
@@ -84,7 +84,7 @@ public class UpdateActionTest {
         final StubItem item = new StubItem();
         final Long itemVersion = randomLong();
         final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlers = Collections.EMPTY_LIST;
-        final UpdateAction<StubItem> updateAction = new UpdateAction<StubItem>(item, persistenceExceptionHandlers);
+        final UpdateAction<StubItem> updateAction = new UpdateAction<>(item, persistenceExceptionHandlers);
         final DatabaseTemplate mockDatabaseTemplate = mock(DatabaseTemplate.class);
         final OptimisticLockException thrownException = new OptimisticLockException("test");
 
@@ -115,7 +115,7 @@ public class UpdateActionTest {
                 ItemConstraintViolationException.class, UpdateActionRuntimeException.class);
         final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlers = Arrays
                 .asList(mockItemConstraintViolationExceptionHandler);
-        final UpdateAction<StubItem> updateAction = new UpdateAction<StubItem>(item, persistenceExceptionHandlers);
+        final UpdateAction<StubItem> updateAction = new UpdateAction<>(item, persistenceExceptionHandlers);
         final DatabaseTemplate mockDatabaseTemplate = mock(DatabaseTemplate.class);
 
         item.setVersion(itemVersion);
@@ -145,7 +145,7 @@ public class UpdateActionTest {
                 ItemConstraintViolationException.class);
         final List<PersistenceExceptionHandler<?>> persistenceExceptionHandlers = Arrays
                 .asList(mockItemConstraintViolationExceptionHandler);
-        final UpdateAction<StubItem> updateAction = new UpdateAction<StubItem>(item, persistenceExceptionHandlers);
+        final UpdateAction<StubItem> updateAction = new UpdateAction<>(item, persistenceExceptionHandlers);
         final DatabaseTemplate mockDatabaseTemplate = mock(DatabaseTemplate.class);
         final OptimisticLockException thrownException = new OptimisticLockException("test");
 
@@ -175,10 +175,10 @@ public class UpdateActionTest {
 
     private PersistenceExceptionHandler<? extends PersistenceException> createMockPersistenceExceptionHandler(
             final Class<? extends PersistenceException> persistenceExceptionClass,
-            final Class<? extends RuntimeException> exceptionClassToThrow) {
+            final Class<? extends PersistenceException> exceptionClassToThrow) {
         final PersistenceExceptionHandler<? extends PersistenceException> mockPersistenceExceptionHandler = mock(
                 PersistenceExceptionHandler.class);
-        if (persistenceExceptionClass != null) {
+        if (exceptionClassToThrow != null) {
             doThrow(exceptionClassToThrow).when(mockPersistenceExceptionHandler).handle(any());
         }
         when(mockPersistenceExceptionHandler.getExceptionClass())
@@ -186,7 +186,11 @@ public class UpdateActionTest {
         return mockPersistenceExceptionHandler;
     }
 
-    private class UpdateActionRuntimeException extends RuntimeException {
+    private class UpdateActionRuntimeException extends PersistenceException {
+        public UpdateActionRuntimeException(final String message) {
+            super(message);
+        }
+
         private static final long serialVersionUID = 1L;
     }
 

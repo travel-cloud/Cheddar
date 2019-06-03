@@ -46,7 +46,7 @@ public class ContainerFeatureSetResponseFilterTest {
         containerFeatureSetResponseFilter.filter(mockContainerRequestContext, mockContainerResponseContext);
 
         // Then
-        verifyStatic();
+        verifyStatic(FeaturesContextHolder.class);
         FeaturesContextHolder.clear();
     }
 }

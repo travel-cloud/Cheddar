@@ -16,7 +16,7 @@
  */
 package com.clicktravel.cheddar.infrastructure.messaging.pooled.listener;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import com.clicktravel.cheddar.infrastructure.messaging.MessageHandler;
 import com.clicktravel.cheddar.infrastructure.messaging.TypedMessage;
+import com.clicktravel.cheddar.infrastructure.messaging.exception.MessageHandlingException;
 
 @SuppressWarnings("unchecked")
 public class MessageHandlerWorkerTest {
@@ -44,7 +45,7 @@ public class MessageHandlerWorkerTest {
     @Test
     public void shouldRun_withMessageAndMessageHandler() throws Exception {
         // Given
-        final MessageHandlerWorker<TypedMessage> messageHandlingWorker = new MessageHandlerWorker<TypedMessage>(
+        final MessageHandlerWorker<TypedMessage> messageHandlingWorker = new MessageHandlerWorker<>(
                 pooledMessageListener, typedMessage, messageHandler);
 
         // When
@@ -58,8 +59,8 @@ public class MessageHandlerWorkerTest {
     @Test
     public void shouldRun_withMessageAndMessageHandlerAndException() throws Exception {
         // Given
-        doThrow(Exception.class).when(messageHandler).handle(any(TypedMessage.class));
-        final MessageHandlerWorker<TypedMessage> messageHandlingWorker = new MessageHandlerWorker<TypedMessage>(
+        doThrow(MessageHandlingException.class).when(messageHandler).handle(any(TypedMessage.class));
+        final MessageHandlerWorker<TypedMessage> messageHandlingWorker = new MessageHandlerWorker<>(
                 pooledMessageListener, typedMessage, messageHandler);
 
         // When
