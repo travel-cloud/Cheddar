@@ -31,7 +31,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -40,7 +39,6 @@ import com.clicktravel.cheddar.features.FeaturesContextHolder;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ FeaturesContextHolder.class })
-@PowerMockIgnore("javax.xml.*")
 public class ContainerFeatureSetRequestFilterTest {
 
     private static final String FEATURE_SET_ID_HEADER = "Feature-Set-Id";
