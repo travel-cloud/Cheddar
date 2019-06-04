@@ -9,5 +9,6 @@ dependencies {
 
     compile "org.springframework:spring-context:${springVersion}"
     compile 'com.thoughtworks.xstream:xstream:1.4.8'
+    compile 'javax.annotation:javax.annotation-api:1.3.2'
 }
 

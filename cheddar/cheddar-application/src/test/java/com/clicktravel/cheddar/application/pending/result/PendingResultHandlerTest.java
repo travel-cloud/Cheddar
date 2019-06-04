@@ -30,6 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -38,6 +39,7 @@ import com.thoughtworks.xstream.XStream;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(SystemEventPublisher.class)
+@PowerMockIgnore("javax.xml.*")
 public class PendingResultHandlerTest {
 
     private PendingResultHandler pendingResultHandler;
