@@ -28,6 +28,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -37,6 +38,7 @@ import com.amazonaws.services.sns.model.Topic;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(DefaultSnsTopicResourceFactory.class)
+@PowerMockIgnore("javax.xml.*")
 public class DefaultSnsTopicResourceFactoryTest {
 
     private DefaultSnsTopicResourceFactory factory;

@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -42,6 +43,7 @@ import com.clicktravel.cheddar.request.context.SecurityContextHolder;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SecurityContextHolder.class })
+@PowerMockIgnore("javax.xml.*")
 public class ContainerSecurityRequestFilterTest {
 
     private static final String CLICK_PLATFORM_SCHEME = "clickplatform";
