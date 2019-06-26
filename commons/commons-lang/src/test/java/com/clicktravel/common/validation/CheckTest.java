@@ -220,7 +220,7 @@ public class CheckTest {
     @Test
     public void shouldValidateEmailAddress_withValidEmailAddresses() {
         // Given
-        final List<String> validEmails = new ArrayList<String>();
+        final List<String> validEmails = new ArrayList<>();
         validEmails.add("prettyandsimple@example.com");
         validEmails.add("very.common@example.com");
         validEmails.add("disposable.style.email.with+symbol@example.com");
@@ -251,7 +251,7 @@ public class CheckTest {
     @Test
     public void shouldNotValidateEmailAddress_withInvalidEmailAddresses() {
         // Given
-        final List<String> invalidEmails = new ArrayList<String>();
+        final List<String> invalidEmails = new ArrayList<>();
         invalidEmails.add("Abc.example.com");
         invalidEmails.add("A@b@c@example.com");
         invalidEmails.add("a\"b(c)d,e:f;g<h>i[j\\k]l@example.com");
@@ -523,6 +523,23 @@ public class CheckTest {
     }
 
     @Test
+    public void shouldCheckPhoneNumber_withPhoneNumberWithoutLeadingPlusSign() throws Exception {
+        // Given
+        final String phoneNumber = "020 02020202";
+
+        // When
+        ValidationException actualException = null;
+        try {
+            Check.isValidPhoneNumber("phoneNumber", phoneNumber);
+        } catch (final ValidationException e) {
+            actualException = e;
+        }
+
+        // Then
+        assertNull(actualException);
+    }
+
+    @Test
     public void shouldCheckPhoneNumber_withNullPhoneNumber() throws Exception {
         // Given
         final String phoneNumber = null;
@@ -583,20 +600,4 @@ public class CheckTest {
         assertEquals("phoneNumber", actualException.getFields()[0]);
     }
 
-    @Test
-    public void shouldCheckPhoneNumber_withPhoneNumberWithoutLeadingPlusSign() throws Exception {
-        // Given
-        final String phoneNumber = "020 02020202";
-
-        // When
-        ValidationException actualException = null;
-        try {
-            Check.isValidPhoneNumber("phoneNumber", phoneNumber);
-        } catch (final ValidationException e) {
-            actualException = e;
-        }
-
-        // Then
-        assertNotNull(actualException);
-    }
 }
