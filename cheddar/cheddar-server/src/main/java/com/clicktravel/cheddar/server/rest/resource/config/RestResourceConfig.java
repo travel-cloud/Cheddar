@@ -61,6 +61,7 @@ public class RestResourceConfig extends ResourceConfig {
                 "com.clicktravel.cheddar.server.rest.resource.status", "com.clicktravel.services",
                 "com.clicktravel.cheddar.rest.body.writer");
         property(ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED, true);
+        property(ServerProperties.WADL_FEATURE_DISABLE, true);
     }
 
     private void registerResources(final String... packages) {
