@@ -23,8 +23,6 @@ import java.util.Properties;
 public class AwsIntegration {
 
     private static final AwsIntegration INSTANCE = new AwsIntegration();
-    private final String accessKeyId;
-    private final String secretKeyId;
     private final String dynamoDbEndpoint;
     private final String cloudSearchEndpoint;
 
@@ -37,18 +35,8 @@ public class AwsIntegration {
         } catch (final IOException e) {
             throw new IllegalStateException("Missing properties file");
         }
-        accessKeyId = props.getProperty("aws.access.key.id");
-        secretKeyId = props.getProperty("aws.secret.key.id");
         dynamoDbEndpoint = props.getProperty("aws.dynamodb.endpoint");
         cloudSearchEndpoint = props.getProperty("aws.cloudsearch.endpoint");
-    }
-
-    public static String getAccessKeyId() {
-        return INSTANCE.accessKeyId;
-    }
-
-    public static String getSecretKeyId() {
-        return INSTANCE.secretKeyId;
     }
 
     public static String getDynamoDbEndpoint() {
