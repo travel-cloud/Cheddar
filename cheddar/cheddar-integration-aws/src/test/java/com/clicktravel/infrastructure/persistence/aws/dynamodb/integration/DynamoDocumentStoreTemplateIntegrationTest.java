@@ -26,7 +26,6 @@ import java.util.*;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
 
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.clicktravel.cheddar.infrastructure.persistence.database.ItemId;
 import com.clicktravel.cheddar.infrastructure.persistence.database.configuration.*;
@@ -47,8 +46,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
 
     @BeforeClass
     public static void createTables() throws Exception {
-        amazonDynamoDbClient = new AmazonDynamoDBClient(
-                new BasicAWSCredentials(AwsIntegration.getAccessKeyId(), AwsIntegration.getSecretKeyId()));
+        amazonDynamoDbClient = new AmazonDynamoDBClient();
         amazonDynamoDbClient.setEndpoint(AwsIntegration.getDynamoDbEndpoint());
         dataGenerator = new DynamoDbDataGenerator(amazonDynamoDbClient);
 
@@ -157,7 +155,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         stubItem = dynamoDbTemplate.create(stubItem);
         stubItem.setStringProperty(Randoms.randomString());
         stubItem.setStringProperty2(Randoms.randomString());
-        final Set<String> propSet = new HashSet<String>();
+        final Set<String> propSet = new HashSet<>();
         for (int i = 0; i < Randoms.randomInt(10); i++) {
             propSet.add(Randoms.randomString());
         }
@@ -241,7 +239,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubItem> expectedMatchingItems = new ArrayList<StubItem>();
+        final List<StubItem> expectedMatchingItems = new ArrayList<>();
         final String fetchCriteriaValue = Randoms.randomString(10);
         final Query query = new AttributeQuery("stringProperty", new Condition(Operators.EQUALS, fetchCriteriaValue));
         for (int i = 0; i < 20; i++) {
@@ -268,7 +266,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubItem> expectedMatchingItems = new ArrayList<StubItem>();
+        final List<StubItem> expectedMatchingItems = new ArrayList<>();
         final Long criteriaValue = Long.valueOf(2);
         final Query query = new AttributeQuery("version",
                 new Condition(Operators.GREATER_THAN_OR_EQUALS, criteriaValue.toString()));
@@ -303,7 +301,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubItem> expectedMatchingItems = new ArrayList<StubItem>();
+        final List<StubItem> expectedMatchingItems = new ArrayList<>();
         final Long criteriaLowValue = Long.valueOf(2);
         final Query query = new AttributeQuery("version",
                 new Condition(Operators.LESS_THAN_OR_EQUALS, criteriaLowValue.toString()));
@@ -375,7 +373,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
         final KeySetQuery q = new KeySetQuery(new ArrayList<ItemId>());
-        final List<String> savedKeys = new ArrayList<String>();
+        final List<String> savedKeys = new ArrayList<>();
         final int itemsToCreate = 50;
         for (int i = 0; i < itemsToCreate; i++) {
             final StubItem item = new StubItem();
@@ -404,7 +402,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<>();
         final String gsiFetchCriteriaValue = Randoms.randomString(10);
         final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(20);
         final Query query = new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue),
@@ -441,7 +439,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<>();
         final String gsiFetchCriteriaValue = Randoms.randomString(10);
         final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(20);
         final Query query = new CompoundAttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue),
@@ -479,7 +477,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<>();
         final String gsiFetchCriteriaValue = Randoms.randomString(10);
         final int upperValueLimit = 30;
         final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(upperValueLimit);
@@ -519,7 +517,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubWithHashAndRangeAndGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithHashAndRangeAndGlobalSecondaryIndexItem>();
+        final List<StubWithHashAndRangeAndGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<>();
         final String gsiFetchCriteriaValue = Randoms.randomString(10);
         final Integer gsiSupportingFetchCriteriaValue = Randoms.randomInt(20);
         final Query query = new CompoundAttributeQuery("id", new Condition(Operators.EQUALS, gsiFetchCriteriaValue),
@@ -557,7 +555,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
 
-        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<StubWithGlobalSecondaryIndexItem>();
+        final List<StubWithGlobalSecondaryIndexItem> expectedMatchingItems = new ArrayList<>();
         final String gsiFetchCriteriaValue = Randoms.randomString(10);
         final Query query = new AttributeQuery("gsi", new Condition(Operators.EQUALS, gsiFetchCriteriaValue));
 

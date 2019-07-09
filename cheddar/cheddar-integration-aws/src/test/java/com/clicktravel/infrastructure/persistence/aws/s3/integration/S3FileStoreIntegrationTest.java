@@ -33,7 +33,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.clicktravel.cheddar.infrastructure.persistence.database.exception.NonExistentItemException;
@@ -55,11 +54,10 @@ public class S3FileStoreIntegrationTest {
 
     @Before
     public void before() {
-        amazonS3Client = new AmazonS3Client(new BasicAWSCredentials(AwsIntegration.getAccessKeyId(),
-                AwsIntegration.getSecretKeyId()));
+        amazonS3Client = new AmazonS3Client();
 
         // create bucket if not present
-        final String fullBucketName = BUCKET_SCHEMA + "." + BUCKET_NAME;
+        final String fullBucketName = BUCKET_SCHEMA + "-" + BUCKET_NAME;
         if (!amazonS3Client.doesBucketExist(fullBucketName)) {
             amazonS3Client.createBucket(fullBucketName);
         }
