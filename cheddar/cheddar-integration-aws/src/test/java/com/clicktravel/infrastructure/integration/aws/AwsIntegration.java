@@ -24,7 +24,6 @@ public class AwsIntegration {
 
     private static final AwsIntegration INSTANCE = new AwsIntegration();
     private final String dynamoDbEndpoint;
-    private final String cloudSearchEndpoint;
 
     public AwsIntegration() {
         final Properties props = new Properties();
@@ -36,15 +35,10 @@ public class AwsIntegration {
             throw new IllegalStateException("Missing properties file");
         }
         dynamoDbEndpoint = props.getProperty("aws.dynamodb.endpoint");
-        cloudSearchEndpoint = props.getProperty("aws.cloudsearch.endpoint");
     }
 
     public static String getDynamoDbEndpoint() {
         return INSTANCE.dynamoDbEndpoint;
-    }
-
-    public static String getCloudSearchEndpoint() {
-        return INSTANCE.cloudSearchEndpoint;
     }
 
 }
