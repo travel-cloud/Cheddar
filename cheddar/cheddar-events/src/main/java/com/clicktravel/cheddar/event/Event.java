@@ -20,8 +20,6 @@ public interface Event {
 
     String type();
 
-    void deserializeAndApply(String serializedString);
-
     String serialize();
 
 }

@@ -16,7 +16,7 @@
  */
 package com.clicktravel.cheddar.event;
 
-import org.springframework.beans.BeanUtils;
+import java.io.IOException;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,10 +39,8 @@ public abstract class AbstractEvent implements Event {
 
     public static <T extends Event> T newEvent(final Class<T> eventClass, final String serializedEvent) {
         try {
-            final T event = eventClass.newInstance();
-            event.deserializeAndApply(serializedEvent);
-            return event;
-        } catch (InstantiationException | IllegalAccessException e) {
+            return MAPPER.readValue(serializedEvent, eventClass);
+        } catch (final IOException e) {
             throw new IllegalStateException("Could not instantiate event " + eventClass.getName());
         }
     }
@@ -53,16 +51,6 @@ public abstract class AbstractEvent implements Event {
             return MAPPER.writeValueAsString(this);
         } catch (final Exception e) {
             throw new IllegalStateException("Could not serialize event: [" + this + "]", e);
-        }
-    }
-
-    @Override
-    public final void deserializeAndApply(final String serializedString) {
-        try {
-            final Event event = MAPPER.readValue(serializedString, getClass());
-            BeanUtils.copyProperties(event, this);
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not deserialize to event " + getClass().getName(), e);
         }
     }
 
