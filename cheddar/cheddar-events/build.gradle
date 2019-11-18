@@ -5,5 +5,4 @@ dependencies {
     compile project(':cheddar:cheddar-messaging')
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:${jacksonVersion}"
-    compile "org.springframework:spring-context-support:${springVersion}"   //Required for BeanUtils
 }

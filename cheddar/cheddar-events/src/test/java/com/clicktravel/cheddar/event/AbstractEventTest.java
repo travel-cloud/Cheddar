@@ -54,14 +54,13 @@ public class AbstractEventTest {
     }
 
     @Test
-    public void shouldDeserializeEvent_withEventTypeAndStringProperty() {
+    public void shouldReturnNewEvent_withSerailisedEvent() {
         // Given
         final String value = Randoms.randomString(10);
         final String serializedString = "{\"value\":\"" + value + "\"}";
-        final StubDomainEvent event = new StubDomainEvent();
 
         // When
-        event.deserializeAndApply(serializedString);
+        final StubDomainEvent event = AbstractEvent.newEvent(StubDomainEvent.class, serializedString);
 
         // Then
         Assert.assertEquals(value, event.getValue());
