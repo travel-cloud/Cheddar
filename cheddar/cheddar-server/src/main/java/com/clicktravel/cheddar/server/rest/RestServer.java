@@ -54,8 +54,7 @@ public class RestServer {
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
-        // The auto generation of Swagger specification has been temporarily remove for security reasons
-        // enableAutoGenerationOfSwaggerSpecification();
+        enableAutoGenerationOfSwaggerSpecification();
         configureWorkerThreadPool(httpServer.getListener("grizzly"), workerThreads);
         logger.info("Starting REST server; servicePort:[" + servicePort + "]");
         httpServer.start();
