@@ -1,0 +1,5 @@
+apply from: '../../logging-api.gradle'
+
+dependencies {
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+}
