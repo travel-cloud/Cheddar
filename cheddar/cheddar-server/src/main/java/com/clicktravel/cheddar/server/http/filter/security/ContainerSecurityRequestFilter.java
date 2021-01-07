@@ -51,7 +51,7 @@ public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
                 CLICK_PLATFORM_SCHEME);
         final String appId = getValueForHeader(headers, CLICK_PLATFORM_APP_ID_HEADER);
         final String identityProviderId = getValueForHeader(headers, CLICK_PLATFORM_IDENTITY_PROVIDER_ID_HEADER);
-        SecurityContextHolder.set(new DefaultSecurityContext(userId, teamId, identityProviderId, agentUserId, appId));
+        SecurityContextHolder.set(new DefaultSecurityContext(userId, teamId, agentUserId, appId, identityProviderId));
     }
 
     private String getValueForHeaderAndScheme(final MultivaluedMap<String, String> headers, final String header,

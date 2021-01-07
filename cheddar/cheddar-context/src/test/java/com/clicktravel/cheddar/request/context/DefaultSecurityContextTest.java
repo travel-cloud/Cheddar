@@ -49,7 +49,7 @@ public class DefaultSecurityContextTest {
         // Given
         final String userId = randomId();
         final String teamId = randomId();
-        final String identityProviderId = randomId();
+        final String identityProviderId = randomBoolean() ? null : randomId();
         final String agentUserId = randomBoolean() ? null : randomId();
         final String appId = randomBoolean() ? null : randomId();
         final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, identityProviderId,
@@ -63,15 +63,15 @@ public class DefaultSecurityContextTest {
     }
 
     @Test
-    public void shouldReturnIdentityProviderId_withTeamInContext() {
+    public void shouldReturnIdentityProviderId_withIdentityProviderInContext() {
         // Given
         final String userId = randomId();
         final String teamId = randomId();
         final String identityProviderId = randomId();
         final String agentUserId = randomBoolean() ? null : randomId();
         final String appId = randomBoolean() ? null : randomId();
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, identityProviderId,
-                agentUserId, appId);
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId,
+                agentUserId, appId, identityProviderId);
 
         // When
         final Optional<String> returnedIdentityProviderId = context.identityProviderId();
@@ -88,8 +88,8 @@ public class DefaultSecurityContextTest {
         final String identityProviderId = randomBoolean() ? null : randomId();
         final String agentUserId = randomId();
         final String appId = randomBoolean() ? null : randomId();
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, identityProviderId,
-                agentUserId, appId);
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId,
+                agentUserId, appId, identityProviderId);
 
         // When
         final Optional<String> returnedAgentUserId = context.agentUserId();
@@ -106,8 +106,8 @@ public class DefaultSecurityContextTest {
         final String identityProviderId = null;
         final String agentUserId = null;
         final String appId = null;
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, identityProviderId,
-                agentUserId, appId);
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId,
+                agentUserId, appId, identityProviderId);
 
         // When
         final Optional<String> returnedUserId = context.userId();
@@ -124,8 +124,8 @@ public class DefaultSecurityContextTest {
         final String identityProviderId = null;
         final String agentUserId = null;
         final String appId = randomId();
-        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId, identityProviderId,
-                agentUserId, appId);
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId,
+                agentUserId, appId, identityProviderId);
 
         // When
         final Optional<String> returnedUserId = context.appId();
@@ -160,4 +160,52 @@ public class DefaultSecurityContextTest {
         assertEquals(Optional.empty(), context.agentUserId());
     }
 
+    @Test
+    public void shouldReturnHeaders_withNoIdentityProviderIdInContext() {
+        // Given
+        final String userId = randomId();
+        final String teamId = randomId();
+        final String agentUserId = randomId();
+        final String appId = randomId();
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId,
+                agentUserId, appId);
+
+        // When
+        final Optional<String> returnedUserId = context.userId();
+        final Optional<String> returnedTeamId = context.teamId();
+        final Optional<String> returnedAgentUserId = context.agentUserId();
+        final Optional<String> returnedAppId = context.appId();
+
+        // Then
+        assertEquals(Optional.of(userId), returnedUserId);
+        assertEquals(Optional.of(teamId), returnedTeamId);
+        assertEquals(Optional.of(agentUserId), returnedAgentUserId);
+        assertEquals(Optional.of(appId), returnedAppId);
+    }
+
+    @Test
+    public void shouldReturnHeaders_withIdentityProviderIdInContext() {
+        // Given
+        final String userId = randomId();
+        final String teamId = randomId();
+        final String agentUserId = randomId();
+        final String appId = randomId();
+        final String identityProviderId = randomId();
+        final DefaultSecurityContext context = new DefaultSecurityContext(userId, teamId,
+                agentUserId, appId, identityProviderId);
+
+        // When
+        final Optional<String> returnedUserId = context.userId();
+        final Optional<String> returnedTeamId = context.teamId();
+        final Optional<String> returnedAgentUserId = context.agentUserId();
+        final Optional<String> returnedAppId = context.appId();
+        final Optional<String> returnedIdentityProviderId = context.identityProviderId();
+
+        // Then
+        assertEquals(Optional.of(userId), returnedUserId);
+        assertEquals(Optional.of(teamId), returnedTeamId);
+        assertEquals(Optional.of(agentUserId), returnedAgentUserId);
+        assertEquals(Optional.of(appId), returnedAppId);
+        assertEquals(Optional.of(identityProviderId), returnedIdentityProviderId);
+    }
 }

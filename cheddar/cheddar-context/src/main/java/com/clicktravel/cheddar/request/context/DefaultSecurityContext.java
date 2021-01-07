@@ -30,13 +30,18 @@ public class DefaultSecurityContext implements SecurityContext {
 
     private final Optional<String> appId;
 
-    public DefaultSecurityContext(final String userId, final String teamId, final String identityProviderId,
-            final String agentUserId, final String appId) {
+    public DefaultSecurityContext(final String userId, final String teamId,
+            final String agentUserId, final String appId, final String identityProviderId) {
         this.userId = Optional.ofNullable(userId);
         this.teamId = Optional.ofNullable(teamId);
         this.identityProviderId = Optional.ofNullable(identityProviderId);
         this.agentUserId = Optional.ofNullable(agentUserId);
         this.appId = Optional.ofNullable(appId);
+    }
+
+    public DefaultSecurityContext(final String userId, final String teamId, final String agentUserId,
+            final String appId) {
+        this(userId, teamId, agentUserId, appId, null);
     }
 
     public DefaultSecurityContext(final String userId, final String teamId) {
