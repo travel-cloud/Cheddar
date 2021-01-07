@@ -47,6 +47,12 @@ public interface SecurityContext {
     Optional<String> teamId();
 
     /**
+     * @return Optional of the identity provider ID in the security context. Domain actions (commands or queries)
+     *         are performed 'as' within the context of the identity provider.
+     */
+    Optional<String> identityProviderId();
+
+    /**
      * @return Optional of the agent's user ID in the security context. Agents issue requests on behalf of the user
      *         identified by {@link #userId}. Note: This is not the user which authorisation checks are performed
      *         against, see {@link #userId}

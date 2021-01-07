@@ -53,7 +53,7 @@ public class SecurityContextHolder {
         if (principal == null) {
             clear();
         } else {
-            set(new DefaultSecurityContext(principal, null, null, null));
+            set(new DefaultSecurityContext(principal, null, null, null, null));
         }
     }
 
