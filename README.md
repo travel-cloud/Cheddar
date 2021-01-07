@@ -1,6 +1,6 @@
 # Cheddar
 
-![Cheddar logo](http://googledrive.com/host/0B3KE77--Zs7eSlN2MzF5ekdDZFE/)
+![Cheddar logo](./images/cheddarLogo.png)
 
 ## Click's Hexagonal Domain-Driven Architecture
 
