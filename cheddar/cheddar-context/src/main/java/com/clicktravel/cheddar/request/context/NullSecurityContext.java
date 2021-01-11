@@ -44,6 +44,11 @@ public class NullSecurityContext implements SecurityContext {
     }
 
     @Override
+    public Optional<String> identityProviderId() {
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<String> agentUserId() {
         return Optional.empty();
     }

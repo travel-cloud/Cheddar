@@ -40,6 +40,7 @@ public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
     private static final String CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER = "Agent-Authorization";
     private static final String CLICK_PLATFORM_TEAM_ID_HEADER = "Team-Id";
     private static final String CLICK_PLATFORM_APP_ID_HEADER = "App-Id";
+    private static final String CLICK_PLATFORM_IDENTITY_PROVIDER_ID_HEADER = "Identity-Provider-Id";
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
@@ -49,7 +50,8 @@ public class ContainerSecurityRequestFilter implements ContainerRequestFilter {
         final String agentUserId = getValueForHeaderAndScheme(headers, CLICK_PLATFORM_AGENT_AUTHORIZATION_HEADER,
                 CLICK_PLATFORM_SCHEME);
         final String appId = getValueForHeader(headers, CLICK_PLATFORM_APP_ID_HEADER);
-        SecurityContextHolder.set(new DefaultSecurityContext(userId, teamId, agentUserId, appId));
+        final String identityProviderId = getValueForHeader(headers, CLICK_PLATFORM_IDENTITY_PROVIDER_ID_HEADER);
+        SecurityContextHolder.set(new DefaultSecurityContext(userId, teamId, agentUserId, appId, identityProviderId));
     }
 
     private String getValueForHeaderAndScheme(final MultivaluedMap<String, String> headers, final String header,
