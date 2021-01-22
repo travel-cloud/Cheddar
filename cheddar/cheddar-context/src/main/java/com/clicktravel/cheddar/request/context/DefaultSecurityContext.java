@@ -26,30 +26,33 @@ public class DefaultSecurityContext implements SecurityContext {
     private final Optional<String> userId;
     private final Optional<String> teamId;
     private final Optional<String> identityProviderId;
+    private final Optional<String> agentIdentityProviderId;
     private final Optional<String> agentUserId;
 
     private final Optional<String> appId;
 
     public DefaultSecurityContext(final String userId, final String teamId,
-            final String agentUserId, final String appId, final String identityProviderId) {
+            final String agentUserId, final String appId, final String identityProviderId,
+            final String agentIdentityProviderId) {
         this.userId = Optional.ofNullable(userId);
         this.teamId = Optional.ofNullable(teamId);
         this.identityProviderId = Optional.ofNullable(identityProviderId);
+        this.agentIdentityProviderId = Optional.ofNullable(agentIdentityProviderId);
         this.agentUserId = Optional.ofNullable(agentUserId);
         this.appId = Optional.ofNullable(appId);
     }
 
     public DefaultSecurityContext(final String userId, final String teamId, final String agentUserId,
             final String appId) {
-        this(userId, teamId, agentUserId, appId, null);
+        this(userId, teamId, agentUserId, appId, null, null);
     }
 
     public DefaultSecurityContext(final String userId, final String teamId) {
-        this(userId, teamId, null, null, null);
+        this(userId, teamId, null, null, null, null);
     }
 
     public DefaultSecurityContext(final String userId) {
-        this(userId, null, null, null, null);
+        this(userId, null, null, null, null, null);
     }
 
     @Override
@@ -70,6 +73,11 @@ public class DefaultSecurityContext implements SecurityContext {
 
     @Override
     public Optional<String> identityProviderId() { return identityProviderId; }
+    
+    @Override
+    public Optional<String> agentIdentityProviderId() {
+        return agentIdentityProviderId;
+    }
 
     @Override
     public Optional<String> agentUserId() {
