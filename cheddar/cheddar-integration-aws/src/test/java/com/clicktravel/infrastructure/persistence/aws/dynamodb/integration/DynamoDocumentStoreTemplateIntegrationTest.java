@@ -397,7 +397,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withEqualsGsiCompoundAttributeQuery() {
+    public void shouldFetch_withEqualsGsiCompoundAttributeQuery() throws InterruptedException {
         // Given
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -423,6 +423,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
@@ -434,7 +436,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withLessThanOrEqualsGsiCompoundAttributeQuery() {
+    public void shouldFetch_withLessThanOrEqualsGsiCompoundAttributeQuery() throws InterruptedException {
         // Given
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -461,6 +463,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
@@ -472,7 +476,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withGreaterThanOrEqualsGsiCompoundAttributeQuery() {
+    public void shouldFetch_withGreaterThanOrEqualsGsiCompoundAttributeQuery() throws InterruptedException {
         // Given
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -501,6 +505,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
@@ -512,7 +518,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withEqualsCompoundGsiAttributeQueryAndHashKeyTheSameAsTablesHashKey() {
+    public void shouldFetch_withEqualsCompoundGsiAttributeQueryAndHashKeyTheSameAsTablesHashKey() throws InterruptedException {
         // Given
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -539,6 +545,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId() + item.getRange());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithHashAndRangeAndGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
@@ -550,7 +558,7 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withAttributeQueryOnHashPartOfCompoundIndex() {
+    public void shouldFetch_withAttributeQueryOnHashPartOfCompoundIndex() throws InterruptedException {
         // Given
         final DynamoDocumentStoreTemplate dynamoDbTemplate = new DynamoDocumentStoreTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -571,6 +579,8 @@ public class DynamoDocumentStoreTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
