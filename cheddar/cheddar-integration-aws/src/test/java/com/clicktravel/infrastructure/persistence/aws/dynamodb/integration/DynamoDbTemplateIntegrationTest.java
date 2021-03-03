@@ -589,6 +589,8 @@ public class DynamoDbTemplateIntegrationTest {
         final StubWithRangeItem createdItem = dataGenerator.createStubWithRangeItem();
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
+        
+        Thread.sleep(10000);
 
         // When
         dynamoDbTemplate.delete(createdItem);
@@ -612,6 +614,8 @@ public class DynamoDbTemplateIntegrationTest {
         stubVariantItem.setStringProperty(randomString(10));
         stubVariantItem.setStringProperty2(randomString(10));
         createdItemIds.add(stubVariantItem.getId());
+        
+        Thread.sleep(10000);
 
         // When
         final StubVariantItem item = dynamoDbTemplate.create(stubVariantItem);
@@ -627,6 +631,8 @@ public class DynamoDbTemplateIntegrationTest {
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
         final StubVariantItem createdStubVariantItem = dataGenerator.createStubVariantItem();
         final ItemId stubVariantItemId = new ItemId(createdStubVariantItem.getId());
+        
+        Thread.sleep(10000);
 
         // When
         final StubVariantItem stubVariantItem = dynamoDbTemplate.read(stubVariantItemId, StubVariantItem.class);
@@ -642,6 +648,8 @@ public class DynamoDbTemplateIntegrationTest {
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
         final ItemId stubVariantItemId = new ItemId(createdStubVariantItem.getId());
+        
+        Thread.sleep(10000);
 
         // When
         NonExistentItemException actualException = null;
@@ -662,6 +670,8 @@ public class DynamoDbTemplateIntegrationTest {
         final ItemId stubVariantItemId = new ItemId(createdStubVariantItem.getId());
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
+        
+        Thread.sleep(10000);
 
         // When
         final StubParentItem stubParentItem = dynamoDbTemplate.read(stubVariantItemId, StubParentItem.class);
@@ -673,7 +683,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withKeySetQueryWithVariants() {
+    public void shouldFetch_withKeySetQueryWithVariants() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -686,6 +696,8 @@ public class DynamoDbTemplateIntegrationTest {
             items.add(item);
             itemIds.add(new ItemId(item.getId()));
         }
+        
+        Thread.sleep(10000);
 
         final KeySetQuery query = new KeySetQuery(itemIds);
 
@@ -703,7 +715,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withKeySetQueryWithMixedVariantsByParent() {
+    public void shouldFetch_withKeySetQueryWithMixedVariantsByParent() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -716,6 +728,8 @@ public class DynamoDbTemplateIntegrationTest {
         itemIds.add(new ItemId(item2.getId()));
 
         final KeySetQuery query = new KeySetQuery(itemIds);
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubParentItem> returnedItems = dynamoDbTemplate.fetch(query, StubParentItem.class);
@@ -737,7 +751,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withKeySetQueryWithMixedVariants_partialResults() {
+    public void shouldFetch_withKeySetQueryWithMixedVariants_partialResults() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -753,6 +767,8 @@ public class DynamoDbTemplateIntegrationTest {
         itemIds.add(new ItemId(item2.getId()));
 
         final KeySetQuery query = new KeySetQuery(itemIds);
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubVariantTwoItem> returnedItems = dynamoDbTemplate.fetch(query, StubVariantTwoItem.class);
@@ -765,7 +781,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldCreate_viaBatchWrite_withSingleItem() {
+    public void shouldCreate_viaBatchWrite_withSingleItem() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -780,6 +796,8 @@ public class DynamoDbTemplateIntegrationTest {
         // When
 
         final List<StubItem> successfulStubItems = dynamoDbTemplate.batchWrite(stubItems, StubItem.class);
+        
+        Thread.sleep(10000);
 
         // Then
 
@@ -796,7 +814,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldUpdate_viaBatchWrite_withSingleItem() {
+    public void shouldUpdate_viaBatchWrite_withSingleItem() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -815,6 +833,8 @@ public class DynamoDbTemplateIntegrationTest {
 
         // When
         final List<StubItem> successfulStubItems = dynamoDbTemplate.batchWrite(stubItems, StubItem.class);
+        
+        Thread.sleep(10000);
 
         // Then
         for (final StubItem aStubItem : successfulStubItems) {
@@ -827,7 +847,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldUpdate_viaBatchWrite_withSingleItemWithCompoundPk() {
+    public void shouldUpdate_viaBatchWrite_withSingleItemWithCompoundPk() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -843,10 +863,12 @@ public class DynamoDbTemplateIntegrationTest {
 
         final List<StubWithRangeItem> stubWithRangeItems = new ArrayList<>();
         stubWithRangeItems.add(createdItem);
-
+        
         // When
         final List<StubWithRangeItem> successfulStubWithRangeItems = dynamoDbTemplate.batchWrite(stubWithRangeItems,
                 StubWithRangeItem.class);
+        
+        Thread.sleep(10000);
 
         // Then
         for (final StubWithRangeItem aStubWithRangeItem : successfulStubWithRangeItems) {
@@ -860,7 +882,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withEqualsGsiCompoundAttributeQuery() {
+    public void shouldFetch_withEqualsGsiCompoundAttributeQuery() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -886,6 +908,8 @@ public class DynamoDbTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
@@ -897,7 +921,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withLessThanOrEqualsGsiCompoundAttributeQuery() {
+    public void shouldFetch_withLessThanOrEqualsGsiCompoundAttributeQuery() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -924,6 +948,8 @@ public class DynamoDbTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
@@ -935,7 +961,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withGreaterThanOrEqualsGsiCompoundAttributeQuery() {
+    public void shouldFetch_withGreaterThanOrEqualsGsiCompoundAttributeQuery() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -964,6 +990,8 @@ public class DynamoDbTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
@@ -975,7 +1003,7 @@ public class DynamoDbTemplateIntegrationTest {
     }
 
     @Test
-    public void shouldFetch_withEqualsCompoundGsiAttributeQueryAndHashKeyTheSameAsTablesHashKey() {
+    public void shouldFetch_withEqualsCompoundGsiAttributeQueryAndHashKeyTheSameAsTablesHashKey() throws InterruptedException {
         // Given
         final DynamoDbTemplate dynamoDbTemplate = new DynamoDbTemplate(databaseSchemaHolder);
         dynamoDbTemplate.initialize(amazonDynamoDbClient);
@@ -1003,6 +1031,8 @@ public class DynamoDbTemplateIntegrationTest {
             createdItemIds.add(item.getId() + item.getRange());
         }
 
+        Thread.sleep(10000);
+        
         // When
         final Collection<StubWithHashAndRangeAndGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
                 StubWithHashAndRangeAndGlobalSecondaryIndexItem.class);
@@ -1034,6 +1064,8 @@ public class DynamoDbTemplateIntegrationTest {
             dynamoDbTemplate.create(item);
             createdItemIds.add(item.getId());
         }
+        
+        Thread.sleep(10000);
 
         // When
         final Collection<StubWithGlobalSecondaryIndexItem> allItems = dynamoDbTemplate.fetch(query,
