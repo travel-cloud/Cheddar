@@ -8,4 +8,6 @@ dependencies {
     compile "org.springframework:spring-context-support:${springVersion}"
     compile "org.springframework:spring-web:${springVersion}"
     compile "org.springframework:spring-aop:${springVersion}"
+    compile "com.amazonaws:aws-xray-recorder-sdk-core:2.9.0"
+    compile "com.amazonaws:aws-xray-recorder-sdk-aws-sdk:2.9.0"
 }
