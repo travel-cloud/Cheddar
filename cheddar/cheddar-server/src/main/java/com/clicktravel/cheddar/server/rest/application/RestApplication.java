@@ -23,6 +23,9 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import com.amazonaws.xray.AWSXRay;
+import com.amazonaws.xray.AWSXRayRecorderBuilder;
+import com.amazonaws.xray.strategy.IgnoreErrorContextMissingStrategy;
 import com.clicktravel.cheddar.server.application.lifecycle.ApplicationLifecycleController;
 
 public class RestApplication {
@@ -60,6 +63,9 @@ public class RestApplication {
             logger.info(String.format("java.version:[%s] java.vendor:[%s] maxMemoryMb:[%d]",
                     System.getProperty("java.version"), System.getProperty("java.vendor"),
                     Runtime.getRuntime().maxMemory() / (1024 * 1024)));
+            // Make sure AWS XRay missing segments don't cause runtime exceptions during start up
+            AWSXRayRecorderBuilder builder = AWSXRayRecorderBuilder.standard().withContextMissingStrategy(new IgnoreErrorContextMissingStrategy());
+            AWSXRay.setGlobalRecorder(builder.build());
             @SuppressWarnings("resource")
             final ConfigurableApplicationContext applicationContext = new ClassPathXmlApplicationContext(
                     "applicationContext.xml");

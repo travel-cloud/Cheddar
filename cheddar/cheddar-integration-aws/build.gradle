@@ -6,6 +6,7 @@ dependencies {
     compile project(':commons:commons-httpclient')
     compile project(':cheddar:cheddar-messaging')
     compile project(':cheddar:cheddar-persistence')
+    compile project(':cheddar:cheddar-context')
 
     compile "com.amazonaws:aws-java-sdk-s3:${awsJavaSdkVersion}"
     compile "com.amazonaws:aws-java-sdk-dynamodb:${awsJavaSdkVersion}"
@@ -17,6 +18,10 @@ dependencies {
     compile "com.amazonaws:aws-java-sdk-lambda:${awsJavaSdkVersion}"
     compile "com.amazonaws:aws-java-sdk-cloudformation:${awsJavaSdkVersion}"
     compile "com.amazonaws:aws-java-sdk-ssm:${awsJavaSdkVersion}"
+    compile "com.amazonaws:aws-xray-recorder-sdk-core:2.9.0"
+    compile "com.amazonaws:aws-xray-recorder-sdk-aws-sdk:2.9.0"
+
+    
     compile "org.springframework:spring-context-support:${springVersion}"
     compile "org.springframework:spring-aop:${springVersion}"
 

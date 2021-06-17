@@ -8,6 +8,7 @@ dependencies {
     compile project(':cheddar:cheddar-features')
     compile project(':commons:commons-json-provider')
     compile project(':cheddar:cheddar-context')
+    compile project(':cheddar:cheddar-integration-aws')
     
     compile "org.glassfish.jersey.ext:jersey-spring4:${jerseyVersion}"
     compile "org.glassfish.jersey.containers:jersey-container-grizzly2-http:${jerseyVersion}"
