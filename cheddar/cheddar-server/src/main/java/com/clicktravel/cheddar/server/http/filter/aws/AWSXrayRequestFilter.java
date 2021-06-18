@@ -27,6 +27,8 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.entities.Segment;
@@ -41,19 +43,25 @@ import com.clicktravel.cheddar.request.context.DefaultAWSXraySegmentContext;
 @Priority(Priorities.USER)
 public class AWSXrayRequestFilter implements ContainerRequestFilter {
 
+    final Logger logger = LoggerFactory.getLogger(AWSXrayRequestFilter.class);
+
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-        String segmentName;
-        if (requestContext.getUriInfo() instanceof ExtendedUriInfo) {
-            segmentName = getPathWithTemplateParamsNotValues(requestContext.getMethod(),
-                    (ExtendedUriInfo) requestContext.getUriInfo());
-        } else {
-            // This is in case we ever swap the ContainerRequestFilter strategy
-            // and ExtendedUriInfo is no longer returned with getUriInfo()
-            segmentName = requestContext.getMethod() + " " + requestContext.getUriInfo().getPath();
+        try {
+            String segmentName;
+            if (requestContext.getUriInfo() instanceof ExtendedUriInfo) {
+                segmentName = getPathWithTemplateParamsNotValues(requestContext.getMethod(),
+                        (ExtendedUriInfo) requestContext.getUriInfo());
+            } else {
+                // This is in case we ever swap the ContainerRequestFilter strategy and the ExtendedUriInfo is no 
+                // longer returned with getUriInfo()
+                segmentName = requestContext.getMethod() + " " + requestContext.getUriInfo().getPath();
+            }
+            final Segment segment = AWSXRay.beginSegment(segmentName);
+            AWSXraySegmentContextHolder.set(new DefaultAWSXraySegmentContext(segment));
+        } catch (final Exception e) {
+            logger.debug("Failed to begin XRay segment due to exception " + e.getMessage());
         }
-        final Segment segment = AWSXRay.beginSegment(segmentName);
-        AWSXraySegmentContextHolder.set(new DefaultAWSXraySegmentContext(segment));
     }
 
     /**
