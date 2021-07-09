@@ -25,27 +25,38 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.entities.Segment;
 import com.clicktravel.cheddar.request.context.AWSXraySegmentContextHolder;
 
 /**
- *  The response filter that will be called at the end of each HTTP response for all services.
- *  If there is an open AWS XRay segment in the context holder it will grab it and close it 
- *  then clear down the context holder for this thread.
+ * The response filter that will be called at the end of each HTTP response for all services. If there is an open AWS
+ * XRay segment in the context holder it will grab it and close it then clear down the context holder for this thread.
  */
 @Provider
 @Priority(Priorities.USER)
 public class AWSXrayResponseFilter implements ContainerResponseFilter {
 
+    final private boolean awsXrayEnabled;
+
+    @Autowired
+    public AWSXrayResponseFilter(@Value("${aws.xray.enabled:false}") final boolean awsXrayEnabled) {
+        this.awsXrayEnabled = awsXrayEnabled;
+    }
+
     @Override
     public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
             throws IOException {
-        if(AWSXraySegmentContextHolder.get().requestSegment().isPresent()) {
-            final Segment requestSegment = AWSXraySegmentContextHolder.get().requestSegment().get();
-            AWSXRay.getGlobalRecorder().setTraceEntity(requestSegment);
-            AWSXRay.endSegment();
+        if (awsXrayEnabled == true) {
+            if (AWSXraySegmentContextHolder.get().requestSegment().isPresent()) {
+                final Segment requestSegment = AWSXraySegmentContextHolder.get().requestSegment().get();
+                AWSXRay.getGlobalRecorder().setTraceEntity(requestSegment);
+                AWSXRay.endSegment();
+            }
+            AWSXraySegmentContextHolder.clear();
         }
-        AWSXraySegmentContextHolder.clear();
     }
 }
