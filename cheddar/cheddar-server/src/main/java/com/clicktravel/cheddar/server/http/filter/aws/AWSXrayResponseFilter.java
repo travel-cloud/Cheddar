@@ -17,6 +17,8 @@
 package com.clicktravel.cheddar.server.http.filter.aws;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -53,10 +55,36 @@ public class AWSXrayResponseFilter implements ContainerResponseFilter {
         if (awsXrayEnabled == true) {
             if (AWSXraySegmentContextHolder.get().requestSegment().isPresent()) {
                 final Segment requestSegment = AWSXraySegmentContextHolder.get().requestSegment().get();
-                AWSXRay.getGlobalRecorder().setTraceEntity(requestSegment);
+                sendResponseAttributesForSegment(responseContext.getStatus(), requestSegment);
+                final Segment segmentWithResponseState = setSegmentStateBasedOnResponseCode(responseContext.getStatus(),
+                        requestSegment);
+                AWSXRay.getGlobalRecorder().setTraceEntity(segmentWithResponseState);
                 AWSXRay.endSegment();
             }
             AWSXraySegmentContextHolder.clear();
         }
+    }
+
+    private void sendResponseAttributesForSegment(final int responseCode, final Segment segment) {
+        final Map<String, Object> responseAttributes = new HashMap<>();
+        responseAttributes.put("status", responseCode);
+        segment.putHttp("response", responseAttributes);
+    }
+
+    private Segment setSegmentStateBasedOnResponseCode(final int responseCode, final Segment segment) {
+        switch (responseCode / 100) {
+            case 4:
+                segment.setError(true);
+                if (responseCode == 429) {
+                    segment.setThrottle(true);
+                }
+                break;
+            case 5:
+                segment.setFault(true);
+                break;
+            default:
+                break;
+        }
+        return segment;
     }
 }

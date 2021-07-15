@@ -100,6 +100,10 @@ public class AWSXrayRequestFilter implements ContainerRequestFilter {
         final Map<String, Object> requestAttributes = new HashMap<>();
         requestAttributes.put("url", requestContext.getUriInfo().getPath());
         requestAttributes.put("method", requestContext.getMethod());
+        final String requestUserAgent = requestContext.getHeaderString("User-Agent");
+        if (requestUserAgent != null) {
+            requestAttributes.put("user_agent", requestUserAgent);
+        }
         segment.putHttp("request", requestAttributes);
     }
 
