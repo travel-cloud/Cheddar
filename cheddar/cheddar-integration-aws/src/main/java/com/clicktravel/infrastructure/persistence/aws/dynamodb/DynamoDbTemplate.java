@@ -188,8 +188,13 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             amazonDynamoDbClient.putItem(itemRequest);
             itemRequestSucceeded = true;
         } catch (final ConditionalCheckFailedException conditionalCheckFailedException) {
+            final String exceptionMessage = String.format(
+                    "Failure creating %s as %s already contains an item with value %s in field %s",
+                    itemConfiguration.itemClass().getSimpleName(), itemConfiguration.tableName(),
+                    itemConfiguration.getItemId(item), itemConfiguration.primaryKeyDefinition().propertyName());
+
             throw new ItemConstraintViolationException(itemConfiguration.primaryKeyDefinition().propertyName(),
-                    "Failure to create item as store already contains item with matching primary key");
+                    exceptionMessage);
         } catch (final AmazonServiceException amazonServiceException) {
             throw new PersistenceResourceFailureException(
                     "Failure while attempting DynamoDb put (create: " + tableName + ")", amazonServiceException);
@@ -254,7 +259,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
             final VariantItemConfiguration variantItemConfiguration = (VariantItemConfiguration) itemConfiguration;
             attributeMap.put(variantItemConfiguration.parentItemConfiguration().discriminator(),
                     new AttributeValueUpdate().withAction(AttributeAction.PUT)
-                            .withValue(new AttributeValue(variantItemConfiguration.discriminatorValue())));
+                    .withValue(new AttributeValue(variantItemConfiguration.discriminatorValue())));
         }
         return attributeMap;
     }
@@ -649,7 +654,7 @@ public class DynamoDbTemplate extends AbstractDynamoDbTemplate implements BatchD
 
     private <T extends Item> com.amazonaws.services.dynamodbv2.model.Condition createDynamoDbCondition(
             final Condition condition, final String propertyName, final ItemConfiguration itemConfiguration)
-            throws Exception {
+                    throws Exception {
         final com.amazonaws.services.dynamodbv2.model.Condition dynamoDbCondition = new com.amazonaws.services.dynamodbv2.model.Condition();
 
         if (condition.getComparisonOperator() == Operators.NULL) {
