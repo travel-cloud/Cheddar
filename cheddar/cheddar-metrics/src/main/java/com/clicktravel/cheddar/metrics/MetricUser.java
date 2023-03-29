@@ -24,24 +24,27 @@ public class MetricUser {
     private final List<String> organisationIds;
     private String name;
     private String emailAddress;
+    private String phoneNumber;
     private final Map<String, Object> customAttributes;
 
-    public MetricUser(final String id, final String organisationId, final String name, final String emailAddress) {
+    public MetricUser(final String id, final String organisationId, final String name, final String emailAddress, final String phoneNumber) {
         super();
         this.id = id;
         organisationIds = organisationId != null ? Arrays.asList(organisationId) : new ArrayList<>();
         this.name = name;
         this.emailAddress = emailAddress;
+        this.phoneNumber = phoneNumber;
         customAttributes = new HashMap<>();
     }
 
     public MetricUser(final String id, final List<String> organisationIds, final String name, final String emailAddress,
-            final Map<String, Object> customAttributes) {
+            final String phoneNumber, final Map<String, Object> customAttributes) {
         super();
         this.id = id;
         this.organisationIds = organisationIds;
         this.name = name;
         this.emailAddress = emailAddress;
+        this.phoneNumber = phoneNumber;
         this.customAttributes = customAttributes;
     }
 
@@ -51,6 +54,10 @@ public class MetricUser {
 
     public void updateEmailAddress(final String emailAddress) {
         this.emailAddress = emailAddress;
+    }
+
+    public void updatePhoneNumber(final String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String id() {
@@ -71,6 +78,10 @@ public class MetricUser {
 
     public String emailAddress() {
         return emailAddress;
+    }
+
+    public String phoneNumber() {
+        return phoneNumber;
     }
 
     public Map<String, Object> customAttributes() {

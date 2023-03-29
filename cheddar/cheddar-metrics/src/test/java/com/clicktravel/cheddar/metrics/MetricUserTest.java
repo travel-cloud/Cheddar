@@ -16,9 +16,7 @@
  */
 package com.clicktravel.cheddar.metrics;
 
-import static com.clicktravel.common.random.Randoms.randomEmailAddress;
-import static com.clicktravel.common.random.Randoms.randomId;
-import static com.clicktravel.common.random.Randoms.randomString;
+import static com.clicktravel.common.random.Randoms.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -39,9 +37,10 @@ public class MetricUserTest {
         final String organisationId = randomId();
         final String name = randomString();
         final String emailAddress = randomEmailAddress();
+        final String phoneNumber = randomPhoneNumber();
 
         // When
-        final MetricUser metricUser = new MetricUser(id, organisationId, name, emailAddress);
+        final MetricUser metricUser = new MetricUser(id, organisationId, name, emailAddress, phoneNumber);
 
         // Then
         assertEquals(id, metricUser.id());
@@ -50,6 +49,7 @@ public class MetricUserTest {
         assertEquals(organisationId, metricUser.organisationIds().get(0));
         assertEquals(name, metricUser.name());
         assertEquals(emailAddress, metricUser.emailAddress());
+        assertEquals(phoneNumber, metricUser.phoneNumber());
         assertTrue(metricUser.customAttributes().isEmpty());
     }
 
@@ -60,16 +60,18 @@ public class MetricUserTest {
         final List<String> organisationIds = Arrays.asList(randomId(), randomId());
         final String name = randomString();
         final String emailAddress = randomEmailAddress();
+        final String phoneNumber = randomPhoneNumber();
         final Map<String, Object> mockCustomAttributes = mock(Map.class);
 
         // When
-        final MetricUser metricUser = new MetricUser(id, organisationIds, name, emailAddress, mockCustomAttributes);
+        final MetricUser metricUser = new MetricUser(id, organisationIds, name, emailAddress, phoneNumber, mockCustomAttributes);
 
         // Then
         assertEquals(id, metricUser.id());
         assertEquals(organisationIds, metricUser.organisationIds());
         assertEquals(name, metricUser.name());
         assertEquals(emailAddress, metricUser.emailAddress());
+        assertEquals(phoneNumber, metricUser.phoneNumber());
         assertEquals(mockCustomAttributes, metricUser.customAttributes());
     }
 
@@ -80,7 +82,8 @@ public class MetricUserTest {
         final String organisationId = randomId();
         final String name = randomString();
         final String emailAddress = randomEmailAddress();
-        final MetricUser metricUser = new MetricUser(id, organisationId, name, emailAddress);
+        final String phoneNumber = randomPhoneNumber();
+        final MetricUser metricUser = new MetricUser(id, organisationId, name, emailAddress, phoneNumber);
         final String newName = randomString();
 
         // When
@@ -97,7 +100,8 @@ public class MetricUserTest {
         final String organisationId = randomId();
         final String name = randomString();
         final String emailAddress = randomEmailAddress();
-        final MetricUser metricUser = new MetricUser(id, organisationId, name, emailAddress);
+        final String phoneNumber = randomPhoneNumber();
+        final MetricUser metricUser = new MetricUser(id, organisationId, name, emailAddress, phoneNumber);
         final String newEmailAddress = randomEmailAddress();
 
         // When
@@ -105,5 +109,23 @@ public class MetricUserTest {
 
         // Then
         assertEquals(newEmailAddress, metricUser.emailAddress());
+    }
+
+    @Test
+    public void shouldUpdatePhoneNumber_withPhoneNumber() {
+        // Given
+        final String id = randomId();
+        final String organisationId = randomId();
+        final String name = randomString();
+        final String emailAddress = randomEmailAddress();
+        final String phoneNumber = randomPhoneNumber();
+        final MetricUser metricUser = new MetricUser(id, organisationId, name, emailAddress, phoneNumber);
+        final String newPhoneNumber = randomPhoneNumber();
+
+        // When
+        metricUser.updatePhoneNumber(newPhoneNumber);
+
+        // Then
+        assertEquals(newPhoneNumber, metricUser.phoneNumber());
     }
 }

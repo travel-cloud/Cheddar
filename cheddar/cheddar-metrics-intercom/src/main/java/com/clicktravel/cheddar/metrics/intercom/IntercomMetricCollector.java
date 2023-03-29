@@ -224,7 +224,7 @@ public class IntercomMetricCollector implements MetricCollector {
             throw new MetricUserNotFoundException(userId);
         } else {
             return new MetricUser(intercomUser.getUserId(), getUserOrganisations(intercomUser), intercomUser.getName(),
-                    intercomUser.getEmail(), getCustomAttributes(intercomUser));
+                    intercomUser.getEmail(), intercomUser.getPhone(), getCustomAttributes(intercomUser));
         }
 
     }
@@ -252,6 +252,7 @@ public class IntercomMetricCollector implements MetricCollector {
         intercomUser.setId(user.id());
         intercomUser.setUserId(user.id());
         intercomUser.setName(user.name());
+        intercomUser.setPhone(user.phoneNumber());
         intercomUser.setCustomAttributes(metricToIntercomCustomAttributeMapper.apply(user.customAttributes()));
         if (!Equals.isNullOrBlank(user.emailAddress())) {
             intercomUser.setEmail(user.emailAddress());
