@@ -53,7 +53,7 @@ public class RandomMetricDataGenerator {
         for (int i = 0; i < numberOfOrganisations; i++) {
             organisationIds.add(randomId());
         }
-        return new MetricUser(randomId(), organisationIds, randomString(), randomEmailAddress(),
+        return new MetricUser(randomId(), organisationIds, randomString(), randomEmailAddress(), randomPhoneNumber(),
                 randomMetricCustomAttributes());
     }
 
