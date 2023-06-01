@@ -16,6 +16,9 @@
  */
 package com.clicktravel.common.security;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Holds a {@link String} that has confidential information which should not be casually displayed. {@link #toString()}
  * is defined to not include the confidential information.
@@ -24,7 +27,8 @@ public class ConfidentialString {
 
     private final String string;
 
-    public ConfidentialString(final String string) {
+    @JsonCreator
+    public ConfidentialString(@JsonProperty("string") final String string) {
         this.string = string;
     }
 
