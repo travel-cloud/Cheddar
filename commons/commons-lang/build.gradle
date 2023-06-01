@@ -1,6 +1,7 @@
 dependencies {
     compile "joda-time:joda-time:${jodaTimeVersion}"
     compile 'javax.mail:mail:1.4.7'
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.hamcrest:hamcrest-library:${hamcrestVersion}"
