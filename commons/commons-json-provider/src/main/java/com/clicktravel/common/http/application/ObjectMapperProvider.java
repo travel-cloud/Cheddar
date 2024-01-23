@@ -36,6 +36,7 @@ public class ObjectMapperProvider implements ContextResolver<ObjectMapper> {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         objectMapper.setSerializationInclusion(Include.NON_NULL);
+        objectMapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
 
         // Swagger codegen generates the following code, but it seems to be redundant
         // as the Java model files for enums have @JsonValue on the toString() methods
