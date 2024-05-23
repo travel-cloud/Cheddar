@@ -2,6 +2,8 @@ dependencies {
     compile "joda-time:joda-time:${jodaTimeVersion}"
     compile 'javax.mail:mail:1.4.7'
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
+    compile 'org.apache.commons:commons-lang3:3.10'
 
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.hamcrest:hamcrest-library:${hamcrestVersion}"
