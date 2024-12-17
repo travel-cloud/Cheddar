@@ -45,13 +45,18 @@ public class QueryParameterValidationFilter implements ContainerRequestFilter {
     public void filter(final ContainerRequestContext requestContext) throws IOException {
         final String query = requestContext.getUriInfo().getRequestUri().getQuery();
 
-        if (query != null && query.equals("q=\"")) {
-            logger.debug("Invalid query string parameter provided to {}", requestContext.getUriInfo().getPath());
+        if (query != null) {
+            logger.debug("Query string provided to {}; query: {}", requestContext.getUriInfo().getPath(),
+                    requestContext.getUriInfo().getRequestUri().getQuery());
 
-            final String errorJson = "{\"error\": \"Invalid query parameter\", \"details\": \"Invalid query string parameter provided.\"}";
+            if (query.equals("q=\"")) {
+                logger.debug("Invalid query string parameter provided to {}", requestContext.getUriInfo().getPath());
 
-            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).entity(errorJson)
-                    .type(MediaType.APPLICATION_JSON).build());
+                final String errorJson = "{\"error\": \"Invalid query parameter\", \"details\": \"Invalid query string parameter provided.\"}";
+
+                requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).entity(errorJson)
+                        .type(MediaType.APPLICATION_JSON).build());
+            }
         }
 
     }
