@@ -18,6 +18,7 @@
 package com.clicktravel.cheddar.server.http.filter.query;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -42,28 +43,26 @@ public class QueryParameterValidationFilter implements ContainerRequestFilter {
 
     final Logger logger = LoggerFactory.getLogger(QueryParameterValidationFilter.class);
 
+    private boolean queryStringContainsDoubleQuote(final List<String> queryString) {
+        return queryString.stream().anyMatch(query -> "\"".equals(query));
+    }
+
+    private boolean anyInvalidQueryStringParameters(final MultivaluedMap<String, String> queryParameters) {
+        return queryParameters.entrySet().stream()
+                .anyMatch(queryString -> queryString != null && queryStringContainsDoubleQuote(queryString.getValue()));
+    }
+
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-        final String path = requestContext.getUriInfo().getRequestUri().getPath();
-        final String query = requestContext.getUriInfo().getRequestUri().getQuery();
         final MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
-        logger.debug("Path: {}", path);
-        logger.debug("Query: {}", query);
-        logger.debug("QueryParameters: {}", queryParameters);
+        if (queryParameters != null && anyInvalidQueryStringParameters(queryParameters)) {
+            logger.debug("Invalid query string parameter provided to {}", queryParameters);
 
-        if (query != null) {
-            logger.debug("Query string provided to {}; query: {}", requestContext.getUriInfo().getPath(),
-                    requestContext.getUriInfo().getRequestUri().getQuery());
+            final String errorJson = "{\"error\": \"Invalid query parameter\", \"details\": \"Invalid query string parameter provided.\"}";
 
-            if (query.equals("q=\"")) {
-                logger.debug("Invalid query string parameter provided to {}", requestContext.getUriInfo().getPath());
-
-                final String errorJson = "{\"error\": \"Invalid query parameter\", \"details\": \"Invalid query string parameter provided.\"}";
-
-                requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).entity(errorJson)
-                        .type(MediaType.APPLICATION_JSON).build());
-            }
+            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).entity(errorJson)
+                    .type(MediaType.APPLICATION_JSON).build());
         }
 
     }
