@@ -24,6 +24,7 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
@@ -43,7 +44,13 @@ public class QueryParameterValidationFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
+        final String path = requestContext.getUriInfo().getRequestUri().getPath();
         final String query = requestContext.getUriInfo().getRequestUri().getQuery();
+        final MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+
+        logger.debug("Path: {}", path);
+        logger.debug("Query: {}", query);
+        logger.debug("QueryParameters: {}", queryParameters);
 
         if (query != null) {
             logger.debug("Query string provided to {}; query: {}", requestContext.getUriInfo().getPath(),
