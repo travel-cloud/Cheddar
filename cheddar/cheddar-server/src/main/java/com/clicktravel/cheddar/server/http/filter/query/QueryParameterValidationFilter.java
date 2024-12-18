@@ -57,7 +57,8 @@ public class QueryParameterValidationFilter implements ContainerRequestFilter {
         final MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
         if (queryParameters != null && anyInvalidQueryStringParameters(queryParameters)) {
-            logger.debug("Invalid query string parameter provided to {}", queryParameters);
+            logger.debug("Invalid query string parameter provided to {}: {}", requestContext.getUriInfo().getPath(),
+                    queryParameters);
 
             final String errorJson = "{\"error\": \"Invalid query parameter\", \"details\": \"Invalid query string parameter provided.\"}";
 
