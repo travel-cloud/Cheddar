@@ -54,6 +54,15 @@ public class RestServer {
         final URI baseUri = UriBuilder.fromUri("http://" + bindAddress).port(servicePort).build();
         logger.info("Configuring REST server on: " + baseUri.toString());
         httpServer = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
+
+        httpServer.getServerConfiguration()
+                .setDefaultErrorPageGenerator((request, status, reasonPhrase, description, exception) -> {
+                    logger.debug("Grizzly error thrown.  Status: {}; Reason: {}; Description: {}; Exception: {}",
+                            status, reasonPhrase, description, exception.getClass().getCanonicalName());
+
+                    return "<html><body><h1>Error processing request</h1><p>Apologies, there was an error processing your request. Please try again.</p></body></html>";
+                });
+
         enableAutoGenerationOfSwaggerSpecification();
         configureWorkerThreadPool(httpServer.getListener("grizzly"), workerThreads);
         logger.info("Starting REST server; servicePort:[" + servicePort + "]");
