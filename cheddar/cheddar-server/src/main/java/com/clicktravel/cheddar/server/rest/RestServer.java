@@ -58,7 +58,7 @@ public class RestServer {
         httpServer.getServerConfiguration()
                 .setDefaultErrorPageGenerator((request, status, reasonPhrase, description, exception) -> {
                     logger.debug("Grizzly error thrown.  Status: {}; Reason: {}; Description: {}; Exception: {}",
-                            status, reasonPhrase, description, exception.getClass().getCanonicalName());
+                            status, reasonPhrase, description, exception.getStackTrace());
 
                     return "<html><body><h1>Error processing request</h1><p>Apologies, there was an error processing your request. Please try again.</p></body></html>";
                 });
